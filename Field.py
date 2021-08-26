@@ -69,6 +69,43 @@ class Field(object):
         self.interpVy = interpolate.LinearNDInterpolator(np.array([self.X, self.Y, self.Z]).T, self.Vy)
         self.interpVz = interpolate.LinearNDInterpolator(np.array([self.X, self.Y, self.Z]).T, self.Vz)
 
+    def velocity(self, x, y, z):
+        glat, glon, galt = pm.ecef2geodetic(x.flatten(), y.flatten(), z.flatten())
+        alat, alon = self.apex.geo2apex(glat, glon, galt/1000.)
+        map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
+
+        V = [0., 500., 0.]
+        # Find ECEF velocity components for given geodetic velocity at center of points
+        u, v, w = pm.enu2uvw(V[0], V[1], V[2], np.mean(map_glat), np.mean(map_glon))
+        # Find ENU components for same velosity translated to all mapped locations
+        e, n, u = pm.uvw2enu(u, v, w, map_glat, map_glon)
+        u = np.zeros(u.shape)   # set up component to zero
+        V_map = np.array([e,n,u])
+        # rescale velocities so that they all have the same magnitude as the original vector
+        V_scale = V_map*np.linalg.norm(V)/np.linalg.norm(V_map, axis=0)
+        # map velocities along field lines back to the original heights
+        V0 = self.apex.map_V_to_height(alat, alon, 300., galt/1000., V_scale)
+
+        V0 = V0.T.reshape(x.shape+(3,))
+        # return np.tile([500,0,0], x.shape+(1,))
+        return V0
+
+    def chapman(self, z):
+        N0 = 4.e11
+        H = 100.
+        z0 = 300.
+
+        return N0*np.exp(1-(z-z0)/H-np.exp(-(z-z0)/H))
+
+        # L. Goodwin's Chapman Layer function - ask about this
+          # zprime = ((altdata[i,j]-zm0)/scaleheight)
+          # y0 =nem0*math.exp(0.5*(1-zprime-abs(1/math.cos(SolarZenData[t,i,j]*math.pi/180))*math.exp(-1*zprime)))
+
+
+    def density(self, x, y, z):
+        glat, glon, galt = pm.ecef2geodetic(x, y, z)
+        # return np.full(x.shape, 1e11)
+        return self.chapman(galt/1000.)
 
     def plot_ionosphere(self):
 
