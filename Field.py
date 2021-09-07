@@ -11,6 +11,10 @@ try:
 except ImportError:
     import configparser
 
+# Figure out how to specify multiple species sensibly
+# this can probably wait as a feature - unlikely to come up often
+# may be nice to be able to have some kind of placeholder just to make the arrays the full shape though
+
 class Field(object):
 
     def __init__(self, *args, **kwargs):
@@ -33,6 +37,22 @@ class Field(object):
 
         config = configparser.ConfigParser()
         config.read(config_file)
+
+        self.density = getattr(self, config['DENSITY']['TYPE'])
+        self.density_params = dict(config['DENSITY'])
+        self.density_params.pop('type')
+
+        self.velocity = getattr(self, config['VELOCITY']['TYPE'])
+        self.velocity_params = dict(config['VELOCITY'])
+        self.velocity_params.pop('type')
+
+        self.etemp = getattr(self, config['ETEMP']['TYPE'])
+        self.etemp_params = dict(config['ETEMP'])
+        self.etemp_params.pop('type')
+
+        self.itemp = getattr(self, config['ITEMP']['TYPE'])
+        self.itemp_params = dict(config['ITEMP'])
+        self.itemp_params.pop('type')
 
         self.apex_year = config.getint('FIELD', 'apex_year')
         self.field_coords = np.array(eval(config.get('FIELD', 'field_coords')))
@@ -69,12 +89,16 @@ class Field(object):
         self.interpVy = interpolate.LinearNDInterpolator(np.array([self.X, self.Y, self.Z]).T, self.Vy)
         self.interpVz = interpolate.LinearNDInterpolator(np.array([self.X, self.Y, self.Z]).T, self.Vz)
 
-    def velocity(self, x, y, z):
+    # add different kinds of velocity fields
+
+    def uniform_velocity(self, x, y, z):
         glat, glon, galt = pm.ecef2geodetic(x.flatten(), y.flatten(), z.flatten())
         alat, alon = self.apex.geo2apex(glat, glon, galt/1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
-        V = [0., 500., 0.]
+        V = np.array([float(i) for i in self.velocity_params['value'].split(',')])
+
+        # V = [500., 700., 0.]
         # Find ECEF velocity components for given geodetic velocity at center of points
         u, v, w = pm.enu2uvw(V[0], V[1], V[2], np.mean(map_glat), np.mean(map_glon))
         # Find ENU components for same velosity translated to all mapped locations
@@ -85,34 +109,48 @@ class Field(object):
         V_scale = V_map*np.linalg.norm(V)/np.linalg.norm(V_map, axis=0)
         # map velocities along field lines back to the original heights
         V0 = self.apex.map_V_to_height(alat, alon, 300., galt/1000., V_scale)
-
-        V0 = V0.T.reshape(x.shape+(3,))
+        # convert to ECEF components
+        u, v, w = pm.enu2uvw(V0[0], V0[1], V0[2], glat, glon)
+        # reform original array shape
+        V0 = np.array([u, v, w]).T.reshape(x.shape+(3,))
         # return np.tile([500,0,0], x.shape+(1,))
         return V0
 
-    def chapman(self, z):
-        N0 = 4.e11
-        H = 100.
-        z0 = 300.
-
-        return N0*np.exp(1-(z-z0)/H-np.exp(-(z-z0)/H))
+    def chapman(self, x, y, z):
+        N0 = float(self.density_params['n0'])
+        H = float(self.density_params['h'])
+        z0 = float(self.density_params['z0'])
+        glat, glon, galt = pm.ecef2geodetic(x, y, z)
+        return N0*np.exp(1-(galt/1000.-z0)/H-np.exp(-(galt/1000.-z0)/H))
 
         # L. Goodwin's Chapman Layer function - ask about this
           # zprime = ((altdata[i,j]-zm0)/scaleheight)
           # y0 =nem0*math.exp(0.5*(1-zprime-abs(1/math.cos(SolarZenData[t,i,j]*math.pi/180))*math.exp(-1*zprime)))
 
 
-    def density(self, x, y, z):
-        glat, glon, galt = pm.ecef2geodetic(x, y, z)
-        # return np.full(x.shape, 1e11)
-        return self.chapman(galt/1000.)
+    def uniform_density(self, x, y, z):
+        Ne = float(self.density_params['value'])
+        return np.full(x.shape, Ne)
 
-    def plot_ionosphere(self):
+    # add polar cap patch function
 
-        fig = plt.figure(figsize=(10,10))
-        ax = fig.add_subplot(111,projection='3d')
+    # add wave fluctuation functions - L. Goodwin code
 
-        for x, y, z, vx, vy, vz in zip(self.X, self.Y, self.Z, self.Vx, self.Vy, self.Vz):
-            ax.quiver(x, y, z, vx, vy, vz, length=0.4*np.sqrt(vx**2+vy**2+vz**2), color='green')
 
-        plt.show()
+    def uniform_Te(self, x, y, z):
+        Te = float(self.etemp_params['value'])
+        return np.full(x.shape, Te)
+
+    def uniform_Ti(self, x, y, z):
+        Ti = float(self.itemp_params['value'])
+        return np.full(x.shape, Ti)
+
+    # def plot_ionosphere(self):
+    #
+    #     fig = plt.figure(figsize=(10,10))
+    #     ax = fig.add_subplot(111,projection='3d')
+    #
+    #     for x, y, z, vx, vy, vz in zip(self.X, self.Y, self.Z, self.Vx, self.Vy, self.Vz):
+    #         ax.quiver(x, y, z, vx, vy, vz, length=0.4*np.sqrt(vx**2+vy**2+vz**2), color='green')
+    #
+    #     plt.show()
