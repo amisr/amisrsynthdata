@@ -100,7 +100,7 @@ class Field(object):
 
         # V = [500., 700., 0.]
         # Find ECEF velocity components for given geodetic velocity at center of points
-        u, v, w = pm.enu2uvw(V[0], V[1], V[2], np.mean(map_glat), np.mean(map_glon))
+        u, v, w = pm.enu2uvw(V[0], V[1], V[2], np.nanmean(map_glat), np.nanmean(map_glon))
         # Find ENU components for same velosity translated to all mapped locations
         e, n, u = pm.uvw2enu(u, v, w, map_glat, map_glon)
         u = np.zeros(u.shape)   # set up component to zero
