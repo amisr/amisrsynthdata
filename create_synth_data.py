@@ -28,11 +28,11 @@ field = Field(args['synth_config_file'])
 # generate radar object
 radar = Radar(args['synth_config_file'])
 
-print(radar.x.shape)
+# print(radar.x.shape)
 
-ne = field.density(radar.x, radar.y, radar.z)
-te = field.etemp(radar.x, radar.y, radar.z)
-ti = field.itemp(radar.x, radar.y, radar.z)
+ne = field.density(radar.lat, radar.lon, radar.alt)
+te = field.etemp(radar.lat, radar.lon, radar.alt)
+ti = field.itemp(radar.lat, radar.lon, radar.alt)
 print('PARAMS', ne.shape, te.shape, ti.shape)
 
 # fig = plt.figure(figsize=(10,10))
@@ -49,19 +49,21 @@ print('PARAMS', ne.shape, te.shape, ti.shape)
 # Vvec = np.array([Vx, Vy, Vz]).T
 # print(Vvec.shape)
 
-Vvec = field.velocity(radar.x, radar.y, radar.z)
+Vvec = field.velocity(radar.lat, radar.lon, radar.alt)
 # print(Vvec)
 #
 #
 # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the interpolated field
 # Vlos = np.tile(np.einsum('...i,...i->...',radar.kvec, Vvec), (len(self.times),1,1))
-Vlos = np.einsum('...i,...i->...',radar.kvec, Vvec)
+kvec = radar.kvec_all_gates()
+print('KVEC:', kvec.shape)
+Vlos = np.einsum('...i,...i->...',kvec, Vvec)
 # assume constant error
 dVlos = np.full(Vlos.shape, radar.vel_error)
 
 print(Vlos.shape)
 
-ne_nb = field.density(radar.x_nb, radar.y_nb, radar.z_nb)
+ne_nb = field.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
 
 # fig = plt.figure(figsize=(10,10))
 # ax = fig.add_subplot(111,projection='3d')
@@ -80,7 +82,7 @@ utime = np.array([[time0+t*radar.integration_period, time0+(t+1)*radar.integrati
 
 # create fit and error arrays that match the shape of whats in the processed fitted files
 # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
-s = (utime.shape[0],)+radar.x.shape
+s = (utime.shape[0],)+radar.fit_slant_range.shape
 # fit_array = np.full(s+(6,4), np.nan)
 fit_array = np.full(s+(2,4), np.nan)    # assume only O+
 fit_array[:,:,:,0,1] = ti
@@ -107,7 +109,7 @@ nfev = np.full(s, 0)
 ion_mass = np.array([16.])
 print(fit_array.shape, chi2.shape, fitcode.shape)
 
-snr = np.full(radar.x_nb.shape, np.nan)
+snr = np.full(radar.slant_range.shape, np.nan)
 dnefrac = np.full(ne_nb.shape, np.nan)
 # # generate dummy density array
 # self.ne = np.full(s, 1e11)
@@ -140,9 +142,9 @@ with h5py.File(radar.output_filename, mode='w') as h5:
     h5.create_dataset('/Geomag/Latitude', data=radar.lat)
     h5.create_dataset('/Geomag/Longitude', data=radar.lon)
     h5.create_dataset('/Geomag/Altitude', data=radar.alt)
-    h5.create_dataset('/Geomag/ke', data=radar.ke)
-    h5.create_dataset('/Geomag/kn', data=radar.kn)
-    h5.create_dataset('/Geomag/kz', data=radar.ku)
+    h5.create_dataset('/Geomag/ke', data=kvec[:,:,0])
+    h5.create_dataset('/Geomag/kn', data=kvec[:,:,1])
+    h5.create_dataset('/Geomag/kz', data=kvec[:,:,2])
 
     # need to call MSIS-E
     h5.create_group('/MSIS')
@@ -181,22 +183,22 @@ with h5py.File(radar.output_filename, mode='w') as h5:
 
 
 print(radar.site_coords)
-glat, glon, galt = np.meshgrid(np.arange(radar.site_coords[0],radar.site_coords[0]+10., 1.), np.arange(radar.site_coords[1]-20.,radar.site_coords[1]+20, 2.), np.arange(200., 500., 200.))
+glat, glon, galt = np.meshgrid(np.arange(radar.site_lat,radar.site_lat+10., 1.), np.arange(radar.site_lon-20.,radar.site_lon+20, 2.), np.arange(200000., 500000., 200000.))
 
 print(glat.shape, glon.shape, galt.shape)
 
-x, y, z = pm.geodetic2ecef(glat, glon, galt*1000.)
-ne0 = field.density(x, y, z)
-te0 = field.etemp(x, y, z)
-ti0 = field.itemp(x, y, z)
-ve = field.velocity(x, y, z)
-e, n, u = pm.uvw2enu(ve[:,:,:,0], ve[:,:,:,1], ve[:,:,:,2], glat, glon)
+# x, y, z = pm.geodetic2ecef(glat, glon, galt*1000.)
+ne0 = field.density(glat, glon, galt)
+te0 = field.etemp(glat, glon, galt)
+ti0 = field.itemp(glat, glon, galt)
+ve = field.velocity(glat, glon, galt)
+# e, n, u = pm.uvw2enu(ve[:,:,:,0], ve[:,:,:,1], ve[:,:,:,2], glat, glon)
 
 # scaling/rotation of vector to plot in cartopy
 # https://github.com/SciTools/cartopy/issues/1179
-es = e/np.cos(glat*np.pi/180.)
-ns = n
-sf = np.sqrt(e**2+n**2)/np.sqrt(es**2+ns**2)
+es = ve[:,:,:,0]/np.cos(glat*np.pi/180.)
+ns = ve[:,:,:,1]
+sf = np.sqrt(ve[:,:,:,0]**2+ve[:,:,:,1]**2)/np.sqrt(es**2+ns**2)
 e = es*sf
 n = ns*sf
 
@@ -227,16 +229,19 @@ for j in range(2):
     ax.coastlines()
     ax.scatter(glon[:,:,j], glat[:,:,j], c=ti0[:,:,j], vmin=0., vmax=3e3, transform=ccrs.Geodetic())
 
+x, y, z = pm.geodetic2ecef(radar.lat, radar.lon, radar.alt)
+fp = np.isfinite(radar.alt)
+
 ax = fig.add_subplot(gs[-1,0], projection='3d')
-ax.scatter(radar.x[np.isfinite(radar.x)], radar.y[np.isfinite(radar.x)], radar.z[np.isfinite(radar.x)], c=ne[np.isfinite(radar.x)], vmin=0., vmax=4e11)
+ax.scatter(x[fp], y[fp], z[fp], c=ne[fp], vmin=0., vmax=4e11)
 
 ax = fig.add_subplot(gs[-1,1], projection='3d')
-ax.scatter(radar.x[np.isfinite(radar.x)], radar.y[np.isfinite(radar.x)], radar.z[np.isfinite(radar.x)], c=Vlos[np.isfinite(radar.x)], vmin=-500., vmax=500.)
+ax.scatter(x[fp], y[fp], z[fp], c=Vlos[fp], vmin=-500., vmax=500.)
 
 ax = fig.add_subplot(gs[-1,2], projection='3d')
-ax.scatter(radar.x[np.isfinite(radar.x)], radar.y[np.isfinite(radar.x)], radar.z[np.isfinite(radar.x)], c=te[np.isfinite(radar.x)], vmin=0., vmax=5e3)
+ax.scatter(x[fp], y[fp], z[fp], c=te[fp], vmin=0., vmax=5e3)
 
 ax = fig.add_subplot(gs[-1,3], projection='3d')
-ax.scatter(radar.x[np.isfinite(radar.x)], radar.y[np.isfinite(radar.x)], radar.z[np.isfinite(radar.x)], c=ti[np.isfinite(radar.x)], vmin=0., vmax=3e3)
+ax.scatter(x[fp], y[fp], z[fp], c=ti[fp], vmin=0., vmax=3e3)
 
 plt.show()
