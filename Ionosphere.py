@@ -1,4 +1,4 @@
-# Field.py
+# Ionosphere.py
 import numpy as np
 from apexpy import Apex
 from scipy import interpolate
@@ -15,7 +15,7 @@ except ImportError:
 # this can probably wait as a feature - unlikely to come up often
 # may be nice to be able to have some kind of placeholder just to make the arrays the full shape though
 
-class Field(object):
+class Ionosphere(object):
 
     def __init__(self, *args, **kwargs):
 

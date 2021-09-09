@@ -1,7 +1,7 @@
 # create_synth_data.py
 # Create an AMISR data file with synthetic data
 
-from Field import Field
+from Ionosphere import Ionosphere
 from Radar import Radar
 import numpy as np
 import datetime as dt
@@ -22,7 +22,7 @@ args = vars(parser.parse_args())
 
 
 # generate field object
-field = Field(args['synth_config_file'])
+iono = Ionosphere(args['synth_config_file'])
 # field.plot_ionosphere()
 
 # generate radar object
@@ -30,9 +30,9 @@ radar = Radar(args['synth_config_file'])
 
 # print(radar.x.shape)
 
-ne = field.density(radar.lat, radar.lon, radar.alt)
-te = field.etemp(radar.lat, radar.lon, radar.alt)
-ti = field.itemp(radar.lat, radar.lon, radar.alt)
+ne = iono.density(radar.lat, radar.lon, radar.alt)
+te = iono.etemp(radar.lat, radar.lon, radar.alt)
+ti = iono.itemp(radar.lat, radar.lon, radar.alt)
 print('PARAMS', ne.shape, te.shape, ti.shape)
 
 # fig = plt.figure(figsize=(10,10))
@@ -49,7 +49,7 @@ print('PARAMS', ne.shape, te.shape, ti.shape)
 # Vvec = np.array([Vx, Vy, Vz]).T
 # print(Vvec.shape)
 
-Vvec = field.velocity(radar.lat, radar.lon, radar.alt)
+Vvec = iono.velocity(radar.lat, radar.lon, radar.alt)
 # print(Vvec)
 #
 #
@@ -63,7 +63,7 @@ dVlos = np.full(Vlos.shape, radar.vel_error)
 
 print(Vlos.shape)
 
-ne_nb = field.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
+ne_nb = iono.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
 
 # fig = plt.figure(figsize=(10,10))
 # ax = fig.add_subplot(111,projection='3d')
@@ -76,7 +76,7 @@ ne_nb = field.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
 #   on January 1 of the year defined in the apex_year portion of the config file.  Because the field is defined manually
 #   and not based on some empirical model, the time really doesn't matter and is mostly included to be consistent
 #   with the read data file format.
-time0 = (dt.datetime(field.apex_year,1,1)-dt.datetime.utcfromtimestamp(0)).total_seconds()
+time0 = (dt.datetime(iono.apex_year,1,1)-dt.datetime.utcfromtimestamp(0)).total_seconds()
 utime = np.array([[time0+t*radar.integration_period, time0+(t+1)*radar.integration_period] for t in range(10)])
 
 
@@ -188,10 +188,10 @@ glat, glon, galt = np.meshgrid(np.arange(radar.site_lat,radar.site_lat+10., 1.),
 print(glat.shape, glon.shape, galt.shape)
 
 # x, y, z = pm.geodetic2ecef(glat, glon, galt*1000.)
-ne0 = field.density(glat, glon, galt)
-te0 = field.etemp(glat, glon, galt)
-ti0 = field.itemp(glat, glon, galt)
-ve = field.velocity(glat, glon, galt)
+ne0 = iono.density(glat, glon, galt)
+te0 = iono.etemp(glat, glon, galt)
+ti0 = iono.itemp(glat, glon, galt)
+ve = iono.velocity(glat, glon, galt)
 # e, n, u = pm.uvw2enu(ve[:,:,:,0], ve[:,:,:,1], ve[:,:,:,2], glat, glon)
 
 # scaling/rotation of vector to plot in cartopy
