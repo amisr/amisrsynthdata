@@ -131,7 +131,7 @@ with h5py.File(radar.output_filename, mode='w') as h5:
     h5.create_dataset('/Site/Longitude', data=radar.site_lon)
     h5.create_dataset('/Site/Altitude', data=radar.site_alt)
     h5.create_dataset('/Site/Code', data=0)
-    h5.create_dataset('/Site/Name', data=radar.radar_name)
+    h5.create_dataset('/Site/Name', data=radar.radar_name, dtype=h5py.string_dtype(encoding='utf-8',length=len(radar.radar_name.encode('utf-8'))))
     h5.create_dataset('/Site/MagneticLatitude', data=radar.site_lat)
     h5.create_dataset('/Site/MagneticLongitude', data=radar.site_lon)
     h5.create_dataset('/Site/MagneticLocalTimeMidnight', data=radar.site_alt)
