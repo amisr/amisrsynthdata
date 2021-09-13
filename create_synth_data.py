@@ -62,6 +62,9 @@ fit_array[:,:,:,-1,3] = Vlos
 fit_array[:,:,:,0,0] = np.ones(s)
 fit_array[:,:,:,-1,0] = np.ones(s)
 
+ne_array = np.full(s, np.nan)
+ne_array[:,:,:] = ne
+
 # empty error arrays
 err_array = np.full(fit_array.shape,np.nan)
 dne = np.full(ne.shape, np.nan)
@@ -88,7 +91,7 @@ with h5py.File(radar.output_filename, mode='w') as h5:
     h5.create_dataset('/FittedParams/Errors', data=err_array)
     h5.create_dataset('/FittedParams/Fits', data=fit_array)
     h5.create_dataset('/FittedParams/IonMass', data=ion_mass)
-    h5.create_dataset('/FittedParams/Ne', data=ne)
+    h5.create_dataset('/FittedParams/Ne', data=ne_array)
     h5.create_dataset('/FittedParams/Noise', data=noise)
     h5.create_dataset('/FittedParams/Range', data=radar.fit_slant_range)
     h5.create_dataset('/FittedParams/dNe', data=dne)
@@ -192,14 +195,30 @@ fp = np.isfinite(radar.alt)
 
 ax = fig.add_subplot(gs[-1,0], projection='3d')
 ax.scatter(x[fp], y[fp], z[fp], c=ne[fp], vmin=0., vmax=4e11)
+ax.xaxis.set_ticklabels([])
+ax.yaxis.set_ticklabels([])
+ax.zaxis.set_ticklabels([])
+ax.set_box_aspect((1,1,1))
 
 ax = fig.add_subplot(gs[-1,1], projection='3d')
 ax.scatter(x[fp], y[fp], z[fp], c=Vlos[fp], vmin=-500., vmax=500.)
+ax.xaxis.set_ticklabels([])
+ax.yaxis.set_ticklabels([])
+ax.zaxis.set_ticklabels([])
+ax.set_box_aspect((1,1,1))
 
 ax = fig.add_subplot(gs[-1,2], projection='3d')
 ax.scatter(x[fp], y[fp], z[fp], c=te[fp], vmin=0., vmax=5e3)
+ax.xaxis.set_ticklabels([])
+ax.yaxis.set_ticklabels([])
+ax.zaxis.set_ticklabels([])
+ax.set_box_aspect((1,1,1))
 
 ax = fig.add_subplot(gs[-1,3], projection='3d')
 ax.scatter(x[fp], y[fp], z[fp], c=ti[fp], vmin=0., vmax=3e3)
+ax.xaxis.set_ticklabels([])
+ax.yaxis.set_ticklabels([])
+ax.zaxis.set_ticklabels([])
+ax.set_box_aspect((1,1,1))
 
 plt.show()
