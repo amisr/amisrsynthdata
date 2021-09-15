@@ -7,6 +7,10 @@ import numpy as np
 import datetime as dt
 import pymap3d as pm
 import h5py
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
 import matplotlib.pyplot as plt
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -19,6 +23,11 @@ parser = ArgumentParser(description=config_file_help,
 arg = parser.add_argument('synth_config_file',help='Configuration file for synthetic data set.')
 args = vars(parser.parse_args())
 
+config = configparser.ConfigParser()
+config.read(args['synth_config_file'])
+starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
+endtime = dt.datetime.fromisoformat(config['GENERAL']['ENDTIME'])
+output_filename = config['GENERAL']['OUTPUT_FILENAME']
 
 # generate ionosphere object
 iono = Ionosphere(args['synth_config_file'])
@@ -41,12 +50,9 @@ ne_nb = iono.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
 
 
 # create unix time array
-# Time array is 10 time steps (of integration period defined by the radar portion of the config file) after midnight
-#   on January 1 of the year defined in the apex_year portion of the config file.  Because the field is defined manually
-#   and not based on some empirical model, the time really doesn't matter and is mostly included to be consistent
-#   with the read data file format.
-time0 = (dt.datetime(iono.apex_year,1,1)-dt.datetime.utcfromtimestamp(0)).total_seconds()
-utime = np.array([[time0+t*radar.integration_period, time0+(t+1)*radar.integration_period] for t in range(10)])
+ust = (starttime-dt.datetime.utcfromtimestamp(0)).total_seconds()
+num_tstep = int((endtime-starttime).total_seconds()/radar.integration_period)
+utime = np.array([[ust+t*radar.integration_period, ust+(t+1)*radar.integration_period] for t in range(num_tstep)])
 
 ion_mass = np.array([16.])
 
@@ -66,8 +72,8 @@ ne_array = np.full(s, np.nan)
 ne_array[:,:,:] = ne
 
 # empty error arrays
-err_array = np.full(fit_array.shape,np.nan)
-dne = np.full(ne.shape, np.nan)
+err_array = np.full(fit_array.shape,10.)
+dne = np.full(ne.shape, 1.e10)
 noise = np.full(s+(3,), np.nan)
 
 # fit parameters
@@ -82,7 +88,7 @@ dnefrac = np.full(ne_nb.shape, np.nan)
 
 
 # create output hdf5 file
-with h5py.File(radar.output_filename, mode='w') as h5:
+with h5py.File(output_filename, mode='w') as h5:
 
     h5.create_dataset('BeamCodes', data=radar.beam_codes)
 

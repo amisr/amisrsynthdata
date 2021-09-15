@@ -54,7 +54,6 @@ class Radar(object):
         self.range_step = config.getfloat('RADAR','RANGE_STEP')
         self.range_start = config.getfloat('RADAR','RANGE_START')
         self.range_end = config.getfloat('RADAR','RANGE_END')
-        self.output_filename = config.get('RADAR','OUTPUT_FILENAME')
         self.integration_period = config.getfloat('RADAR','INTEGRATION_PERIOD')
         self.vel_error = config.getfloat('RADAR','VEL_ERROR')
         self.radar_name = config.get('RADAR', 'NAME')

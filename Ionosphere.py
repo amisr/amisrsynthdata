@@ -1,5 +1,6 @@
 # Ionosphere.py
 import numpy as np
+import datetime as dt
 from apexpy import Apex
 import pymap3d as pm
 
@@ -21,8 +22,8 @@ class Ionosphere(object):
             self.read_config(args[0])
         else:
             self.apex_year = kwargs['apex_year']
-            self.field_coords = np.array(kwargs['field_coords'])
-            self.field_values = np.array(kwargs['field_values'])
+            # self.field_coords = np.array(kwargs['field_coords'])
+            # self.field_values = np.array(kwargs['field_values'])
 
         # initialize Apex object
         self.apex = Apex(date=self.apex_year)
@@ -49,9 +50,9 @@ class Ionosphere(object):
         self.itemp_params = dict(config['ITEMP'])
         self.itemp_params.pop('type')
 
-        self.apex_year = config.getint('FIELD', 'apex_year')
-        self.field_coords = np.array(eval(config.get('FIELD', 'field_coords')))
-        self.field_values = np.array(eval(config.get('FIELD', 'field_values')))
+        self.apex_year = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
+        # self.field_coords = np.array(eval(config.get('FIELD', 'field_coords')))
+        # self.field_values = np.array(eval(config.get('FIELD', 'field_values')))
 
 
 
