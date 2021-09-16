@@ -1,8 +1,8 @@
 # create_synth_data.py
 # Create an AMISR data file with synthetic data
 
-from Ionosphere import Ionosphere
-from Radar import Radar
+from .Ionosphere import Ionosphere
+from .Radar import Radar
 import numpy as np
 import datetime as dt
 import pymap3d as pm
@@ -54,17 +54,17 @@ ust = (starttime-dt.datetime.utcfromtimestamp(0)).total_seconds()
 num_tstep = int((endtime-starttime).total_seconds()/radar.integration_period)
 utime = np.array([[ust+t*radar.integration_period, ust+(t+1)*radar.integration_period] for t in range(num_tstep)])
 
-ion_mass = np.array([16.])
 
 # create fit and error arrays that match the shape of whats in the processed fitted files
 # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
+# assume only O+, but include fields for other parameters so array is a general shape
 s = (utime.shape[0],)+radar.fit_slant_range.shape
-# fit_array = np.full(s+(6,4), np.nan)
-fit_array = np.full(s+(2,4), np.nan)    # assume only O+
+fit_array = np.full(s+(len(iono.ion_mass)+1,4), np.nan)
 fit_array[:,:,:,0,1] = ti
 fit_array[:,:,:,-1,1] = te
 fit_array[:,:,:,0,3] = Vlos
 fit_array[:,:,:,-1,3] = Vlos
+fit_array[:,:,:,:,0] = np.zeros(s+(len(iono.ion_mass)+1,))
 fit_array[:,:,:,0,0] = np.ones(s)
 fit_array[:,:,:,-1,0] = np.ones(s)
 
@@ -96,7 +96,7 @@ with h5py.File(output_filename, mode='w') as h5:
     h5.create_dataset('/FittedParams/Altitude', data=radar.alt)
     h5.create_dataset('/FittedParams/Errors', data=err_array)
     h5.create_dataset('/FittedParams/Fits', data=fit_array)
-    h5.create_dataset('/FittedParams/IonMass', data=ion_mass)
+    h5.create_dataset('/FittedParams/IonMass', data=iono.ion_mass)
     h5.create_dataset('/FittedParams/Ne', data=ne_array)
     h5.create_dataset('/FittedParams/Noise', data=noise)
     h5.create_dataset('/FittedParams/Range', data=radar.fit_slant_range)

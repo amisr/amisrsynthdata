@@ -51,6 +51,7 @@ class Ionosphere(object):
         self.itemp_params.pop('type')
 
         self.apex_year = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
+        self.ion_mass = np.array([float(im) for im in config['GENERAL']['ION_MASS'].split(',')])
         # self.field_coords = np.array(eval(config.get('FIELD', 'field_coords')))
         # self.field_values = np.array(eval(config.get('FIELD', 'field_values')))
 
