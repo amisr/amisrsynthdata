@@ -85,12 +85,13 @@ class Ionosphere(object):
         N0 = float(self.density_params['n0'])
         H = float(self.density_params['h'])
         z0 = float(self.density_params['z0'])
+        sza = float(self.density_params['sza'])*np.pi/180.
 
-        return N0*np.exp(1-(galt-z0)/H-np.exp(-(galt-z0)/H))
+        # From Schunk and Nagy, 2009; eqn 11.57
+        zp = (galt-z0)/H
+        Ne = N0*np.exp(0.5*(1-zp-np.exp(-zp)/np.cos(sza)))
 
-        # L. Goodwin's Chapman Layer function - ask about this
-          # zprime = ((altdata[i,j]-zm0)/scaleheight)
-          # y0 =nem0*math.exp(0.5*(1-zprime-abs(1/math.cos(SolarZenData[t,i,j]*math.pi/180))*math.exp(-1*zprime)))
+        return Ne
 
 
     def uniform_density(self, glat, glon, galt):
