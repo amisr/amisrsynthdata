@@ -28,11 +28,11 @@ REQUIREMENTS = [
 
 # Get the readme text
 # README = os.path.join(here, 'README.rst')
-# with open('README.rst', 'r', encoding='utf-8') as f:
-#     READMETXT = f.read()
+with open('README.md', 'r', encoding='utf-8') as f:
+    READMETXT = f.read()
 # READMETXT = '\n'.join(READMETXT)
 
-READMETXT = 'Basic readme\n'
+# READMETXT = 'Basic readme\n'
 
 # # Get version number from __init__.py
 # regex = "(?<=__version__..\s)\S+"
