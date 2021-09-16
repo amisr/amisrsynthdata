@@ -81,6 +81,21 @@ class Ionosphere(object):
 
         return V0
 
+    def uniform_mlat_aligned(self, glat, glon, galt):
+        Ve1, Ve2, Ve3 = [float(i) for i in self.velocity_params['value'].split(',')]
+
+        # Find base vector at each location
+        _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
+        # reshape basevector arrays to match the original input
+        e1 = e1.T.reshape(glat.shape+(3,))
+        e2 = e2.T.reshape(glat.shape+(3,))
+        e3 = e3.T.reshape(glat.shape+(3,))
+
+        # calculate V in geodetic coordinates
+        V0 = Ve1*e1 + Ve2*e2 + Ve3*e3
+
+        return V0
+
     def chapman(self, glat, glon, galt):
         N0 = float(self.density_params['n0'])
         H = float(self.density_params['h'])
