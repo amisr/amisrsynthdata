@@ -113,7 +113,20 @@ class Ionosphere(object):
         Ne = float(self.density_params['value'])
         return np.full(galt.shape, Ne)
 
-    # add polar cap patch function
+
+    def circle_patch(self, glat, glon, galt):
+        # circular gaussian polar cap patch
+        cent_lat = float(self.density_params['cent_lat'])
+        cent_lon = float(self.density_params['cent_lon'])
+        cent_alt = float(self.density_params['cent_alt'])
+        N0 = float(self.density_params['n0'])
+        r = float(self.density_params['width'])/2.
+        h = float(self.density_params['height'])/2.
+
+        e, n, u  = pm.geodetic2enu(glat, glon, galt, cent_lat, cent_lon, cent_alt)
+        Ne = N0*np.exp(-0.5*(e**2/r**2 + n**2/r**2 + u**2/h**2))
+
+        return Ne
 
     # add wave fluctuation functions - L. Goodwin code
 

@@ -155,7 +155,7 @@ with h5py.File(output_filename, mode='w') as h5:
 
 
 # summary plot of output
-glat, glon, galt = np.meshgrid(np.arange(radar.site_lat,radar.site_lat+10., 1.), np.arange(radar.site_lon-20.,radar.site_lon+20, 2.), np.arange(200000., 500000., 200000.))
+glat, glon, galt = np.meshgrid(np.arange(radar.site_lat,radar.site_lat+10., 1.), np.arange(radar.site_lon-20.,radar.site_lon+20, 2.), np.arange(200000., 500000., 100000.))
 
 ne0 = iono.density(glat, glon, galt)
 te0 = iono.etemp(glat, glon, galt)
