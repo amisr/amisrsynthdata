@@ -45,14 +45,17 @@ kvec = radar.kvec_all_gates()
 Vvec = iono.velocity(radar.lat, radar.lon, radar.alt)
 Vlos = np.einsum('...i,...i->...',kvec, Vvec)
 
-# calculate density in ACF bins
-ne_nb = iono.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
 
 
 # create unix time array
 ust = (starttime-dt.datetime.utcfromtimestamp(0)).total_seconds()
 num_tstep = int((endtime-starttime).total_seconds()/radar.integration_period)
 utime = np.array([[ust+t*radar.integration_period, ust+(t+1)*radar.integration_period] for t in range(num_tstep)])
+
+# calculate density in ACF bins
+ne_nb_ot = iono.density(radar.lat_nb, radar.lon_nb, radar.alt_nb)
+ne_nb = np.full((utime.shape[0],)+ne_nb_ot.shape, np.nan)
+ne_nb[:,:,:] = ne_nb_ot
 
 
 # create fit and error arrays that match the shape of whats in the processed fitted files
