@@ -31,14 +31,41 @@ class SyntheticData(object):
         self.radar = Radar(configfile)
 
         self.generate_time_array(starttime, endtime)
+        self.generate_geomag()
+        self.generate_site(starttime)
         self.calc_radar_measurements()
         self.save_hdf5_output(output_filename)
 
     def generate_time_array(self, starttime, endtime):
-        # create unix time array
+        # create time arrays
         ust = (starttime-dt.datetime.utcfromtimestamp(0)).total_seconds()
         num_tstep = int((endtime-starttime).total_seconds()/self.radar.integration_period)
-        self.utime = np.array([[ust+t*self.radar.integration_period, ust+(t+1)*self.radar.integration_period] for t in range(num_tstep)])
+        self.utime = np.array([ust+np.arange(0,num_tstep)*self.radar.integration_period, ust+np.arange(1,num_tstep+1)*self.radar.integration_period]).T
+        time = np.array([[dt.datetime.utcfromtimestamp(t) for t in ut] for ut in self.utime])
+
+        self.Time = {'UnixTime':self.utime}
+
+        self.Time['Day'] = np.array([[t.day for t in ip] for ip in time])
+        self.Time['Month'] = np.array([[t.month for t in ip] for ip in time])
+        self.Time['Year'] = np.array([[t.year for t in ip] for ip in time])
+        self.Time['doy'] = np.array([[t.timetuple().tm_yday for t in ip] for ip in time])
+        self.Time['dtime'] = np.array([[(t-dt.datetime(t.year,t.month,t.day,0,0,0)).total_seconds()/3600. for t in ip] for ip in time])
+
+        _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
+        _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
+        self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
+
+    def generate_geomag(self):
+        # generate Geomag array
+        # Reqires running IGRF to get all fields
+        self.Geomag = {'Latitude':self.radar.lat, 'Longitude':self.radar.lon, 'Altitude':self.radar.alt, 'ke':self.radar.kvec[:,0], 'kn':self.radar.kvec[:,1], 'ku':self.radar.kvec[:,2]}
+
+
+    def generate_site(self, st):
+        self.Site = {'Latitude':self.radar.site_lat, 'Longitude':self.radar.site_lon, 'Altitude':self.radar.site_alt, 'Code':0}
+        mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
+        _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
+        self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
 
 
     def calc_radar_measurements(self):
@@ -48,46 +75,52 @@ class SyntheticData(object):
         self.ti = self.iono.itemp(self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
-        self.kvec = self.radar.kvec_all_gates()
+        # self.kvec = self.radar.kvec_all_gates()
         Vvec = self.iono.velocity(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.Vlos = np.einsum('...i,...i->...',self.kvec, Vvec)
+        # self.Vlos = np.einsum('...i,...i->...',self.radar.kvec, Vvec)
+        self.Vlos = np.einsum('ik,ijk->ij',self.radar.kvec, Vvec)
 
-        # calculate density in ACF bins
-        ne_nb_ot = self.iono.density(self.radar.lat_nb, self.radar.lon_nb, self.radar.alt_nb)
-        self.ne_nb = np.full((self.utime.shape[0],)+ne_nb_ot.shape, np.nan)
-        self.ne_nb[:,:,:] = ne_nb_ot
+
+        self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.fit_slant_range}
 
 
         # create fit and error arrays that match the shape of whats in the processed fitted files
         # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
         # assume only O+, but include fields for other parameters so array is a general shape
         s = (self.utime.shape[0],)+self.radar.fit_slant_range.shape
-        self.fit_array = np.full(s+(len(self.iono.ion_mass)+1,4), np.nan)
-        self.fit_array[:,:,:,0,1] = self.ti
-        self.fit_array[:,:,:,-1,1] = self.te
-        self.fit_array[:,:,:,0,3] = self.Vlos
-        self.fit_array[:,:,:,-1,3] = self.Vlos
-        self.fit_array[:,:,:,:,0] = np.zeros(s+(len(self.iono.ion_mass)+1,))
-        self.fit_array[:,:,:,0,0] = np.ones(s)
-        self.fit_array[:,:,:,-1,0] = np.ones(s)
+        self.FittedParams['Fits'] = np.full(s+(len(self.iono.ion_mass)+1,4), np.nan)
+        self.FittedParams['Fits'][:,:,:,0,1] = self.ti
+        self.FittedParams['Fits'][:,:,:,-1,1] = self.te
+        self.FittedParams['Fits'][:,:,:,0,3] = self.Vlos
+        self.FittedParams['Fits'][:,:,:,-1,3] = self.Vlos
+        self.FittedParams['Fits'][:,:,:,:,0] = np.zeros(s+(len(self.iono.ion_mass)+1,))
+        self.FittedParams['Fits'][:,:,:,0,0] = np.ones(s)
+        self.FittedParams['Fits'][:,:,:,-1,0] = np.ones(s)
 
-        self.ne_array = np.full(s, np.nan)
-        self.ne_array[:,:,:] = self.ne
+        # do this kind of stuff with explicit broadcasting
+        self.FittedParams['Ne'] = np.full(s, np.nan)
+        self.FittedParams['Ne'][:,:,:] = self.ne
 
         # empty error arrays
-        self.err_array = np.full(self.fit_array.shape,10.)
-        self.dne = np.full(self.ne.shape, 1.e10)
-        self.noise = np.full(s+(3,), np.nan)
-
-        # fit parameters
-        self.chi2 = np.full(s, 1.0)
-        self.dof = np.full(s, 26)
-        self.fitcode = np.full(s, 1)
-        self.nfev = np.full(s, 0)
+        self.FittedParams['Errors'] = np.full(self.FittedParams['Fits'].shape,10.)
+        self.FittedParams['dNe'] = np.full(self.ne.shape, 1.e10)
+        self.FittedParams['Noise'] = np.full(s+(3,), np.nan)
 
 
-        self.snr = np.full(self.radar.slant_range.shape, np.nan)
-        self.dnefrac = np.full(self.ne_nb.shape, np.nan)
+        # fit info
+        self.FitInfo = {'chi2':np.full(s, 1.0), 'dof':np.full(s, 26), 'fitcode':np.full(s, 1), 'nfev':np.full(s, 0)}
+
+
+        # calculate density in ACF bins
+        self.NeFromPower = {'Altitude':self.radar.alt_nb, 'Range':self.radar.slant_range}
+
+        ne_nb_ot = self.iono.density(self.radar.lat_nb, self.radar.lon_nb, self.radar.alt_nb)
+        self.NeFromPower['Ne_Mod'] = np.full((self.utime.shape[0],)+ne_nb_ot.shape, np.nan)
+        self.NeFromPower['Ne_Mod'][:,:,:] = ne_nb_ot
+        self.NeFromPower['Ne_NoTr'] = np.full((self.utime.shape[0],)+ne_nb_ot.shape, np.nan)
+        self.NeFromPower['Ne_NoTr'][:,:,:] = ne_nb_ot
+        self.NeFromPower['SNR'] = np.full(self.radar.slant_range.shape, np.nan)
+        self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
 
 
     def save_hdf5_output(self, outfilename):
@@ -97,64 +130,37 @@ class SyntheticData(object):
             h5.create_dataset('BeamCodes', data=self.radar.beam_codes)
 
             h5.create_group('/FittedParams')
-            h5.create_dataset('/FittedParams/Altitude', data=self.radar.alt)
-            h5.create_dataset('/FittedParams/Errors', data=self.err_array)
-            h5.create_dataset('/FittedParams/Fits', data=self.fit_array)
-            h5.create_dataset('/FittedParams/IonMass', data=self.iono.ion_mass)
-            h5.create_dataset('/FittedParams/Ne', data=self.ne_array)
-            h5.create_dataset('/FittedParams/Noise', data=self.noise)
-            h5.create_dataset('/FittedParams/Range', data=self.radar.fit_slant_range)
-            h5.create_dataset('/FittedParams/dNe', data=self.dne)
+            for k, v in self.FittedParams.items():
+                h5.create_dataset('/FittedParams/{}'.format(k), data=v)
 
             h5.create_group('/FittedParams/FitInfo')
-            h5.create_dataset('/FittedParams/FitInfo/chi2', data=self.chi2)
-            h5.create_dataset('/FittedParams/FitInfo/dof', data=self.dof)
-            h5.create_dataset('/FittedParams/FitInfo/fitcode', data=self.fitcode)
-            h5.create_dataset('/FittedParams/FitInfo/nfev', data=self.nfev)
+            for k, v in self.FitInfo.items():
+                h5.create_dataset('/FittedParams/FitInfo/{}'.format(k), data=v)
 
             h5.create_group('/Calibration')
 
-            # need to call IGRF
             h5.create_group('/Geomag')
-            h5.create_dataset('/Geomag/Latitude', data=self.radar.lat)
-            h5.create_dataset('/Geomag/Longitude', data=self.radar.lon)
-            h5.create_dataset('/Geomag/Altitude', data=self.radar.alt)
-            h5.create_dataset('/Geomag/ke', data=self.kvec[:,:,0])
-            h5.create_dataset('/Geomag/kn', data=self.kvec[:,:,1])
-            h5.create_dataset('/Geomag/kz', data=self.kvec[:,:,2])
+            for k, v in self.Geomag.items():
+                h5.create_dataset('/Geomag/{}'.format(k), data=v)
 
             # need to call MSIS-E
             h5.create_group('/MSIS')
 
             h5.create_group('/NeFromPower')
-            h5.create_dataset('/NeFromPower/Altitude', data=self.radar.alt_nb)
-            h5.create_dataset('/NeFromPower/Ne_Mod', data=self.ne_nb)
-            h5.create_dataset('/NeFromPower/Ne_NoTr', data=self.ne_nb)
-            h5.create_dataset('/NeFromPower/Range', data=self.radar.slant_range)
-            h5.create_dataset('/NeFromPower/SNR', data=self.snr)
-            h5.create_dataset('/NeFromPower/dNeFrac', data=self.dnefrac)
+            for k, v in self.NeFromPower.items():
+                h5.create_dataset('/NeFromPower/{}'.format(k), data=v)
 
             h5.create_group('/ProcessingParams')
 
             h5.create_group('Site')
-            h5.create_dataset('/Site/Latitude', data=self.radar.site_lat)
-            h5.create_dataset('/Site/Longitude', data=self.radar.site_lon)
-            h5.create_dataset('/Site/Altitude', data=self.radar.site_alt)
-            h5.create_dataset('/Site/Code', data=0)
+            for k, v in self.Site.items():
+                h5.create_dataset('/Site/{}'.format(k), data=v)
             h5.create_dataset('/Site/Name', data=self.radar.radar_name, dtype=h5py.string_dtype(encoding='utf-8',length=len(self.radar.radar_name.encode('utf-8'))))
-            h5.create_dataset('/Site/MagneticLatitude', data=self.radar.site_lat)
-            h5.create_dataset('/Site/MagneticLongitude', data=self.radar.site_lon)
-            h5.create_dataset('/Site/MagneticLocalTimeMidnight', data=self.radar.site_alt)
 
-            # all these fields can be calclulated from time array
             h5.create_group('Time')
-            h5.create_dataset('/Time/Day', data=self.utime)
-            h5.create_dataset('/Time/MagneticLocalTimeSite', data=self.utime)
-            h5.create_dataset('/Time/Month', data=self.utime)
-            h5.create_dataset('/Time/UnixTime', data=self.utime)
-            h5.create_dataset('/Time/Year', data=self.utime)
-            h5.create_dataset('/Time/doy', data=self.utime)
-            h5.create_dataset('/Time/dtime', data=self.utime)
+            for k, v in self.Time.items():
+                h5.create_dataset('/Time/{}'.format(k), data=v)
+
 
     def summary_plot(self):
 

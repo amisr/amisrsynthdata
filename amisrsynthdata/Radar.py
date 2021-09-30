@@ -40,9 +40,9 @@ class Radar(object):
 
         kx, ky, kz = pm.enu2uvw(self.kvec[:,0], self.kvec[:,1], self.kvec[:,2], self.site_lat, self.site_lon)
         ke, kn, ku = pm.uvw2enu(kx[:,None], ky[:,None], kz[:,None], self.lat, self.lon)
-        kvec = np.array([ke, kn, ku]).transpose(1,2,0)
+        self.kvec = np.array([ke, kn, ku]).transpose(1,2,0)
 
-        return kvec
+        # return kvec
 
 
     def read_config(self, config_file):
