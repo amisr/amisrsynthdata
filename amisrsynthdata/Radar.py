@@ -22,6 +22,9 @@ class Radar(object):
         el = bc_data[idx,2]
         self.beam_codes = np.array([bc, az, el, np.full(bc.shape, np.nan)]).T
 
+        if len(self.altbins) == 3:
+            self.altbins = np.arange(self.altbins[0], self.altbins[1], self.altbins[2])
+
 
         self.slant_range = np.arange(self.range_start,self.range_end, self.range_step)  # move start/end range to config file
         self.lat_nb, self.lon_nb, self.alt_nb = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range[None,:], self.site_lat, self.site_lon, self.site_alt)
