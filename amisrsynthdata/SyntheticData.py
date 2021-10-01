@@ -58,7 +58,7 @@ class SyntheticData(object):
     def generate_geomag(self):
         # generate Geomag array
         # Reqires running IGRF to get all fields
-        self.Geomag = {'Latitude':self.radar.lat, 'Longitude':self.radar.lon, 'Altitude':self.radar.alt, 'ke':self.radar.kvec[:,0], 'kn':self.radar.kvec[:,1], 'ku':self.radar.kvec[:,2]}
+        self.Geomag = {'Latitude':self.radar.lat, 'Longitude':self.radar.lon, 'Altitude':self.radar.alt}
 
 
     def generate_site(self, st):
@@ -75,10 +75,11 @@ class SyntheticData(object):
         self.ti = self.iono.itemp(self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
-        # self.kvec = self.radar.kvec_all_gates()
+        kvec = self.radar.kvec_all_gates()
         Vvec = self.iono.velocity(self.radar.lat, self.radar.lon, self.radar.alt)
-        # self.Vlos = np.einsum('...i,...i->...',self.radar.kvec, Vvec)
-        self.Vlos = np.einsum('ik,ijk->ij',self.radar.kvec, Vvec)
+        self.Vlos = np.einsum('...i,...i->...', kvec, Vvec)
+
+        self.Geomag.update(ke=kvec[:,0], kn=kvec[:,1], ku=kvec[:,2])
 
 
         self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.fit_slant_range}
@@ -165,7 +166,7 @@ class SyntheticData(object):
     def summary_plot(self):
 
         # summary plot of output
-        alt_layers = np.arange(100.,500.,100.)
+        alt_layers = np.arange(100.,500.,200.)
         e, n, u = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(0.,500.,50.)*1000., alt_layers*1000.)
         glat, glon, galt = pm.enu2geodetic(e, n, u, self.radar.site_lat, self.radar.site_lon, 0.)
 
@@ -188,7 +189,7 @@ class SyntheticData(object):
 
         proj = ccrs.AzimuthalEquidistant(central_latitude=self.radar.site_lat, central_longitude=self.radar.site_lon)
 
-        fig = plt.figure(figsize=(12,12))
+        fig = plt.figure(figsize=(12,6))
         gs = gridspec.GridSpec(len(alt_layers)+1,4)
 
         for j in range(len(alt_layers)):

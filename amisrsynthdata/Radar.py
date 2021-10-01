@@ -15,12 +15,20 @@ class Radar(object):
 
         self.read_config(config)
 
+        # beams defined by standard beam code
         bc_data = np.loadtxt(self.beamcode_filename)
         idx = np.where(np.in1d(bc_data[:,0],self.beamcodes))[0]
-        bc = bc_data[idx,0]
-        az = bc_data[idx,1]
-        el = bc_data[idx,2]
-        self.beam_codes = np.array([bc, az, el, np.full(bc.shape, np.nan)]).T
+        beams_bc = np.array([bc_data[idx,0], bc_data[idx,1], bc_data[idx,2], np.full(len(idx), np.nan)]).T
+
+        # beams defined by azimuth and elevation
+        beams_ae = np.array([np.arange(len(self.beam_azimuth))+90000, self.beam_azimuth, self.beam_elevation, np.full(len(self.beam_azimuth), np.nan)]).T
+
+        # combine both beam arrays
+        self.beam_codes = np.concatenate((beams_bc, beams_ae), axis=0)
+
+        az = self.beam_codes[:,1]
+        el = self.beam_codes[:,2]
+
 
         if len(self.altbins) == 3:
             self.altbins = np.arange(self.altbins[0], self.altbins[1], self.altbins[2])
@@ -33,6 +41,7 @@ class Radar(object):
         self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.fit_slant_range, self.site_lat, self.site_lon, self.site_alt)
 
         ke, kn, ku = pm.aer2enu(az, el, 1.0)
+        # ke, kn, ku = pm.aer2enu(self.beam_codes[:,1], self.beam_codes[:,2], 1.0)
         self.kvec = np.array([ke, kn, ku]).T
 
 
@@ -40,9 +49,9 @@ class Radar(object):
 
         kx, ky, kz = pm.enu2uvw(self.kvec[:,0], self.kvec[:,1], self.kvec[:,2], self.site_lat, self.site_lon)
         ke, kn, ku = pm.uvw2enu(kx[:,None], ky[:,None], kz[:,None], self.lat, self.lon)
-        self.kvec = np.array([ke, kn, ku]).transpose(1,2,0)
+        kvec = np.array([ke, kn, ku]).transpose(1,2,0)
 
-        # return kvec
+        return kvec
 
 
     def read_config(self, config_file):
@@ -51,8 +60,10 @@ class Radar(object):
         config.read(config_file)
 
         self.site_lat, self.site_lon, self.site_alt = [float(i) for i in config.get('RADAR','SITE_COORDS').split(',')]
-        self.beamcode_filename = config.get('RADAR', 'BEAMCODE_FILENAME')
-        self.beamcodes = [float(i) for i in config.get('RADAR','BEAMCODES').split(',')]
+        self.beamcode_filename = config['RADAR'].get('BEAMCODE_FILENAME', None)
+        self.beamcodes = [float(i) for i in config['RADAR'].get('BEAMCODES','').split(',') if i]
+        self.beam_azimuth = [float(i) for i in config['RADAR'].get('BEAM_AZIMUTH','').split(',') if i]
+        self.beam_elevation = [float(i) for i in config['RADAR'].get('BEAM_ELEVATION','').split(',') if i]
         self.altbins = np.array([float(i) for i in config.get('RADAR','ALTBINS').split(',')])
         self.range_step = config.getfloat('RADAR','RANGE_STEP')
         self.range_start = config.getfloat('RADAR','RANGE_START')
