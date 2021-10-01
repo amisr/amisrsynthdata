@@ -23,6 +23,8 @@ class SyntheticData(object):
         starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
         endtime = dt.datetime.fromisoformat(config['GENERAL']['ENDTIME'])
         output_filename = config['GENERAL']['OUTPUT_FILENAME']
+        err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
+        add_noise = config['GENERAL'].getboolean('NOISE')
 
         # generate ionosphere object
         self.iono = Ionosphere(configfile)
@@ -34,6 +36,9 @@ class SyntheticData(object):
         self.generate_geomag()
         self.generate_site(starttime)
         self.calc_radar_measurements()
+        self.calc_errors(err_coef)
+        if add_noise:
+            self.add_measurment_noise()
         self.save_hdf5_output(output_filename)
 
     def generate_time_array(self, starttime, endtime):
@@ -99,14 +104,10 @@ class SyntheticData(object):
         self.FittedParams['Fits'][:,:,:,-1,0] = np.ones(s)
 
         # do this kind of stuff with explicit broadcasting
-        self.FittedParams['Ne'] = np.full(s, np.nan)
-        self.FittedParams['Ne'][:,:,:] = self.ne
+        # self.FittedParams['Ne'] = np.full(s, np.nan)
+        self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
 
-        # empty error arrays
-        self.FittedParams['Errors'] = np.full(self.FittedParams['Fits'].shape,10.)
-        self.FittedParams['dNe'] = np.full(self.ne.shape, 1.e10)
         self.FittedParams['Noise'] = np.full(s+(3,), np.nan)
-
 
         # fit info
         self.FitInfo = {'chi2':np.full(s, 1.0), 'dof':np.full(s, 26), 'fitcode':np.full(s, 1), 'nfev':np.full(s, 0)}
@@ -116,13 +117,35 @@ class SyntheticData(object):
         self.NeFromPower = {'Altitude':self.radar.alt_nb, 'Range':self.radar.slant_range}
 
         ne_nb_ot = self.iono.density(self.radar.lat_nb, self.radar.lon_nb, self.radar.alt_nb)
-        self.NeFromPower['Ne_Mod'] = np.full((self.utime.shape[0],)+ne_nb_ot.shape, np.nan)
-        self.NeFromPower['Ne_Mod'][:,:,:] = ne_nb_ot
-        self.NeFromPower['Ne_NoTr'] = np.full((self.utime.shape[0],)+ne_nb_ot.shape, np.nan)
-        self.NeFromPower['Ne_NoTr'][:,:,:] = ne_nb_ot
+        self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_nb_ot, (self.utime.shape[0],)+ne_nb_ot.shape)
+        self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_nb_ot, (self.utime.shape[0],)+ne_nb_ot.shape)
         self.NeFromPower['SNR'] = np.full(self.radar.slant_range.shape, np.nan)
         self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
 
+    def calc_errors(self, err_coef):
+
+        ne_err = err_coef[0] * self.radar.fit_slant_range**2
+        ve_err = err_coef[1] * self.radar.fit_slant_range**2
+        te_err = err_coef[2] * self.radar.fit_slant_range**2
+        ti_err = err_coef[3] * self.radar.fit_slant_range**2
+
+        # fill out hdf5 arrays
+        self.FittedParams['dNe'] = np.broadcast_to(ne_err, self.FittedParams['Ne'].shape)
+        self.FittedParams['Errors'] = np.full(self.FittedParams['Fits'].shape, np.nan)
+        self.FittedParams['Errors'][:,:,:,0,1] = ti_err
+        self.FittedParams['Errors'][:,:,:,-1,1] = te_err
+        self.FittedParams['Errors'][:,:,:,0,3] = ve_err
+        self.FittedParams['Errors'][:,:,:,-1,3] = ve_err
+
+
+    def add_measurment_noise(self):
+
+        # fitted parameters
+        self.FittedParams['Ne'] = np.random.normal(loc=self.FittedParams['Ne'], scale=self.FittedParams['dNe'])
+
+        # ACF parameters
+        self.NeFromPower['Ne_Mod'] = np.random.normal(loc=self.NeFromPower['Ne_Mod'], scale=self.NeFromPower['dNeFrac'])
+        self.NeFromPower['Ne_NoTr'] = np.random.normal(loc=self.NeFromPower['Ne_NoTr'], scale=self.NeFromPower['dNeFrac'])
 
     def save_hdf5_output(self, outfilename):
         # create output hdf5 file

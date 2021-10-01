@@ -41,7 +41,6 @@ class Radar(object):
         self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.fit_slant_range, self.site_lat, self.site_lon, self.site_alt)
 
         ke, kn, ku = pm.aer2enu(az, el, 1.0)
-        # ke, kn, ku = pm.aer2enu(self.beam_codes[:,1], self.beam_codes[:,2], 1.0)
         self.kvec = np.array([ke, kn, ku]).T
 
 
@@ -59,12 +58,12 @@ class Radar(object):
         config = configparser.ConfigParser()
         config.read(config_file)
 
-        self.site_lat, self.site_lon, self.site_alt = [float(i) for i in config.get('RADAR','SITE_COORDS').split(',')]
+        self.site_lat, self.site_lon, self.site_alt = [float(i) for i in config['RADAR'].get('SITE_COORDS').split(',')]
         self.beamcode_filename = config['RADAR'].get('BEAMCODE_FILENAME', None)
         self.beamcodes = [float(i) for i in config['RADAR'].get('BEAMCODES','').split(',') if i]
         self.beam_azimuth = [float(i) for i in config['RADAR'].get('BEAM_AZIMUTH','').split(',') if i]
         self.beam_elevation = [float(i) for i in config['RADAR'].get('BEAM_ELEVATION','').split(',') if i]
-        self.altbins = np.array([float(i) for i in config.get('RADAR','ALTBINS').split(',')])
+        self.altbins = np.array([float(i) for i in config['RADAR'].get('ALTBINS').split(',')])
         self.range_step = config.getfloat('RADAR','RANGE_STEP')
         self.range_start = config.getfloat('RADAR','RANGE_START')
         self.range_end = config.getfloat('RADAR','RANGE_END')
