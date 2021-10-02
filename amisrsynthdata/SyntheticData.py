@@ -25,6 +25,7 @@ class SyntheticData(object):
         output_filename = config['GENERAL']['OUTPUT_FILENAME']
         err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
         add_noise = config['GENERAL'].getboolean('NOISE')
+        summary_plot = config['GENERAL'].get('SUMMARY_PLOT', None)
 
         # generate ionosphere object
         self.iono = Ionosphere(configfile)
@@ -40,6 +41,8 @@ class SyntheticData(object):
         if add_noise:
             self.add_measurment_noise()
         self.save_hdf5_output(output_filename)
+        if summary_plot:
+            self.summary_plot(summary_plot)
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
@@ -87,13 +90,13 @@ class SyntheticData(object):
         self.Geomag.update(ke=kvec[:,0], kn=kvec[:,1], ku=kvec[:,2])
 
 
-        self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.fit_slant_range}
+        self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.slant_range}
 
 
         # create fit and error arrays that match the shape of whats in the processed fitted files
         # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
         # assume only O+, but include fields for other parameters so array is a general shape
-        s = (self.utime.shape[0],)+self.radar.fit_slant_range.shape
+        s = (self.utime.shape[0],)+self.radar.slant_range.shape
         self.FittedParams['Fits'] = np.full(s+(len(self.iono.ion_mass)+1,4), np.nan)
         self.FittedParams['Fits'][:,:,:,0,1] = self.ti
         self.FittedParams['Fits'][:,:,:,-1,1] = self.te
@@ -114,20 +117,20 @@ class SyntheticData(object):
 
 
         # calculate density in ACF bins
-        self.NeFromPower = {'Altitude':self.radar.alt_nb, 'Range':self.radar.slant_range}
+        self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
 
-        ne_nb_ot = self.iono.density(self.radar.lat_nb, self.radar.lon_nb, self.radar.alt_nb)
-        self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_nb_ot, (self.utime.shape[0],)+ne_nb_ot.shape)
-        self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_nb_ot, (self.utime.shape[0],)+ne_nb_ot.shape)
-        self.NeFromPower['SNR'] = np.full(self.radar.slant_range.shape, np.nan)
+        ne_p = self.iono.density(self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
+        self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        self.NeFromPower['SNR'] = np.full(self.radar.slant_range_p.shape, np.nan)
         self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
 
     def calc_errors(self, err_coef):
 
-        ne_err = err_coef[0] * self.radar.fit_slant_range**2
-        ve_err = err_coef[1] * self.radar.fit_slant_range**2
-        te_err = err_coef[2] * self.radar.fit_slant_range**2
-        ti_err = err_coef[3] * self.radar.fit_slant_range**2
+        ne_err = err_coef[0] * self.radar.slant_range**2
+        ve_err = err_coef[1] * self.radar.slant_range**2
+        te_err = err_coef[2] * self.radar.slant_range**2
+        ti_err = err_coef[3] * self.radar.slant_range**2
 
         # fill out hdf5 arrays
         self.FittedParams['dNe'] = np.broadcast_to(ne_err, self.FittedParams['Ne'].shape)
@@ -186,14 +189,13 @@ class SyntheticData(object):
                 h5.create_dataset('/Time/{}'.format(k), data=v)
 
 
-    def summary_plot(self):
+    def summary_plot(self, output_plot_name):
 
         # summary plot of output
-        alt_layers = np.arange(100.,500.,200.)
-        e, n, u = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(0.,500.,50.)*1000., alt_layers*1000.)
+        alt_layers = np.arange(100.,500.,100.)
+        e, n, u = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(-200.,800.,50.)*1000., alt_layers*1000.)
         glat, glon, galt = pm.enu2geodetic(e, n, u, self.radar.site_lat, self.radar.site_lon, 0.)
 
-        # glat, glon, galt = np.meshgrid(np.arange(radar.site_lat,radar.site_lat+10., 1.), np.arange(radar.site_lon-20.,radar.site_lon+20, 2.), np.arange(200000., 500000., 100000.))
 
         ne0 = self.iono.density(glat, glon, galt)
         te0 = self.iono.etemp(glat, glon, galt)
@@ -212,13 +214,13 @@ class SyntheticData(object):
 
         proj = ccrs.AzimuthalEquidistant(central_latitude=self.radar.site_lat, central_longitude=self.radar.site_lon)
 
-        fig = plt.figure(figsize=(12,6))
-        gs = gridspec.GridSpec(len(alt_layers)+1,4)
+        fig = plt.figure(figsize=(12,3*(len(alt_layers)+1)))
+        gs = gridspec.GridSpec(len(alt_layers)+1,4, left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.2, hspace=0.15)
 
         for j in range(len(alt_layers)):
+
             ax = fig.add_subplot(gs[j,0], projection=proj)
             ax.coastlines()
-            # ax.scatter(glon[:,:,j], glat[:,:,j], c=ne0[:,:,j], vmin=0., vmax=4e11, transform=ccrs.Geodetic())
             ax.contourf(glon[:,:,j], glat[:,:,j], ne0[:,:,j], vmin=0., vmax=4e11, cmap='viridis', transform=ccrs.PlateCarree())
             ax.set_title('{} km'.format(alt_layers[j]))
 
@@ -229,13 +231,11 @@ class SyntheticData(object):
 
             ax = fig.add_subplot(gs[j,2], projection=proj)
             ax.coastlines()
-            # ax.scatter(glon[:,:,j], glat[:,:,j], c=te0[:,:,j], vmin=0., vmax=5e3, transform=ccrs.Geodetic())
             ax.contourf(glon[:,:,j], glat[:,:,j], te0[:,:,j], vmin=0., vmax=5e3, cmap='inferno', transform=ccrs.PlateCarree())
             ax.set_title('{} km'.format(alt_layers[j]))
 
             ax = fig.add_subplot(gs[j,3], projection=proj)
             ax.coastlines()
-            # ax.scatter(glon[:,:,j], glat[:,:,j], c=ti0[:,:,j], vmin=0., vmax=3e3, transform=ccrs.Geodetic())
             ax.contourf(glon[:,:,j], glat[:,:,j], ti0[:,:,j], vmin=0., vmax=3e3, cmap='magma', transform=ccrs.PlateCarree())
             ax.set_title('{} km'.format(alt_layers[j]))
 
@@ -243,35 +243,35 @@ class SyntheticData(object):
         fp = np.isfinite(self.radar.alt)
 
         ax = fig.add_subplot(gs[-1,0], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[fp], vmin=0., vmax=4e11)
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[fp], vmin=0., vmax=4e11, cmap='viridis')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
         ax.set_box_aspect((1,1,1))
-        fig.colorbar(c)
+        fig.colorbar(c, label=r'Ne (m$^{-3}$)')
 
         ax = fig.add_subplot(gs[-1,1], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[fp], vmin=-500., vmax=500.)
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[fp], vmin=-500., vmax=500., cmap='coolwarm')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
         ax.set_box_aspect((1,1,1))
-        fig.colorbar(c)
+        fig.colorbar(c, label='V (m/s)')
 
         ax = fig.add_subplot(gs[-1,2], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[fp], vmin=0., vmax=5e3)
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[fp], vmin=0., vmax=5e3, cmap='inferno')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
         ax.set_box_aspect((1,1,1))
-        fig.colorbar(c)
+        fig.colorbar(c, label='Te (K)')
 
         ax = fig.add_subplot(gs[-1,3], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[fp], vmin=0., vmax=3e3)
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[fp], vmin=0., vmax=3e3, cmap='magma')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
         ax.set_box_aspect((1,1,1))
-        fig.colorbar(c)
+        fig.colorbar(c, label='Ti (K)')
 
-        plt.show()
+        fig.savefig(output_plot_name)

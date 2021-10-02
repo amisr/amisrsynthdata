@@ -15,7 +15,6 @@ def main():
     args = vars(parser.parse_args())
 
     sd = SyntheticData(args['synth_config_file'])
-    sd.summary_plot()
 
 if __name__=='__main__':
     main()

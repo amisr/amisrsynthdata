@@ -34,11 +34,11 @@ class Radar(object):
             self.altbins = np.arange(self.altbins[0], self.altbins[1], self.altbins[2])
 
 
-        self.slant_range = np.arange(self.range_start,self.range_end, self.range_step)  # move start/end range to config file
-        self.lat_nb, self.lon_nb, self.alt_nb = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range[None,:], self.site_lat, self.site_lon, self.site_alt)
+        self.slant_range_p = np.arange(self.range_start,self.range_end, self.range_step)  # move start/end range to config file
+        self.lat_p, self.lon_p, self.alt_p = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range_p[None,:], self.site_lat, self.site_lon, self.site_alt)
 
-        self.fit_slant_range = np.array([[np.nanmean(np.where((beam>=self.altbins[i]) & (beam<self.altbins[i+1]), self.slant_range, np.nan)) for i in range(len(self.altbins)-1)] for beam in self.alt_nb])
-        self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.fit_slant_range, self.site_lat, self.site_lon, self.site_alt)
+        self.slant_range = np.array([[np.nanmean(np.where((beam>=self.altbins[i]) & (beam<self.altbins[i+1]), self.slant_range_p, np.nan)) for i in range(len(self.altbins)-1)] for beam in self.alt_p])
+        self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range, self.site_lat, self.site_lon, self.site_alt)
 
         ke, kn, ku = pm.aer2enu(az, el, 1.0)
         self.kvec = np.array([ke, kn, ku]).T
@@ -64,9 +64,8 @@ class Radar(object):
         self.beam_azimuth = [float(i) for i in config['RADAR'].get('BEAM_AZIMUTH','').split(',') if i]
         self.beam_elevation = [float(i) for i in config['RADAR'].get('BEAM_ELEVATION','').split(',') if i]
         self.altbins = np.array([float(i) for i in config['RADAR'].get('ALTBINS').split(',')])
-        self.range_step = config.getfloat('RADAR','RANGE_STEP')
-        self.range_start = config.getfloat('RADAR','RANGE_START')
-        self.range_end = config.getfloat('RADAR','RANGE_END')
-        self.integration_period = config.getfloat('RADAR','INTEGRATION_PERIOD')
-        self.vel_error = config.getfloat('RADAR','VEL_ERROR')
-        self.radar_name = config.get('RADAR', 'NAME')
+        self.range_step = config['RADAR'].getfloat('RANGE_STEP')
+        self.range_start = config['RADAR'].getfloat('RANGE_START')
+        self.range_end = config['RADAR'].getfloat('RANGE_END')
+        self.integration_period = config['RADAR'].getfloat('INTEGRATION_PERIOD')
+        self.radar_name = config['RADAR'].get('NAME')
