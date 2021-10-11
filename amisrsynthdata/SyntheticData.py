@@ -192,9 +192,15 @@ class SyntheticData(object):
     def summary_plot(self, output_plot_name):
 
         # summary plot of output
-        alt_layers = np.arange(100.,500.,100.)
-        e, n, u = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(-200.,800.,50.)*1000., alt_layers*1000.)
-        glat, glon, galt = pm.enu2geodetic(e, n, u, self.radar.site_lat, self.radar.site_lon, 0.)
+
+        # form grid of coordinates for plotting
+        alt_layers = np.arange(100.,500.,100.)*1000.
+        e, n = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(-200.,800.,50.)*1000.)
+        glat, glon, galt = pm.enu2geodetic(e, n, 0., self.radar.site_lat, self.radar.site_lon, 0.)
+
+        glat = np.tile(glat, alt_layers.shape).reshape(glat.shape+alt_layers.shape)
+        glon = np.tile(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape)
+        galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
 
         ne0 = self.iono.density(glat, glon, galt)
