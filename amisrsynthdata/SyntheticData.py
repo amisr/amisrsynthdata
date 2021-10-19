@@ -84,10 +84,11 @@ class SyntheticData(object):
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
+        print(kvec.shape)
         Vvec = self.iono.velocity(self.radar.lat, self.radar.lon, self.radar.alt)
         self.Vlos = np.einsum('...i,...i->...', kvec, Vvec)
 
-        self.Geomag.update(ke=kvec[:,0], kn=kvec[:,1], ku=kvec[:,2])
+        self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
 
 
         self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.slant_range}
@@ -195,11 +196,11 @@ class SyntheticData(object):
 
         # form grid of coordinates for plotting
         alt_layers = np.arange(100.,500.,100.)*1000.
-        e, n = np.meshgrid(np.arange(-500.,500.,50.)*1000., np.arange(-200.,800.,50.)*1000.)
+        e, n = np.meshgrid(np.arange(-500.,500.,100.)*1000., np.arange(-200.,800.,100.)*1000.)
         glat, glon, galt = pm.enu2geodetic(e, n, 0., self.radar.site_lat, self.radar.site_lon, 0.)
 
-        glat = np.tile(glat, alt_layers.shape).reshape(glat.shape+alt_layers.shape)
-        glon = np.tile(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape)
+        glat = np.tile(glat, alt_layers.shape).reshape(glat.shape+alt_layers.shape, order='F')
+        glon = np.repeat(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape, order='C')
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
 
@@ -228,22 +229,22 @@ class SyntheticData(object):
             ax = fig.add_subplot(gs[j,0], projection=proj)
             ax.coastlines()
             ax.contourf(glon[:,:,j], glat[:,:,j], ne0[:,:,j], vmin=0., vmax=4e11, cmap='viridis', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]))
+            ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
             ax = fig.add_subplot(gs[j,1], projection=proj)
             ax.coastlines()
             ax.quiver(glon[:,:,j], glat[:,:,j], e[:,:,j], n[:,:,j], color='blue', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]))
+            ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
             ax = fig.add_subplot(gs[j,2], projection=proj)
             ax.coastlines()
             ax.contourf(glon[:,:,j], glat[:,:,j], te0[:,:,j], vmin=0., vmax=5e3, cmap='inferno', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]))
+            ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
             ax = fig.add_subplot(gs[j,3], projection=proj)
             ax.coastlines()
             ax.contourf(glon[:,:,j], glat[:,:,j], ti0[:,:,j], vmin=0., vmax=3e3, cmap='magma', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]))
+            ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
         x, y, z = pm.geodetic2ecef(self.radar.lat, self.radar.lon, self.radar.alt)
         fp = np.isfinite(self.radar.alt)
