@@ -108,6 +108,29 @@ class Ionosphere(object):
 
         return Ne
 
+    def gradient(self, glat, glon, galt):
+
+        cent_lat = float(self.density_params['cent_lat'])
+        cent_lon = float(self.density_params['cent_lon'])
+        N0 = float(self.density_params['n0'])
+        L = float(self.density_params['l'])
+        az = float(self.density_params['az'])
+
+        # ECEF vector to the center point
+        center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, 0.))
+
+        # define norm vector and array of point vectors in ECEF
+        norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, 0.))-center_vec
+        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+
+        # calculate distance between each point and the plane
+        r = np.einsum('...i,i->...', point_vec, norm_vec)
+
+        # apply hyperbolic tangent function to create gradient
+        Ne = N0*(np.tanh(r/L)+1)
+
+        return Ne
+
 
     def uniform_density(self, glat, glon, galt):
         Ne = float(self.density_params['value'])
