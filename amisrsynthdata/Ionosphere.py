@@ -57,9 +57,21 @@ class Ionosphere(object):
 
 
 
-    # add different kinds of velocity fields
+    def time_interp():
+        # this morphs between two states
+        N1 = self.density1(glat, glon, galt)
+        N2 = self.density2(glat, glon, galt)
 
-    def uniform_velocity(self, glat, glon, galt):
+        # interpolate in time between N1 and N2
+
+    # Interpolating between two states is NOT the same a structre propigating
+    # interpolating will just result in the patch slowly fading in one location
+    # while reappearing in another
+    # easiest/most flexible way to do this is to just build it into the existing state functions
+    # all state functions take time and return full array shape
+    # if state is static, just repeteat the array as is done in Synthetic Data
+
+    def uniform_velocity(self, utime, glat, glon, galt):
 
         alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
@@ -77,11 +89,14 @@ class Ionosphere(object):
         # map velocities along field lines back to the original heights
         V0 = self.apex.map_V_to_height(alat, alon, 300., galt.ravel()/1000., V_scale)
         # reform original array shape
-        V0 = V0.T.reshape(galt.shape+(3,))
+        VE = V0.T.reshape(galt.shape+(3,))
 
-        return V0
+        s = (utime.shape[0],)+galt.shape+(3,)
+        VE0 = np.broadcast_to(VE, s)
 
-    def uniform_mlat_aligned(self, glat, glon, galt):
+        return VE0
+
+    def uniform_mlat_aligned(self, utime, glat, glon, galt):
         Ve1, Ve2, Ve3 = [float(i) for i in self.velocity_params['value'].split(',')]
 
         # Find base vector at each location
@@ -92,11 +107,14 @@ class Ionosphere(object):
         e3 = e3.T.reshape(glat.shape+(3,))
 
         # calculate V in geodetic coordinates
-        V0 = Ve1*e1 + Ve2*e2 + Ve3*e3
+        VE = Ve1*e1 + Ve2*e2 + Ve3*e3
 
-        return V0
+        s = (utime.shape[0],)+galt.shape+(3,)
+        VE0 = np.broadcast_to(VE, s)
 
-    def chapman(self, glat, glon, galt):
+        return VE0
+
+    def chapman(self, utime, glat, glon, galt):
         N0 = float(self.density_params['n0'])
         H = float(self.density_params['h'])
         z0 = float(self.density_params['z0'])
@@ -106,9 +124,12 @@ class Ionosphere(object):
         zp = (galt-z0)/H
         Ne = N0*np.exp(0.5*(1-zp-np.exp(-zp)/np.cos(sza)))
 
-        return Ne
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.broadcast_to(Ne, s)
 
-    def gradient(self, glat, glon, galt):
+        return Ne0
+
+    def gradient(self, utime, glat, glon, galt):
 
         cent_lat = float(self.density_params['cent_lat'])
         cent_lon = float(self.density_params['cent_lon'])
@@ -129,15 +150,22 @@ class Ionosphere(object):
         # apply hyperbolic tangent function to create gradient
         Ne = N0*(np.tanh(r/L)+1)
 
-        return Ne
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.broadcast_to(Ne, s)
+
+        return Ne0
 
 
-    def uniform_density(self, glat, glon, galt):
+    def uniform_density(self, utime, glat, glon, galt):
         Ne = float(self.density_params['value'])
-        return np.full(galt.shape, Ne)
+
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.full(s, Ne)
+
+        return Ne0
 
 
-    def circle_patch(self, glat, glon, galt):
+    def circle_patch(self, utime, glat, glon, galt):
         # circular gaussian polar cap patch
         cent_lat = float(self.density_params['cent_lat'])
         cent_lon = float(self.density_params['cent_lon'])
@@ -149,15 +177,26 @@ class Ionosphere(object):
         e, n, u  = pm.geodetic2enu(glat, glon, galt, cent_lat, cent_lon, cent_alt)
         Ne = N0*np.exp(-0.5*(e**2/r**2 + n**2/r**2 + u**2/h**2))
 
-        return Ne
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.broadcast_to(Ne, s)
+
+        return Ne0
 
     # add wave fluctuation functions - L. Goodwin code
 
 
-    def uniform_Te(self, glat, glon, galt):
+    def uniform_Te(self, utime, glat, glon, galt):
         Te = float(self.etemp_params['value'])
-        return np.full(galt.shape, Te)
 
-    def uniform_Ti(self, glat, glon, galt):
+        s = (utime.shape[0],)+galt.shape
+        Te0 = np.full(s, Te)
+
+        return Te0
+
+    def uniform_Ti(self, utime, glat, glon, galt):
         Ti = float(self.itemp_params['value'])
-        return np.full(galt.shape, Ti)
+
+        s = (utime.shape[0],)+galt.shape
+        Ti0 = np.full(s, Ti)
+
+        return Ti0

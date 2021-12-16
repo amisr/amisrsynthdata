@@ -78,15 +78,15 @@ class SyntheticData(object):
 
     def calc_radar_measurements(self):
         # caculate scalar ionosphere parameters at each fitted radar bin
-        self.ne = self.iono.density(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.te = self.iono.etemp(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.ti = self.iono.itemp(self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ne = self.iono.density(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.te = self.iono.etemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ti = self.iono.itemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
         print(kvec.shape)
-        Vvec = self.iono.velocity(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.Vlos = np.einsum('...i,...i->...', kvec, Vvec)
+        Vvec = self.iono.velocity(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.Vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
         self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
 
@@ -109,7 +109,8 @@ class SyntheticData(object):
 
         # do this kind of stuff with explicit broadcasting
         # self.FittedParams['Ne'] = np.full(s, np.nan)
-        self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
+        # self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
+        self.FittedParams['Ne'] = self.ne
 
         self.FittedParams['Noise'] = np.full(s+(3,), np.nan)
 
@@ -120,9 +121,11 @@ class SyntheticData(object):
         # calculate density in ACF bins
         self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
 
-        ne_p = self.iono.density(self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
-        self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
-        self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        ne_p = self.iono.density(self.utime, self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
+        # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        self.NeFromPower['Ne_Mod'] = ne_p
+        self.NeFromPower['Ne_NoTr'] = ne_p
         self.NeFromPower['SNR'] = np.full(self.radar.slant_range_p.shape, np.nan)
         self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
 
@@ -204,10 +207,12 @@ class SyntheticData(object):
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
 
-        ne0 = self.iono.density(glat, glon, galt)
-        te0 = self.iono.etemp(glat, glon, galt)
-        ti0 = self.iono.itemp(glat, glon, galt)
-        ve = self.iono.velocity(glat, glon, galt)
+        ne0 = np.squeeze(self.iono.density(np.array([[0.,60.]]), glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(np.array([[0.,60.]]), glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(np.array([[0.,60.]]), glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(np.array([[0.,60.]]), glat, glon, galt))
+
+        print(ne0.shape, te0.shape)
 
         # scaling/rotation of vector to plot in cartopy
         # https://github.com/SciTools/cartopy/issues/1179
@@ -250,7 +255,7 @@ class SyntheticData(object):
         fp = np.isfinite(self.radar.alt)
 
         ax = fig.add_subplot(gs[-1,0], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[fp], vmin=0., vmax=4e11, cmap='viridis')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[0,fp], vmin=0., vmax=4e11, cmap='viridis')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -258,7 +263,7 @@ class SyntheticData(object):
         fig.colorbar(c, label=r'Ne (m$^{-3}$)')
 
         ax = fig.add_subplot(gs[-1,1], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[fp], vmin=-500., vmax=500., cmap='coolwarm')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[0,fp], vmin=-500., vmax=500., cmap='coolwarm')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -266,7 +271,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='V (m/s)')
 
         ax = fig.add_subplot(gs[-1,2], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[fp], vmin=0., vmax=5e3, cmap='inferno')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[0,fp], vmin=0., vmax=5e3, cmap='inferno')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -274,7 +279,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='Te (K)')
 
         ax = fig.add_subplot(gs[-1,3], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[fp], vmin=0., vmax=3e3, cmap='magma')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[0,fp], vmin=0., vmax=3e3, cmap='magma')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
