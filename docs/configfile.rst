@@ -11,9 +11,9 @@ GENERAL
 +---------------------+--------------------------------------------------------+----------------------------------+
 | Parameter           | Description                                            | Example                          |
 +=====================+========================================================+==================================+
-| STARTTIME [1]_      | File start time (in ISO format)                        | 2021-09-13 00:00:00              |
+| STARTTIME           | File start time (in ISO format)                        | 2021-09-13 00:00:00              |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| ENDTIME [1]_        | File end time (in ISO format)                          | 2021-09-13 00:05:00              |
+| ENDTIME             | File end time (in ISO format)                          | 2021-09-13 00:05:00              |
 +---------------------+--------------------------------------------------------+----------------------------------+
 | OUTPUT_FILENAME     | Name out output synthetic data file                    | amisr_synthetic_data_output.h5   |
 +---------------------+--------------------------------------------------------+----------------------------------+
@@ -24,6 +24,8 @@ GENERAL
 | NOISE               | Whether or not to add random noise                     | FALSE                            |
 +---------------------+--------------------------------------------------------+----------------------------------+
 | SUMMARY_PLOT        | Filename for output summary plot                       | synthetic_data_summary_risrn.png |
++---------------------+--------------------------------------------------------+----------------------------------+
+| SUMMARY_PLOT_TIME   | Time to plot in the output summary plot                |  2021-09-13 00:03:00             |
 +---------------------+--------------------------------------------------------+----------------------------------+
 
 
@@ -56,7 +58,7 @@ RADAR
 | INTEGRATION_PERIOD [1]_ | Integration period (s)                                    | 60.                        |
 +-------------------------+-----------------------------------------------------------+----------------------------+
 
-.. [1] Because the current code does not consider time dependence, STARTTIME, ENDTIME, and INTEGRATION_PERIOD don't really matter, but the output number of records and array shapes will reflect these.
+.. [1] Although no actual integration occurs, INTEGRATION_PERIOD determines the time steps in the output file.
 
 .. [2] Most calculations are done assuming only O+, but listing all five major species considered by the fitter will result in arrays of a similar shape.
 
@@ -66,6 +68,6 @@ PFISR: https://amisr.com/amisr/about/about_pfisr/pfisr-specs/
 
 RISR-N: https://amisr.com/amisr/about/resolute-bay-isrs/risrn-specs/
 
-RISR-C: https://www.ucalgary.ca/aurora/projects/risrc  
+RISR-C: https://www.ucalgary.ca/aurora/projects/risrc
 
 .. [4] Beams can be specified either by a list of beamcode numbers, a list of azimuth and elevation angles, or some combination of both.

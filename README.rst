@@ -31,7 +31,7 @@ Limitations
 The following are NOT currently included in the amisrsynthdata module:
 
 1. Any kind of proper treatment or simulation of ISR theory - The module effectively assumes the radar measures plasma parameters perfectly, although empirical errors can be added.
-2. Time dependance - Output files will have time fields and all array shapes will match these fields, but the data are exactly the same in all records.
+2. Integration over a time period or smearing along the length of pulses, as well as pulse coding.
 3. Madrigal data format - Currently files are only generated in the SRI data format.
 
 Contributing
@@ -39,4 +39,4 @@ Contributing
 
 Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.
 
-To add a new ionospheric state function, write the function as a method of the Ionosphere class.  These functions should take three inputs: geodetic latitude (degrees), geodetic longitude (degrees), and geodetic altitude (meters).  All other inputs should be specified in the config file and accessed through the ``params`` dictionaries.  
+To add a new ionospheric state function, write the function as a method of the Ionosphere class.  These functions should take three inputs: geodetic latitude (degrees), geodetic longitude (degrees), and geodetic altitude (meters).  All other inputs should be specified in the config file and accessed through the ``params`` dictionaries.
