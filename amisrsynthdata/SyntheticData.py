@@ -26,6 +26,7 @@ class SyntheticData(object):
         err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
         add_noise = config['GENERAL'].getboolean('NOISE')
         summary_plot = config['GENERAL'].get('SUMMARY_PLOT', None)
+        summary_plot_time = config['GENERAL'].get('SUMMARY_PLOT_TIME', None)
 
         # generate ionosphere object
         self.iono = Ionosphere(configfile)
@@ -42,7 +43,7 @@ class SyntheticData(object):
             self.add_measurment_noise()
         self.save_hdf5_output(output_filename)
         if summary_plot:
-            self.summary_plot(summary_plot)
+            self.summary_plot(summary_plot, summary_plot_time)
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
@@ -195,7 +196,7 @@ class SyntheticData(object):
                 h5.create_dataset('/Time/{}'.format(k), data=v)
 
 
-    def summary_plot(self, output_plot_name):
+    def summary_plot(self, output_plot_name, time):
 
         # summary plot of output
 
@@ -208,14 +209,16 @@ class SyntheticData(object):
         glon = np.repeat(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape, order='C')
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
+        if not time:
+            idx = 0
+        else:
+            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))            
 
-        idx = 3
         ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
         te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
         ti0 = np.squeeze(self.iono.itemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
         ve = np.squeeze(self.iono.velocity(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
 
-        print(ne0.shape, te0.shape)
 
         # scaling/rotation of vector to plot in cartopy
         # https://github.com/SciTools/cartopy/issues/1179
