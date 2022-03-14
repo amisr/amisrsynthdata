@@ -26,6 +26,7 @@ class SyntheticData(object):
         err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
         add_noise = config['GENERAL'].getboolean('NOISE')
         summary_plot = config['GENERAL'].get('SUMMARY_PLOT', None)
+        summary_plot_time = config['GENERAL'].get('SUMMARY_PLOT_TIME', None)
 
         # generate ionosphere object
         self.iono = Ionosphere(configfile)
@@ -42,7 +43,7 @@ class SyntheticData(object):
             self.add_measurment_noise()
         self.save_hdf5_output(output_filename)
         if summary_plot:
-            self.summary_plot(summary_plot)
+            self.summary_plot(summary_plot, summary_plot_time)
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
@@ -59,9 +60,10 @@ class SyntheticData(object):
         self.Time['doy'] = np.array([[t.timetuple().tm_yday for t in ip] for ip in time])
         self.Time['dtime'] = np.array([[(t-dt.datetime(t.year,t.month,t.day,0,0,0)).total_seconds()/3600. for t in ip] for ip in time])
 
-        _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
-        _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
-        self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
+        # _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
+        # _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
+        # self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
+        self.Time['MagneticLocalTimeSite'] = np.array([np.zeros(num_tstep),np.ones(num_tstep)]).T
 
     def generate_geomag(self):
         # generate Geomag array
@@ -71,22 +73,23 @@ class SyntheticData(object):
 
     def generate_site(self, st):
         self.Site = {'Latitude':self.radar.site_lat, 'Longitude':self.radar.site_lon, 'Altitude':self.radar.site_alt, 'Code':0}
-        mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
-        _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
-        self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
+        # mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
+        # _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
+        # self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
+        self.Site.update(MagneticLatitude=0., MagneticLongitude=0., MagneticLocalTimeMidnight=0.)
 
 
     def calc_radar_measurements(self):
         # caculate scalar ionosphere parameters at each fitted radar bin
-        self.ne = self.iono.density(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.te = self.iono.etemp(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.ti = self.iono.itemp(self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ne = self.iono.density(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.te = self.iono.etemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ti = self.iono.itemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
         print(kvec.shape)
-        Vvec = self.iono.velocity(self.radar.lat, self.radar.lon, self.radar.alt)
-        self.Vlos = np.einsum('...i,...i->...', kvec, Vvec)
+        Vvec = self.iono.velocity(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.Vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
         self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
 
@@ -109,7 +112,8 @@ class SyntheticData(object):
 
         # do this kind of stuff with explicit broadcasting
         # self.FittedParams['Ne'] = np.full(s, np.nan)
-        self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
+        # self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
+        self.FittedParams['Ne'] = self.ne
 
         self.FittedParams['Noise'] = np.full(s+(3,), np.nan)
 
@@ -120,9 +124,11 @@ class SyntheticData(object):
         # calculate density in ACF bins
         self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
 
-        ne_p = self.iono.density(self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
-        self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
-        self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        ne_p = self.iono.density(self.utime, self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
+        # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
+        self.NeFromPower['Ne_Mod'] = ne_p
+        self.NeFromPower['Ne_NoTr'] = ne_p
         self.NeFromPower['SNR'] = np.full(self.radar.slant_range_p.shape, np.nan)
         self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
 
@@ -190,7 +196,7 @@ class SyntheticData(object):
                 h5.create_dataset('/Time/{}'.format(k), data=v)
 
 
-    def summary_plot(self, output_plot_name):
+    def summary_plot(self, output_plot_name, time):
 
         # summary plot of output
 
@@ -203,11 +209,16 @@ class SyntheticData(object):
         glon = np.repeat(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape, order='C')
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
+        if not time:
+            idx = 0
+        else:
+            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))            
 
-        ne0 = self.iono.density(glat, glon, galt)
-        te0 = self.iono.etemp(glat, glon, galt)
-        ti0 = self.iono.itemp(glat, glon, galt)
-        ve = self.iono.velocity(glat, glon, galt)
+        ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+
 
         # scaling/rotation of vector to plot in cartopy
         # https://github.com/SciTools/cartopy/issues/1179
@@ -250,7 +261,7 @@ class SyntheticData(object):
         fp = np.isfinite(self.radar.alt)
 
         ax = fig.add_subplot(gs[-1,0], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[fp], vmin=0., vmax=4e11, cmap='viridis')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[idx,fp], vmin=0., vmax=4e11, cmap='viridis')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -258,7 +269,7 @@ class SyntheticData(object):
         fig.colorbar(c, label=r'Ne (m$^{-3}$)')
 
         ax = fig.add_subplot(gs[-1,1], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[fp], vmin=-500., vmax=500., cmap='coolwarm')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[idx,fp], vmin=-500., vmax=500., cmap='coolwarm')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -266,7 +277,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='V (m/s)')
 
         ax = fig.add_subplot(gs[-1,2], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[fp], vmin=0., vmax=5e3, cmap='inferno')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[idx,fp], vmin=0., vmax=5e3, cmap='inferno')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -274,7 +285,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='Te (K)')
 
         ax = fig.add_subplot(gs[-1,3], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[fp], vmin=0., vmax=3e3, cmap='magma')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[idx,fp], vmin=0., vmax=3e3, cmap='magma')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])

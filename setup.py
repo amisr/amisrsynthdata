@@ -22,13 +22,12 @@ here = os.path.abspath(os.path.dirname(__file__))
 REQUIREMENTS = [
     'numpy',
     'h5py',
-    'pymap3d',
-    'apexpy'
+    'pymap3d'
 ]
 
 # Get the readme text
 # README = os.path.join(here, 'README.rst')
-with open('README.md', 'r', encoding='utf-8') as f:
+with open('README.rst', 'r', encoding='utf-8') as f:
     READMETXT = f.read()
 # READMETXT = '\n'.join(READMETXT)
 
