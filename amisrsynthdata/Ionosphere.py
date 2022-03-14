@@ -114,6 +114,16 @@ class Ionosphere(object):
 
         return VE0
 
+
+    def uniform_glat_aligned(self, utime, glat, glon, galt):
+        VE = [float(i) for i in self.velocity_params['value'].split(',')]
+
+        s = (utime.shape[0],)+galt.shape+(3,)
+        VE0 = np.broadcast_to(VE, s)
+
+        return VE0
+
+
     def chapman(self, utime, glat, glon, galt):
         N0 = float(self.density_params['n0'])
         H = float(self.density_params['h'])
@@ -167,14 +177,14 @@ class Ionosphere(object):
         h = float(self.density_params['height'])/2.
         # V = np.array([float(i) for i in self.velocity_params['value'].split(',')])
 
-        for ut in utime:
-            # ECEF vector to the center point
-            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
+        # for ut in utime:
+        # ECEF vector to the center point
+        center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
 
-            # define norm vector and array of point vectors in ECEF
-            norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
+        # define norm vector and array of point vectors in ECEF
+        norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
 
-        print(norm_vec.shape)
+        # print(norm_vec.shape)
         point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
 
         # calculate distance between each point and the plane
