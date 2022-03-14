@@ -34,6 +34,9 @@ class Ionosphere(object):
         config = configparser.ConfigParser()
         config.read(config_file)
 
+        self.utime0 = (dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])-dt.datetime.utcfromtimestamp(0)).total_seconds()
+
+
         self.density = getattr(self, config['DENSITY']['TYPE'])
         self.density_params = dict(config['DENSITY'])
         self.density_params.pop('type')
@@ -167,35 +170,42 @@ class Ionosphere(object):
 
     def tubular_patch(self, utime, glat, glon, galt):
 
-        cent_lat = float(self.density_params['cent_lat'])
-        cent_lon = float(self.density_params['cent_lon'])
-        cent_alt = float(self.density_params['cent_alt'])
+        lat0 = float(self.density_params['cent_lat'])
+        lon0 = float(self.density_params['cent_lon'])
+        alt0 = float(self.density_params['cent_alt'])
         N0 = float(self.density_params['n0'])
         L = float(self.density_params['l'])
         w = float(self.density_params['width'])/2.
         az = float(self.density_params['az'])
         h = float(self.density_params['height'])/2.
-        # V = np.array([float(i) for i in self.velocity_params['value'].split(',')])
-
-        # for ut in utime:
-        # ECEF vector to the center point
-        center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
-
-        # define norm vector and array of point vectors in ECEF
-        norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
-
-        # print(norm_vec.shape)
-        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
-
-        # calculate distance between each point and the plane
-        r = np.einsum('...i,i->...', point_vec, norm_vec)
-
-        # apply hyperbolic tangent function to create gradient
-        Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
-        # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
+        V = np.array([float(i) for i in self.density_params['velocity'].split(',')])
 
         s = (utime.shape[0],)+galt.shape
-        Ne0 = np.broadcast_to(Ne, s)
+        Ne0 = np.empty(s)
+
+        for i in range(len(utime)):
+
+            # Progress center point to new location
+            t = utime[i,0]-self.utime0
+            cent_lat, cent_lon, cent_alt = pm.enu2geodetic(V[0]*t, V[1]*t, V[2]*t, lat0, lon0, alt0)
+
+            # ECEF vector to the center point
+            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
+
+            # define norm vector and array of point vectors in ECEF
+            norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
+
+            # print(norm_vec.shape)
+            point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+
+            # calculate distance between each point and the plane
+            r = np.einsum('...i,i->...', point_vec, norm_vec)
+
+            # apply hyperbolic tangent function to create gradient
+            Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
+            # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
+
+            Ne0[i] = Ne
 
         return Ne0
 

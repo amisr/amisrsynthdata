@@ -209,10 +209,11 @@ class SyntheticData(object):
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
 
-        ne0 = np.squeeze(self.iono.density(np.array([[0.,60.]]), glat, glon, galt))
-        te0 = np.squeeze(self.iono.etemp(np.array([[0.,60.]]), glat, glon, galt))
-        ti0 = np.squeeze(self.iono.itemp(np.array([[0.,60.]]), glat, glon, galt))
-        ve = np.squeeze(self.iono.velocity(np.array([[0.,60.]]), glat, glon, galt))
+        idx = 3
+        ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
 
         print(ne0.shape, te0.shape)
 
@@ -257,7 +258,7 @@ class SyntheticData(object):
         fp = np.isfinite(self.radar.alt)
 
         ax = fig.add_subplot(gs[-1,0], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[0,fp], vmin=0., vmax=4e11, cmap='viridis')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[idx,fp], vmin=0., vmax=4e11, cmap='viridis')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -265,7 +266,7 @@ class SyntheticData(object):
         fig.colorbar(c, label=r'Ne (m$^{-3}$)')
 
         ax = fig.add_subplot(gs[-1,1], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[0,fp], vmin=-500., vmax=500., cmap='coolwarm')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[idx,fp], vmin=-500., vmax=500., cmap='coolwarm')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -273,7 +274,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='V (m/s)')
 
         ax = fig.add_subplot(gs[-1,2], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[0,fp], vmin=0., vmax=5e3, cmap='inferno')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[idx,fp], vmin=0., vmax=5e3, cmap='inferno')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
@@ -281,7 +282,7 @@ class SyntheticData(object):
         fig.colorbar(c, label='Te (K)')
 
         ax = fig.add_subplot(gs[-1,3], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[0,fp], vmin=0., vmax=3e3, cmap='magma')
+        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[idx,fp], vmin=0., vmax=3e3, cmap='magma')
         ax.xaxis.set_ticklabels([])
         ax.yaxis.set_ticklabels([])
         ax.zaxis.set_ticklabels([])
