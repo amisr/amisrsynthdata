@@ -1,7 +1,7 @@
 # Ionosphere.py
 import numpy as np
 import datetime as dt
-from apexpy import Apex
+# from apexpy import Apex
 import pymap3d as pm
 
 
@@ -26,7 +26,7 @@ class Ionosphere(object):
             # self.field_values = np.array(kwargs['field_values'])
 
         # initialize Apex object
-        self.apex = Apex(date=self.apex_year)
+        # self.apex = Apex(date=self.apex_year)
 
 
     def read_config(self, config_file):
@@ -149,6 +149,40 @@ class Ionosphere(object):
 
         # apply hyperbolic tangent function to create gradient
         Ne = N0*(np.tanh(r/L)+1)
+
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.broadcast_to(Ne, s)
+
+        return Ne0
+
+    def tubular_patch(self, utime, glat, glon, galt):
+
+        cent_lat = float(self.density_params['cent_lat'])
+        cent_lon = float(self.density_params['cent_lon'])
+        cent_alt = float(self.density_params['cent_alt'])
+        N0 = float(self.density_params['n0'])
+        L = float(self.density_params['l'])
+        w = float(self.density_params['width'])/2.
+        az = float(self.density_params['az'])
+        h = float(self.density_params['height'])/2.
+        # V = np.array([float(i) for i in self.velocity_params['value'].split(',')])
+
+        for ut in utime:
+            # ECEF vector to the center point
+            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
+
+            # define norm vector and array of point vectors in ECEF
+            norm_vec = np.array(pm.aer2ecef(az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
+
+        print(norm_vec.shape)
+        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+
+        # calculate distance between each point and the plane
+        r = np.einsum('...i,i->...', point_vec, norm_vec)
+
+        # apply hyperbolic tangent function to create gradient
+        Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
+        # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
 
         s = (utime.shape[0],)+galt.shape
         Ne0 = np.broadcast_to(Ne, s)
