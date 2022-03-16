@@ -60,10 +60,10 @@ class SyntheticData(object):
         self.Time['doy'] = np.array([[t.timetuple().tm_yday for t in ip] for ip in time])
         self.Time['dtime'] = np.array([[(t-dt.datetime(t.year,t.month,t.day,0,0,0)).total_seconds()/3600. for t in ip] for ip in time])
 
-        # _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
-        # _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
-        # self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
-        self.Time['MagneticLocalTimeSite'] = np.array([np.zeros(num_tstep),np.ones(num_tstep)]).T
+        _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
+        _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
+        self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
+        # self.Time['MagneticLocalTimeSite'] = np.array([np.zeros(num_tstep),np.ones(num_tstep)]).T
 
     def generate_geomag(self):
         # generate Geomag array
@@ -73,10 +73,10 @@ class SyntheticData(object):
 
     def generate_site(self, st):
         self.Site = {'Latitude':self.radar.site_lat, 'Longitude':self.radar.site_lon, 'Altitude':self.radar.site_alt, 'Code':0}
-        # mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
-        # _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
-        # self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
-        self.Site.update(MagneticLatitude=0., MagneticLongitude=0., MagneticLocalTimeMidnight=0.)
+        mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
+        _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
+        self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
+        # self.Site.update(MagneticLatitude=0., MagneticLongitude=0., MagneticLocalTimeMidnight=0.)
 
 
     def calc_radar_measurements(self):
@@ -212,7 +212,7 @@ class SyntheticData(object):
         if not time:
             idx = 0
         else:
-            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))            
+            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
 
         ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
         te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))

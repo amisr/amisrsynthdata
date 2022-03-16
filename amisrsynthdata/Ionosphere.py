@@ -1,7 +1,7 @@
 # Ionosphere.py
 import numpy as np
 import datetime as dt
-# from apexpy import Apex
+from apexpy import Apex
 import pymap3d as pm
 
 
@@ -26,7 +26,7 @@ class Ionosphere(object):
             # self.field_values = np.array(kwargs['field_values'])
 
         # initialize Apex object
-        # self.apex = Apex(date=self.apex_year)
+        self.apex = Apex(date=self.apex_year)
 
 
     def read_config(self, config_file):
