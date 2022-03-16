@@ -247,8 +247,30 @@ class Ionosphere(object):
 
         return Te0
 
+    def hypertan_Te(self, utime, glat, glon, galt):
+        maxTe = float(self.etemp_params['maxte'])
+        scale_height = float(self.etemp_params['scale_height'])
+
+        Te = maxTe*np.tanh(galt/scale_height)
+
+        s = (utime.shape[0],)+galt.shape
+        Te0 = np.full(s, Te)
+
+        return Te0
+
     def uniform_Ti(self, utime, glat, glon, galt):
         Ti = float(self.itemp_params['value'])
+
+        s = (utime.shape[0],)+galt.shape
+        Ti0 = np.full(s, Ti)
+
+        return Ti0
+
+    def hypertan_Ti(self, utime, glat, glon, galt):
+        maxTi = float(self.itemp_params['maxti'])
+        scale_height = float(self.itemp_params['scale_height'])
+
+        Ti = maxTi*np.tanh(galt/scale_height)
 
         s = (utime.shape[0],)+galt.shape
         Ti0 = np.full(s, Ti)
