@@ -236,6 +236,26 @@ class Ionosphere(object):
 
         return Ne0
 
+    def gemini(self, utime, glat, glon, galt):
+
+        gemini_output_dir = self.density_params['gemini_output_dir']
+
+        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
+        import gemini3d.read as read
+
+        cfg = read.config(gemini_output_dir)
+        xg = read.grid(gemini_output_dir)
+        dat = read.frame(gemini_output_dir, cfg['time'][-1], var='ne')
+
+        # Call pygemini to queary gemini results?
+        Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
+        s = (utime.shape[0],)+galt.shape
+        Ne0 = np.broadcast_to(Ne.reshape(galt.shape), s)
+
+        return Ne0
+
+
+
     # add wave fluctuation functions - L. Goodwin code
 
 
