@@ -245,12 +245,18 @@ class Ionosphere(object):
 
         cfg = read.config(gemini_output_dir)
         xg = read.grid(gemini_output_dir)
-        dat = read.frame(gemini_output_dir, cfg['time'][-1], var='ne')
 
-        # Call pygemini to queary gemini results?
-        Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
         s = (utime.shape[0],)+galt.shape
-        Ne0 = np.broadcast_to(Ne.reshape(galt.shape), s)
+        Ne0 = np.empty(s)
+
+        for i in range(len(utime)):
+
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='ne')
+
+            # Call pygemini to queary gemini results?
+            Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
+
+            Ne0[i] = Ne.reshape(galt.shape)
 
         return Ne0
 
