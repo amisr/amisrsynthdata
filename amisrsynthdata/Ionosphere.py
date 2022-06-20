@@ -284,6 +284,31 @@ class Ionosphere(object):
 
         return Te0
 
+    def gemini_Te(self, utime, glat, glon, galt):
+
+        gemini_output_dir = self.density_params['gemini_output_dir']
+
+        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
+        import gemini3d.read as read
+
+        cfg = read.config(gemini_output_dir)
+        xg = read.grid(gemini_output_dir)
+
+        s = (utime.shape[0],)+galt.shape
+        Te0 = np.empty(s)
+
+        for i in range(len(utime)):
+
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='Te')
+
+            # Call pygemini to queary gemini results?
+            Te = model2pointsgeogcoords(xg, dat['Te'], galt, glon, glat)
+
+            Te0[i] = Te.reshape(galt.shape)
+
+        return Te0
+
+
     def uniform_Ti(self, utime, glat, glon, galt):
         Ti = float(self.itemp_params['value'])
 
@@ -300,5 +325,30 @@ class Ionosphere(object):
 
         s = (utime.shape[0],)+galt.shape
         Ti0 = np.full(s, Ti)
+
+        return Ti0
+
+
+    def gemini_Ti(self, utime, glat, glon, galt):
+
+        gemini_output_dir = self.density_params['gemini_output_dir']
+
+        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
+        import gemini3d.read as read
+
+        cfg = read.config(gemini_output_dir)
+        xg = read.grid(gemini_output_dir)
+
+        s = (utime.shape[0],)+galt.shape
+        Ti0 = np.empty(s)
+
+        for i in range(len(utime)):
+
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='Ti')
+
+            # Call pygemini to queary gemini results?
+            Ti = model2pointsgeogcoords(xg, dat['Ti'], galt, glon, glat)
+
+            Ti0[i] = Ne.reshape(galt.shape)
 
         return Ti0
