@@ -349,6 +349,6 @@ class Ionosphere(object):
             # Call pygemini to queary gemini results?
             Ti = model2pointsgeogcoords(xg, dat['Ti'], galt, glon, glat)
 
-            Ti0[i] = Ne.reshape(galt.shape)
+            Ti0[i] = Ti.reshape(galt.shape)
 
         return Ti0
