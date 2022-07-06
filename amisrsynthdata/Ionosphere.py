@@ -126,6 +126,51 @@ class Ionosphere(object):
 
         return VE0
 
+    def gemini_Vi(self, utime, glat, glon, galt):
+        gemini_output_dir = self.velocity_params['gemini_output_dir']
+
+        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
+        import gemini3d.read as read
+
+        cfg = read.config(gemini_output_dir)
+        xg = read.grid(gemini_output_dir)
+
+        s = (utime.shape[0],)+galt.shape+(3,)
+        Vi0 = np.empty(s)
+
+        for i in range(len(utime)):
+
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='v1')
+            V1 = model2pointsgeogcoords(xg, dat['v1'], galt, glon, glat)
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='v2')
+            V2 = model2pointsgeogcoords(xg, dat['v2'], galt, glon, glat)
+            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i,0]), var='v3')
+            V3 = model2pointsgeogcoords(xg, dat['v3'], galt, glon, glat)
+
+# [egalt,eglon,eglat]=unitvecs_geographic(xg)
+# #^ returns a set of geographic unit vectors on xg; these are in ECEF geomag comps
+# #    like all other unit vectors in xg
+#
+# # each of the components in models basis projected onto geographic unit vectors
+# vgalt=( np.sum(xg["e1"]*egalt,3)*dat["v1"] + np.sum(xg["e2"]*egalt,3)*dat["v2"] +
+#     np.sum(xg["e3"]*egalt,3)*dat["v3"] )
+# vglat=( np.sum(xg["e1"]*eglat,3)*dat["v1"] + np.sum(xg["e2"]*eglat,3)*dat["v2"] +
+#     np.sum(xg["e3"]*eglat,3)*dat["v3"] )
+# vglon=( np.sum(xg["e1"]*eglon,3)*dat["v1"] + np.sum(xg["e2"]*eglon,3)*dat["v2"] +
+#     np.sum(xg["e3"]*eglon,3)*dat["v3"] )
+
+
+
+            V = np.array([V1, V2, V3]).T
+            print(galt.shape, V1.shape, Vi0.shape, V.shape)
+
+            Vi0[i] = V.reshape(galt.shape+(3,))
+            # Vi0[i,:,1] = V2.reshape(galt.shape)
+            # Vi0[i,:,2] = V3.reshape(galt.shape)
+
+        return Vi0
+
+
 
     def chapman(self, utime, glat, glon, galt):
         N0 = float(self.density_params['n0'])
