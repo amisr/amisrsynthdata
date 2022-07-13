@@ -1,18 +1,17 @@
 # Velocity.py
 import numpy as np
 import pymap3d as pm
-import datetime as dt
 from apexpy import Apex
 
 class Velocity(object):
-    def __init__(self, utime0, config_params):
+    def __init__(self, utime0, config_params, apex=None):
         # set density function
         self.Vi_function = getattr(self, config_params['TYPE'])
         # set starttime
         self.utime0 = utime0
 
         # initialize Apex object for all mapping
-        self.apex = Apex(date=dt.datetime.utcfromtimestamp(utime0))
+        self.apex = apex
 
         # assign remaining config options to parameters to be handled by each function
         config_params.pop('type')
