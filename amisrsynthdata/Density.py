@@ -5,7 +5,7 @@ import pymap3d as pm
 class Density(object):
     def __init__(self, utime0, config_params):
         # set density function
-        self.density_function = getattr(self, config_params['TYPE'])
+        self.Ne_function = getattr(self, config_params['TYPE'])
         # set starttime
         self.utime0 = utime0
 
@@ -15,7 +15,7 @@ class Density(object):
 
 
     def __call__(self, utime, glat, glon, galt):
-        return self.density_function(utime, glat, glon, galt)
+        return self.Ne_function(utime, glat, glon, galt)
 
 
     def uniform_density(self, utime, glat, glon, galt):
