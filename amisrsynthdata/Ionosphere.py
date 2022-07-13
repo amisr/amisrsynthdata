@@ -3,6 +3,7 @@ import numpy as np
 import datetime as dt
 from apexpy import Apex
 import pymap3d as pm
+from .Density import Density
 
 
 try:
@@ -28,6 +29,21 @@ class Ionosphere(object):
         # initialize Apex object
         self.apex = Apex(date=self.apex_year)
 
+        # self.density = Density(config['DENSITY'])
+        #
+        # # in Density.py
+        # class Density(object):
+        #     def __init__(self,config_params):
+        #         density_function = getattr(self, config_params['TYPE'])
+        #         for param in config_params:
+        #             setattr(self,key,value)
+        #
+        #     def __call__(self, utime, glat, glon, galt):
+        #         density_function(self, utime, glat, glon, galt)
+        #
+        #     def uniform(self, utime, glat, glon, galt):
+        #         return self.N0
+
 
     def read_config(self, config_file):
 
@@ -37,9 +53,10 @@ class Ionosphere(object):
         self.utime0 = (dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])-dt.datetime.utcfromtimestamp(0)).total_seconds()
 
 
-        self.density = getattr(self, config['DENSITY']['TYPE'])
-        self.density_params = dict(config['DENSITY'])
-        self.density_params.pop('type')
+        self.density = Density(self.utime0, config['DENSITY'])
+        # self.density = getattr(self, config['DENSITY']['TYPE'])
+        # self.density_params = dict(config['DENSITY'])
+        # self.density_params.pop('type')
 
         self.velocity = getattr(self, config['VELOCITY']['TYPE'])
         self.velocity_params = dict(config['VELOCITY'])
