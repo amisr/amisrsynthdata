@@ -5,15 +5,16 @@ import numpy as np
 #   within this function.  Ions and Electrons DO NOT have to use the same background function
 #   or parameters, these are specified seperately in the config file.
 class Temperature(object):
-    def __init__(self, utime0, config_params):
-        # set temperature function
-        self.Ts_function = getattr(self, config_params['type'])
+    def __init__(self, type, params, utime0):
+
+        # set density function
+        self.Ts_function = getattr(self, type)
         # set starttime
         self.utime0 = utime0
 
-        # assign remaining config options to parameters to be handled by each function
-        config_params.pop('type')
-        self.params = config_params
+        # set parameters as class attributes
+        for param, value in params.items():
+            setattr(self, param, value)
 
 
     def __call__(self, utime, glat, glon, galt):
@@ -21,18 +22,15 @@ class Temperature(object):
 
 
     def uniform(self, utime, glat, glon, galt):
-        Ts = float(self.params['value'])
 
         s = (utime.shape[0],)+galt.shape
-        Ts0 = np.full(s, Ts)
+        Ts0 = np.full(s, self.value)
 
         return Ts0
 
     def hypertan(self, utime, glat, glon, galt):
-        maxTs = float(self.params['maxtemp'])
-        scale_height = float(self.params['scale_height'])
 
-        Ts = maxTs*np.tanh(galt/scale_height)
+        Ts = self.maxtemp*np.tanh(galt/self.scale_height)
 
         s = (utime.shape[0],)+galt.shape
         Ts0 = np.full(s, Ts)

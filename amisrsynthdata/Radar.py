@@ -57,7 +57,7 @@ class Radar(object):
 
         # config = configparser.ConfigParser()
         # config.read(config_file)
-        print(config['RADAR'])
+        # print(config['RADAR'])
 
         self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
         self.beamcode_filename = config['RADAR']['beamcode_filename']
