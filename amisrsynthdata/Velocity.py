@@ -6,7 +6,7 @@ from apexpy import Apex
 class Velocity(object):
     def __init__(self, utime0, config_params, apex=None):
         # set density function
-        self.Vi_function = getattr(self, config_params['TYPE'])
+        self.Vi_function = getattr(self, config_params['type'])
         # set starttime
         self.utime0 = utime0
 
@@ -27,7 +27,7 @@ class Velocity(object):
         alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
-        V = np.array([float(i) for i in self.params['value'].split(',')])
+        V = np.array(self.params['value'])
 
         # Find ECEF velocity components for given geodetic velocity at center of points
         u, v, w = pm.enu2uvw(V[0], V[1], V[2], np.nanmean(map_glat), np.nanmean(map_glon))

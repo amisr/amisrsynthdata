@@ -7,7 +7,7 @@ import numpy as np
 class Temperature(object):
     def __init__(self, utime0, config_params):
         # set temperature function
-        self.Ts_function = getattr(self, config_params['TYPE'])
+        self.Ts_function = getattr(self, config_params['type'])
         # set starttime
         self.utime0 = utime0
 

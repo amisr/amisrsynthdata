@@ -2,10 +2,10 @@
 import numpy as np
 import pymap3d as pm
 
-try:
-    import ConfigParser as configparser
-except ImportError:
-    import configparser
+# try:
+#     import ConfigParser as configparser
+# except ImportError:
+#     import configparser
 
 # NEEDS MAJOR REFACTORING FOR EFFICIENCY/MODULARIZING
 
@@ -53,19 +53,20 @@ class Radar(object):
         return kvec
 
 
-    def read_config(self, config_file):
+    def read_config(self, config):
 
-        config = configparser.ConfigParser()
-        config.read(config_file)
+        # config = configparser.ConfigParser()
+        # config.read(config_file)
+        print(config['RADAR'])
 
-        self.site_lat, self.site_lon, self.site_alt = [float(i) for i in config['RADAR'].get('SITE_COORDS').split(',')]
-        self.beamcode_filename = config['RADAR'].get('BEAMCODE_FILENAME', None)
-        self.beamcodes = [float(i) for i in config['RADAR'].get('BEAMCODES','').split(',') if i]
-        self.beam_azimuth = [float(i) for i in config['RADAR'].get('BEAM_AZIMUTH','').split(',') if i]
-        self.beam_elevation = [float(i) for i in config['RADAR'].get('BEAM_ELEVATION','').split(',') if i]
-        self.altbins = np.array([float(i) for i in config['RADAR'].get('ALTBINS').split(',')])
-        self.range_step = config['RADAR'].getfloat('RANGE_STEP')
-        self.range_start = config['RADAR'].getfloat('RANGE_START')
-        self.range_end = config['RADAR'].getfloat('RANGE_END')
-        self.integration_period = config['RADAR'].getfloat('INTEGRATION_PERIOD')
-        self.radar_name = config['RADAR'].get('NAME')
+        self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
+        self.beamcode_filename = config['RADAR']['beamcode_filename']
+        self.beamcodes = config['RADAR']['beamcodes']
+        self.beam_azimuth = config['RADAR'].get('beam_azimuth', [])
+        self.beam_elevation = config['RADAR'].get('beam_elevation', [])
+        self.altbins = config['RADAR']['altbins']
+        self.range_step = config['RADAR']['range_step']
+        self.range_start = config['RADAR']['range_start']
+        self.range_end = config['RADAR']['range_end']
+        self.integration_period = config['RADAR']['integration_period']
+        self.radar_name = config['RADAR']['name']

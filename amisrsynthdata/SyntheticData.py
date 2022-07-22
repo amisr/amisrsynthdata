@@ -5,7 +5,7 @@ from .Radar import Radar
 
 import numpy as np
 import datetime as dt
-import configparser
+import yaml
 import h5py
 import pymap3d as pm
 
@@ -17,22 +17,23 @@ class SyntheticData(object):
 
     def __init__(self, configfile):
 
-        # parse items from config file
-        config = configparser.ConfigParser()
-        config.read(configfile)
-        starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
-        endtime = dt.datetime.fromisoformat(config['GENERAL']['ENDTIME'])
-        output_filename = config['GENERAL']['OUTPUT_FILENAME']
-        err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
-        add_noise = config['GENERAL'].getboolean('NOISE')
-        summary_plot = config['GENERAL'].get('SUMMARY_PLOT', None)
-        summary_plot_time = config['GENERAL'].get('SUMMARY_PLOT_TIME', None)
+        with open(configfile, 'r') as cf:
+            config = yaml.load(cf, Loader=yaml.FullLoader)
+
+
+        starttime = config['GENERAL']['starttime']
+        endtime = config['GENERAL']['endtime']
+        output_filename = config['GENERAL']['output_filename']
+        err_coef = config['GENERAL']['err_coef']
+        add_noise = config['GENERAL']['noise']
+        summary_plot = config['GENERAL'].get('summary_plot', None)
+        summary_plot_time = config['GENERAL'].get('summary_plot_time', None)
 
         # generate ionosphere object
-        self.iono = Ionosphere(configfile)
+        self.iono = Ionosphere(config)
 
         # generate radar object
-        self.radar = Radar(configfile)
+        self.radar = Radar(config)
 
         self.generate_time_array(starttime, endtime)
         self.generate_geomag()
@@ -212,7 +213,7 @@ class SyntheticData(object):
         if not time:
             idx = 0
         else:
-            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
+            idx = np.argmin(np.abs((time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
 
         ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
         te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))

@@ -7,10 +7,10 @@ from .Velocity import Velocity
 from .Temperature import Temperature
 
 
-try:
-    import ConfigParser as configparser
-except ImportError:
-    import configparser
+# try:
+#     import ConfigParser as configparser
+# except ImportError:
+#     import configparser
 
 # Figure out how to specify multiple species sensibly
 # this can probably wait as a feature - unlikely to come up often
@@ -18,12 +18,13 @@ except ImportError:
 
 class Ionosphere(object):
 
-    def __init__(self, config_file):
+    def __init__(self, config):
+        #
+        # config = configparser.ConfigParser()
+        # config.read(config_file)
 
-        config = configparser.ConfigParser()
-        config.read(config_file)
-
-        starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
+        # starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
+        starttime = config['GENERAL']['starttime']
         start_utime = (starttime-dt.datetime.utcfromtimestamp(0)).total_seconds()
 
         # initialize Apex object
@@ -35,4 +36,4 @@ class Ionosphere(object):
         self.etemp = Temperature(start_utime, config['ETEMP'])
         self.itemp = Temperature(start_utime, config['ITEMP'])
 
-        self.ion_mass = np.array([float(im) for im in config['GENERAL']['ION_MASS'].split(',')])
+        self.ion_mass = config['GENERAL']['ion_mass']

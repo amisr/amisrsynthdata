@@ -5,7 +5,7 @@ import pymap3d as pm
 class Density(object):
     def __init__(self, utime0, config_params):
         # set density function
-        self.Ne_function = getattr(self, config_params['TYPE'])
+        self.Ne_function = getattr(self, config_params['type'])
         # set starttime
         self.utime0 = utime0
 
@@ -28,8 +28,8 @@ class Density(object):
 
 
     def chapman(self, utime, glat, glon, galt):
-        N0 = float(self.params['n0'])
-        H = float(self.params['h'])
+        N0 = float(self.params['N0'])
+        H = float(self.params['H'])
         z0 = float(self.params['z0'])
         sza = float(self.params['sza'])*np.pi/180.
 
@@ -46,8 +46,8 @@ class Density(object):
 
         cent_lat = float(self.params['cent_lat'])
         cent_lon = float(self.params['cent_lon'])
-        N0 = float(self.params['n0'])
-        L = float(self.params['l'])
+        N0 = float(self.params['N0'])
+        L = float(self.params['L'])
         az = float(self.params['az'])
 
         # ECEF vector to the center point
@@ -73,12 +73,12 @@ class Density(object):
         lat0 = float(self.params['cent_lat'])
         lon0 = float(self.params['cent_lon'])
         alt0 = float(self.params['cent_alt'])
-        N0 = float(self.params['n0'])
-        L = float(self.params['l'])
+        N0 = float(self.params['N0'])
+        L = float(self.params['L'])
         w = float(self.params['width'])/2.
         az = float(self.params['az'])
         h = float(self.params['height'])/2.
-        V = np.array([float(i) for i in self.params['velocity'].split(',')])
+        V = np.array(self.params['velocity'])
 
         s = (utime.shape[0],)+galt.shape
         Ne0 = np.empty(s)
