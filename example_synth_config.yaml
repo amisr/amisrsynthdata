@@ -21,14 +21,12 @@ GENERAL:
 RADAR:
 
   # name of site
-  name: Poker Flat
+  full_name: Poker Flat
+  abbreviation: RISR-C
 
   # radar site coordinates (geodetic lat, lon, alt)
   site_coords: [65.13,-147.47,213.]   # PFISR
   # site_coords: [74.72955,-94.90576,145.]  # RISR
-
-  # file name for the beam code table
-  beamcode_filename: bcotable_pfisr.txt
 
   # define beams by beamcode
   beamcodes: [64016, 64157, 64964, 65066]

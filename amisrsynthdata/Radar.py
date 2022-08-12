@@ -1,6 +1,7 @@
 # Radar.py
 import numpy as np
 import pymap3d as pm
+from importlib_resources import files
 
 # NEEDS MAJOR REFACTORING FOR EFFICIENCY/MODULARIZING
 
@@ -10,8 +11,11 @@ class Radar(object):
 
         self.read_config(config)
 
-        # beams defined by standard beam code
-        bc_data = np.loadtxt(self.beamcode_filename)
+        # beams defined by standard beam code (beamcode files in package data)
+        bc_file = files('amisrsynthdata.beamcodes').joinpath('bcotable_{}.txt'.format(self.radar_abbrev.lower().replace('-','')))
+        bc_data = np.loadtxt(bc_file)
+
+
         idx = np.where(np.in1d(bc_data[:,0],self.beamcodes))[0]
         beams_bc = np.array([bc_data[idx,0], bc_data[idx,1], bc_data[idx,2], np.full(len(idx), np.nan)]).T
 
@@ -51,12 +55,12 @@ class Radar(object):
 
     def read_config(self, config):
 
+        self.radar_name = config['RADAR']['full_name']
+        self.radar_abbrev = config['RADAR']['abbreviation']
         self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
-        self.beamcode_filename = config['RADAR']['beamcode_filename']
         self.beamcodes = config['RADAR'].get('beamcodes', [])
         self.beam_azimuth = config['RADAR'].get('beam_azimuth', [])
         self.beam_elevation = config['RADAR'].get('beam_elevation', [])
         self.altitude_bins = config['RADAR']['altitude_bins']
         self.acf_slant_range = config['RADAR']['acf_slant_range']
         self.integration_period = config['RADAR']['integration_period']
-        self.radar_name = config['RADAR']['name']
