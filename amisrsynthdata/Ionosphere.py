@@ -7,10 +7,6 @@ from .Velocity import Velocity
 from .Temperature import Temperature
 
 
-# try:
-#     import ConfigParser as configparser
-# except ImportError:
-#     import configparser
 
 # Figure out how to specify multiple species sensibly
 # this can probably wait as a feature - unlikely to come up often

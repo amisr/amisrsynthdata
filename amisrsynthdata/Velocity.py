@@ -1,7 +1,6 @@
 # Velocity.py
 import numpy as np
 import pymap3d as pm
-from apexpy import Apex
 
 class Velocity(object):
     def __init__(self, type, params, utime0, apex=None):

@@ -7,11 +7,6 @@ import numpy as np
 import datetime as dt
 import yaml
 import h5py
-import pymap3d as pm
-
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import matplotlib.gridspec as gridspec
 
 class SyntheticData(object):
 
@@ -64,7 +59,6 @@ class SyntheticData(object):
         _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
         _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
         self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
-        # self.Time['MagneticLocalTimeSite'] = np.array([np.zeros(num_tstep),np.ones(num_tstep)]).T
 
     def generate_geomag(self):
         # generate Geomag array
@@ -88,7 +82,6 @@ class SyntheticData(object):
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
-        print(kvec.shape)
         Vvec = self.iono.velocity(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
         self.Vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
@@ -199,7 +192,17 @@ class SyntheticData(object):
 
     def summary_plot(self, output_plot_name, time):
 
-        # summary plot of output
+        # optional imports used ONLY for creating summary plots
+        # matplotlib and cartopy are not listed in the package requirments
+        try:
+            import pymap3d as pm
+            import matplotlib.pyplot as plt
+            import matplotlib.gridspec as gridspec
+            import cartopy.crs as ccrs
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('In order to create summary plots, the optional modules matplotlib (https://matplotlib.org/) '
+                                      'and cartopy (https://scitools.org.uk/cartopy/docs/latest/) must be installed.') from e
+
 
         # form grid of coordinates for plotting
         alt_layers = np.arange(100.,500.,100.)*1000.
