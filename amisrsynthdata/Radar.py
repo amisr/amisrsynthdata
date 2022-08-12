@@ -2,11 +2,6 @@
 import numpy as np
 import pymap3d as pm
 
-# try:
-#     import ConfigParser as configparser
-# except ImportError:
-#     import configparser
-
 # NEEDS MAJOR REFACTORING FOR EFFICIENCY/MODULARIZING
 
 class Radar(object):
@@ -29,15 +24,16 @@ class Radar(object):
         az = self.beam_codes[:,1]
         el = self.beam_codes[:,2]
 
+        # form list of altitude bins
+        altbins = list()
+        for segment in self.altitude_bins:
+            altbins.extend(np.arange(*segment))
 
-        if len(self.altbins) == 3:
-            self.altbins = np.arange(self.altbins[0], self.altbins[1], self.altbins[2])
-
-
-        self.slant_range_p = np.arange(self.range_start,self.range_end, self.range_step)  # move start/end range to config file
+        # form slant range bins
+        self.slant_range_p = np.arange(*self.acf_slant_range)
         self.lat_p, self.lon_p, self.alt_p = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range_p[None,:], self.site_lat, self.site_lon, self.site_alt)
 
-        self.slant_range = np.array([[np.nanmean(np.where((beam>=self.altbins[i]) & (beam<self.altbins[i+1]), self.slant_range_p, np.nan)) for i in range(len(self.altbins)-1)] for beam in self.alt_p])
+        self.slant_range = np.array([[np.nanmean(np.where((beam>=altbins[i]) & (beam<altbins[i+1]), self.slant_range_p, np.nan)) for i in range(len(altbins)-1)] for beam in self.alt_p])
         self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range, self.site_lat, self.site_lon, self.site_alt)
 
         ke, kn, ku = pm.aer2enu(az, el, 1.0)
@@ -55,18 +51,12 @@ class Radar(object):
 
     def read_config(self, config):
 
-        # config = configparser.ConfigParser()
-        # config.read(config_file)
-        # print(config['RADAR'])
-
         self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
         self.beamcode_filename = config['RADAR']['beamcode_filename']
-        self.beamcodes = config['RADAR']['beamcodes']
+        self.beamcodes = config['RADAR'].get('beamcodes', [])
         self.beam_azimuth = config['RADAR'].get('beam_azimuth', [])
         self.beam_elevation = config['RADAR'].get('beam_elevation', [])
-        self.altbins = config['RADAR']['altbins']
-        self.range_step = config['RADAR']['range_step']
-        self.range_start = config['RADAR']['range_start']
-        self.range_end = config['RADAR']['range_end']
+        self.altitude_bins = config['RADAR']['altitude_bins']
+        self.acf_slant_range = config['RADAR']['acf_slant_range']
         self.integration_period = config['RADAR']['integration_period']
         self.radar_name = config['RADAR']['name']

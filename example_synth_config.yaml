@@ -18,31 +18,6 @@ GENERAL:
   summary_plot_time: 2016-09-13 00:10:00
 
 
-DENSITY:
-
-  type: chapman
-  N0: 4.0e+11
-  H: 100000.
-  z0: 300000.
-  sza: 0.
-
-VELOCITY:
-
-  type: uniform
-  value: [0., 500., 0.]
-
-ETEMP:
-
-  type: hypertan
-  maxtemp: 4000.
-  scale_height: 100000.
-
-ITEMP:
-
-  type: uniform
-  value: 1000.
-
-
 RADAR:
 
   # name of site
@@ -50,21 +25,47 @@ RADAR:
 
   # radar site coordinates (geodetic lat, lon, alt)
   site_coords: [65.13,-147.47,213.]   # PFISR
-  # site_coords: [74.72955,-94.90576,145.]  # RISR-N
+  # site_coords: [74.72955,-94.90576,145.]  # RISR
 
   # file name for the beam code table
   beamcode_filename: bcotable_pfisr.txt
 
-  # beam codes to use
+  # define beams by beamcode
   beamcodes: [64016, 64157, 64964, 65066]
 
-  # define slant range gates for ACFs
-  range_step: 3000.
-  range_start: 80000.
-  range_end: 800000.
+  # define beams by azimuth and elevation
+  beam_azimuth: [120., 180.]
+  beam_elevation: [60., 50.]
 
-  # altitude bins for fitted data
-  altbins: 100000., 150000., 200000., 250000., 300000., 350000., 400000., 450000., 500000., 550000., 600000., 650000., 700000., 750000., 800000.
+  # define slant range gates for ACFs (start, stop, step)
+  acf_slant_range: [80000., 800000., 3000.]
+
+  # altitude bins for fitted data (start, stop, step)
+  # include multiple sets to change spatial resolution
+  altitude_bins:
+    - [80000., 150000., 10000.]
+    - [150000., 800000., 50000.]
 
   # integration period of each time step in simulated data set (this doesn't really matter)
   integration_period: 60.
+
+
+DENSITY:
+  chapman:
+    N0: 4.0e+11
+    H: 100000.
+    z0: 300000.
+    sza: 0.
+
+VELOCITY:
+  uniform:
+    value: [0., 500., 0.]
+
+ETEMP:
+  hypertan:
+    maxtemp: 4000.
+    scale_height: 100000.
+
+ITEMP:
+  uniform:
+    value: 1000.
