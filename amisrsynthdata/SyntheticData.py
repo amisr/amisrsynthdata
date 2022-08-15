@@ -5,16 +5,11 @@ from .Radar import Radar
 
 import numpy as np
 import datetime as dt
-import yaml
 import h5py
 
 class SyntheticData(object):
 
-    def __init__(self, configfile):
-
-        with open(configfile, 'r') as cf:
-            config = yaml.load(cf, Loader=yaml.FullLoader)
-
+    def __init__(self, config):
 
         starttime = config['GENERAL']['starttime']
         endtime = config['GENERAL']['endtime']

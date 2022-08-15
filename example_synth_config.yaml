@@ -22,7 +22,7 @@ RADAR:
 
   # name of site
   full_name: Poker Flat
-  abbreviation: RISR-C
+  abbreviation: PFISR
 
   # radar site coordinates (geodetic lat, lon, alt)
   site_coords: [65.13,-147.47,213.]   # PFISR

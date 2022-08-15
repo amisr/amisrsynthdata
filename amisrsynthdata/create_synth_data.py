@@ -3,6 +3,7 @@
 
 from .SyntheticData import SyntheticData
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import yaml
 
 
 def main():
@@ -14,7 +15,11 @@ def main():
     arg = parser.add_argument('synth_config_file',help='Configuration file for synthetic data set.')
     args = vars(parser.parse_args())
 
-    sd = SyntheticData(args['synth_config_file'])
+
+    with open(args['synth_config_file'], 'r') as cf:
+        config = yaml.load(cf, Loader=yaml.FullLoader)
+
+    sd = SyntheticData(config)
 
 if __name__=='__main__':
     main()
