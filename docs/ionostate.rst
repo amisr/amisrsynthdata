@@ -59,7 +59,7 @@ Instructions for Adding Function
 
   1. Clone the source repository and install following the :ref:`developer instructions <developer installation>`.
   2. Create a new branch to develop your new function.
-  3. Add your function to the appropriate class following the :ref:`Function Guidelines`.
+  3. Add your function to the appropriate class  in `Ionosphere.py` following the :ref:`Function Guidelines`.
   4. Modify your configuration file to use your new function.
   5. TEST!!!
   6. Push your new branch to GitHub and create a pull request to merge it into the develop branch of the main package repository.

@@ -30,7 +30,7 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
 
 `Radar` example::
 
-  from amisrsynthdata.Radar import Radar
+  from amisrsynthdata import Radar
 
   rad = Radar(config)
 
@@ -43,7 +43,7 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
 `Ionosphere` example::
 
   import datetime as dt
-  from amisrsythdata.Ionosphere import Ionosphere
+  from amisrsythdata import Ionosphere
 
   iono = Ionosphere(config)
 
@@ -59,7 +59,7 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
 
 `SyntheticData` example::
 
-  from amisrsythdata.SyntheticData import SyntheticData
+  from amisrsythdata import SyntheticData
 
   sd = SyntheticData(config)
 
