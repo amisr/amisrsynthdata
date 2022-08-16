@@ -48,22 +48,28 @@ RADAR:
   integration_period: 60.
 
 
+# Chapman profile on top of a low level background electron density
 DENSITY:
+  uniform:
+    value: 5.0e+10
   chapman:
     N0: 4.0e+11
     H: 100000.
     z0: 300000.
     sza: 0.
 
+# Uniform velocity 500 m/s  north
 VELOCITY:
   uniform:
     value: [0., 500., 0.]
 
+# Electron temperature as a hypertangent function
 ETEMP:
   hypertan:
     maxtemp: 4000.
     scale_height: 100000.
 
+# Uniform ion temperature
 ITEMP:
   uniform:
     value: 1000.

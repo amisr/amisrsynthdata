@@ -19,6 +19,14 @@ class Density(object):
 
 
     def uniform(self, utime, glat, glon, galt):
+        """
+        Uniform electron density at all points.
+
+        Parameters
+        ----------
+        value: float
+            The value to assign at all points (m-3).
+        """
 
         s = (utime.shape[0],)+galt.shape
         Ne0 = np.full(s, self.value)
@@ -27,6 +35,25 @@ class Density(object):
 
 
     def chapman(self, utime, glat, glon, galt):
+        """
+        Standard Chapman profile.
+
+        z' = (z-z0)/H
+        Ne = N0 * exp(0.5(1-z'-exp(-z'))/cos(sza))
+
+        From Schunk and Nagy, 2009; Equation 11.57
+
+        Parameters
+        ----------
+        N0: float
+            Peak electron density (m-3)
+        z0: float
+            Peak altitude (m)
+        H: float
+            Scale height (m)
+        sza: float
+            Solar zenith angle (degrees)
+        """
 
         # From Schunk and Nagy, 2009; eqn 11.57
         zp = (galt-self.z0)/self.H
@@ -38,6 +65,22 @@ class Density(object):
         return Ne0
 
     def gradient(self, utime, glat, glon, galt):
+        """
+        Single horizontal gradient crated with a hyperbolic tangent function.
+
+        Parameters
+        ----------
+        N0: float
+            Electron density at high side of gradient (m-3)
+        L: float
+            Gradient scale length (m)
+        cent_lat: float
+            Geodetic latitude of point to center the gradient around (deg)
+        cent_lon: float
+            Geodetic longitude of point to center the gradient around (deg)
+        az: float
+            Azimuth of gradient normal direction from geodetic north (deg)
+        """
 
         # ECEF vector to the center point
         center_vec = np.array(pm.geodetic2ecef(self.cent_lat, self.cent_lon, 0.))
@@ -58,6 +101,32 @@ class Density(object):
         return Ne0
 
     def tubular_patch(self, utime, glat, glon, galt):
+        """
+        "Infintite tubular patch" of the variety that has traditionally been used to model polar cap patchs
+        in numerical models.  Formed from two hyperbolic tangients in the horizontal direction and a
+        Gaussian in the vertical direction.  A non-zero velocity will make the patch move in time.
+
+        Parameters
+        ----------
+        N0: float
+            Peak electron density within the patch (m-3)
+        L: float
+            Gradient scale length (m)
+        width: float
+            Patch width (m)
+        height: float
+            Patch height (m)
+        cent_lat: float
+            Geodetic latitude of point to center the gradient around (deg)
+        cent_lon: float
+            Geodetic longitude of point to center the gradient around (deg)
+        cent_alt: float
+            Geodetic altitude of point to center the gradient around (m)
+        az: float
+            Azimuth of gradient normal direction from geodetic north (deg)
+        velocity: list
+            Patch velocity [E, N, U] (m/s)
+        """
 
         w = self.width/2.
         h = self.height/2.
@@ -93,6 +162,24 @@ class Density(object):
 
 
     def circle_patch(self, utime, glat, glon, galt):
+        """
+        Polar cap patch formed from a 3D Gaussian.
+
+        Parameters
+        ----------
+        N0: float
+            Electron density at patch peak (m-3)
+        width: float
+            Patch width - Horizontal Gaussian FWHM (m)
+        height: float
+            Patch height - Horizontal Gaussian FWHM (m)
+        cent_lat: float
+            Geodetic latitude of center of patch (deg)
+        cent_lon: float
+            Geodetic longitude of center of patch (deg)
+        cent_alt: float
+            Geodetic altitude of center of patch (m)
+        """
 
         r = self.width/2.
         h = self.height/2.

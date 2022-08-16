@@ -22,6 +22,14 @@ class Temperature(object):
 
 
     def uniform(self, utime, glat, glon, galt):
+        """
+        Uniform temperature at all points.
+
+        Parameters
+        ----------
+        value: float
+            The value to assign at all points (K)
+        """
 
         s = (utime.shape[0],)+galt.shape
         Ts0 = np.full(s, self.value)
@@ -29,6 +37,16 @@ class Temperature(object):
         return Ts0
 
     def hypertan(self, utime, glat, glon, galt):
+        """
+        Temperature increases in altitude as a hyperbolic tangent.
+
+        Parameters
+        ----------
+        maxtemp: float
+            The temperature at infinity to asymptope to (K)
+        scale_height: float
+            Vertical scale height (m)
+        """
 
         Ts = self.maxtemp*np.tanh(galt/self.scale_height)
 

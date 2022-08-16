@@ -15,6 +15,7 @@ Welcome to amisrsynthdata's documentation!
    installation
    usage
    configfile
+   ionostate
    reference
 
 
