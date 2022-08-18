@@ -1,38 +1,31 @@
 # SyntheticData.py
 
-from .Ionosphere import Ionosphere
-from .Radar import Radar
+from .ionosphere import Ionosphere
+from .radar import Radar
 
 import numpy as np
 import datetime as dt
-import configparser
 import h5py
-import pymap3d as pm
-
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import matplotlib.gridspec as gridspec
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import yaml
 
 class SyntheticData(object):
 
-    def __init__(self, configfile):
+    def __init__(self, config):
 
-        # parse items from config file
-        config = configparser.ConfigParser()
-        config.read(configfile)
-        starttime = dt.datetime.fromisoformat(config['GENERAL']['STARTTIME'])
-        endtime = dt.datetime.fromisoformat(config['GENERAL']['ENDTIME'])
-        output_filename = config['GENERAL']['OUTPUT_FILENAME']
-        err_coef = [float(i) for i in config['GENERAL'].get('ERR_COEF').split(',')]
-        add_noise = config['GENERAL'].getboolean('NOISE')
-        summary_plot = config['GENERAL'].get('SUMMARY_PLOT', None)
-        summary_plot_time = config['GENERAL'].get('SUMMARY_PLOT_TIME', None)
+        starttime = config['GENERAL']['starttime']
+        endtime = config['GENERAL']['endtime']
+        output_filename = config['GENERAL']['output_filename']
+        err_coef = config['GENERAL']['err_coef']
+        add_noise = config['GENERAL']['noise']
+        summary_plot = config['GENERAL'].get('summary_plot', None)
+        summary_plot_time = config['GENERAL'].get('summary_plot_time', None)
 
         # generate ionosphere object
-        self.iono = Ionosphere(configfile)
+        self.iono = Ionosphere(config)
 
         # generate radar object
-        self.radar = Radar(configfile)
+        self.radar = Radar(config)
 
         self.generate_time_array(starttime, endtime)
         self.generate_geomag()
@@ -63,7 +56,6 @@ class SyntheticData(object):
         _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
         _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
         self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
-        # self.Time['MagneticLocalTimeSite'] = np.array([np.zeros(num_tstep),np.ones(num_tstep)]).T
 
     def generate_geomag(self):
         # generate Geomag array
@@ -81,14 +73,13 @@ class SyntheticData(object):
 
     def calc_radar_measurements(self):
         # caculate scalar ionosphere parameters at each fitted radar bin
-        self.ne = self.iono.density(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
-        self.te = self.iono.etemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
-        self.ti = self.iono.itemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ne = self.iono.density(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
+        self.te = self.iono.etemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ti = self.iono.itemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
-        print(kvec.shape)
-        Vvec = self.iono.velocity(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        Vvec = self.iono.velocity(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
         self.Vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
         self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
@@ -124,7 +115,7 @@ class SyntheticData(object):
         # calculate density in ACF bins
         self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
 
-        ne_p = self.iono.density(self.utime, self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
+        ne_p = self.iono.density(self.utime[:,0], self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
         # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
         # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
         self.NeFromPower['Ne_Mod'] = ne_p
@@ -198,7 +189,17 @@ class SyntheticData(object):
 
     def summary_plot(self, output_plot_name, time):
 
-        # summary plot of output
+        # optional imports used ONLY for creating summary plots
+        # matplotlib and cartopy are not listed in the package requirments
+        try:
+            import pymap3d as pm
+            import matplotlib.pyplot as plt
+            import matplotlib.gridspec as gridspec
+            import cartopy.crs as ccrs
+        except ModuleNotFoundError as e:
+            raise ModuleNotFoundError('In order to create summary plots, the optional modules matplotlib (https://matplotlib.org/) '
+                                      'and cartopy (https://scitools.org.uk/cartopy/docs/latest/) must be installed.') from e
+
 
         # form grid of coordinates for plotting
         alt_layers = np.arange(100.,500.,100.)*1000.
@@ -212,12 +213,12 @@ class SyntheticData(object):
         if not time:
             idx = 0
         else:
-            idx = np.argmin(np.abs((dt.datetime.fromisoformat(time)-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
+            idx = np.argmin(np.abs((time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
 
-        ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        ti0 = np.squeeze(self.iono.itemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        ve = np.squeeze(self.iono.velocity(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ne0 = np.squeeze(self.iono.density(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(self.Time['UnixTime'][idx, 0], glat, glon, galt))
 
 
         # scaling/rotation of vector to plot in cartopy
@@ -293,3 +294,20 @@ class SyntheticData(object):
         fig.colorbar(c, label='Ti (K)')
 
         fig.savefig(output_plot_name)
+
+
+
+def main():
+    help_string = 'Program to generate synthetic data for multibeam, AMISR like incoherent scatter radars.'
+
+    # Build the argument parser tree
+    parser = ArgumentParser(description=help_string,
+                            formatter_class=RawDescriptionHelpFormatter)
+    arg = parser.add_argument('synth_config_file', help='Configuration file for synthetic data set.')
+    args = vars(parser.parse_args())
+
+
+    with open(args['synth_config_file'], 'r') as cf:
+        config = yaml.safe_load(cf)
+
+    sd = SyntheticData(config)
