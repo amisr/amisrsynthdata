@@ -1,11 +1,13 @@
 # SyntheticData.py
 
-from .Ionosphere import Ionosphere
-from .Radar import Radar
+from .ionosphere import Ionosphere
+from .radar import Radar
 
 import numpy as np
 import datetime as dt
 import h5py
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import yaml
 
 class SyntheticData(object):
 
@@ -292,3 +294,20 @@ class SyntheticData(object):
         fig.colorbar(c, label='Ti (K)')
 
         fig.savefig(output_plot_name)
+
+
+
+def main():
+    help_string = 'Program to generate synthetic data for multibeam, AMISR like incoherent scatter radars.'
+
+    # Build the argument parser tree
+    parser = ArgumentParser(description=help_string,
+                            formatter_class=RawDescriptionHelpFormatter)
+    arg = parser.add_argument('synth_config_file', help='Configuration file for synthetic data set.')
+    args = vars(parser.parse_args())
+
+
+    with open(args['synth_config_file'], 'r') as cf:
+        config = yaml.safe_load(cf)
+
+    sd = SyntheticData(config)

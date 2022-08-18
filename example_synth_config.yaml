@@ -14,7 +14,7 @@ GENERAL:
 
   noise: False
 
-  summary_plot: synthetic_data_summary_risrn.png
+  summary_plot: synthetic_data_summary_plot.png
   summary_plot_time: 2016-09-13 00:10:00
 
 
