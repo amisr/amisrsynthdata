@@ -43,7 +43,7 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
 `Ionosphere` example::
 
   import datetime as dt
-  from amisrsythdata import Ionosphere
+  from amisrsynthdata import Ionosphere
 
   iono = Ionosphere(config)
 
@@ -51,15 +51,15 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
   glat = 65.0
   glon = 100.0
   alt = 300000.
-  utime = dt.datetime(2016, 9, 13, 0, 5, 0)
-  Ne = iono.density(glat, glon, alt)
-  Vi = iono.velocity(glat, glon, alt)
-  Te = iono.etemp(glat, glon, alt)
-  Ti = iono.itemp(glat, glon, alt)
+  utime = (dt.datetime(2016, 9, 13, 0, 5, 0)-dt.datetime.utcfromtimestamp(0)).total_seconds()
+  Ne = iono.density(utime, glat, glon, alt)
+  Vi = iono.velocity(utime, glat, glon, alt)
+  Te = iono.etemp(utime, glat, glon, alt)
+  Ti = iono.itemp(utime, glat, glon, alt)
 
 `SyntheticData` example::
 
-  from amisrsythdata import SyntheticData
+  from amisrsynthdata import SyntheticData
 
   sd = SyntheticData(config)
 
@@ -75,6 +75,6 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
   galt = sd.radar.alt
 
   # And access Ionosphere functions directly
-  Ne = sd.iono.density(glat, glon, alt)
+  Ne = sd.iono.density(utime, glat, glon, galt)
 
 Note that all functionality of the `Radar` and `Ionosphere` classes are available through the `SyntheticData` class.  `SyntheticData` contains an instance of the `Radar` class named `radar` and an instance of the `Ionosphere` class named `iono`.

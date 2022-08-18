@@ -9,6 +9,19 @@ from apexpy import Apex
 # Figure out how to specify multiple species sensibly
 # this can probably wait as a feature - unlikely to come up often
 # may be nice to be able to have some kind of placeholder just to make the arrays the full shape though
+def output_shape(ut, x):
+    # determine the appropriate output shape for the given time and position inputs
+    if (np.isscalar(ut) and np.isscalar(x)):
+        s = None
+    elif np.isscalar(ut):
+        s = x.shape
+    elif np.isscalar(x):
+        s = ut.shape
+    else:
+        s = ut.shape+x.shape
+    return s
+
+
 
 class Ionosphere(object):
 
@@ -28,29 +41,47 @@ class Ionosphere(object):
         self.etemp_functions = [Temperature(type, params, start_utime) for type, params in config['ETEMP'].items()]
         self.itemp_functions = [Temperature(type, params, start_utime) for type, params in config['ITEMP'].items()]
 
+    def zero_array(self, ut, x, vec=False):
+        s = output_shape(ut, x)
+        if vec:
+            if not s:
+                s = (3,)
+            else:
+                s = s + (3,)
+            return np.zeros(s)
+        if not s:
+            return 0.0
+        else:
+            return np.zeros(s)
+
+
     def density(self, utime, glat, glon, galt):
         # call each density instance and sum the results
-        dens = np.zeros((utime.shape[0],)+galt.shape)
+        dens = self.zero_array(utime, galt)
+        # dens = np.zeros((utime.shape[0],)+galt.shape)
         for fun in self.density_functions:
             dens = dens + fun(utime, glat, glon, galt)
         return dens
 
     def velocity(self, utime, glat, glon, galt):
-        vel = np.zeros((utime.shape[0],)+galt.shape+(3,))
+        # vel = np.zeros((utime.shape[0],)+galt.shape+(3,))
+        vel = self.zero_array(utime, galt, vec=True)
         for fun in self.velocity_functions:
             vel = vel + fun(utime, glat, glon, galt)
         return vel
 
     def etemp(self, utime, glat, glon, galt):
         # call each electron temperature instance and sum the results
-        etemp = np.zeros((utime.shape[0],)+galt.shape)
+        # etemp = np.zeros((utime.shape[0],)+galt.shape)
+        etemp = self.zero_array(utime, galt)
         for fun in self.etemp_functions:
             etemp = etemp + fun(utime, glat, glon, galt)
         return etemp
 
     def itemp(self, utime, glat, glon, galt):
         # call each ion temperature instance and sum the results
-        itemp = np.zeros((utime.shape[0],)+galt.shape)
+        # itemp = np.zeros((utime.shape[0],)+galt.shape)
+        itemp = self.zero_array(utime, galt)
         for fun in self.itemp_functions:
             itemp = itemp + fun(utime, glat, glon, galt)
         return itemp
@@ -83,8 +114,11 @@ class Density(object):
             The value to assign at all points (m-3).
         """
 
-        s = (utime.shape[0],)+galt.shape
-        Ne0 = np.full(s, self.value)
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = self.value
+        else:
+            Ne0 = np.full(s, self.value)
 
         return Ne0
 
@@ -114,8 +148,11 @@ class Density(object):
         zp = (galt-self.z0)/self.H
         Ne = self.N0*np.exp(0.5*(1-zp-np.exp(-zp)/np.cos(self.sza*np.pi/180.)))
 
-        s = (utime.shape[0],)+galt.shape
-        Ne0 = np.broadcast_to(Ne, s)
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = Ne
+        else:
+            Ne0 = np.broadcast_to(Ne, s)
 
         return Ne0
 
@@ -150,8 +187,15 @@ class Density(object):
         # apply hyperbolic tangent function to create gradient
         Ne = self.N0*(np.tanh(r/self.L)+1)
 
-        s = (utime.shape[0],)+galt.shape
-        Ne0 = np.broadcast_to(Ne, s)
+        # s = (utime.shape[0],)+galt.shape
+        # Ne0 = np.broadcast_to(Ne, s)
+        #
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = Ne
+        else:
+            Ne0 = np.broadcast_to(Ne, s)
+
 
         return Ne0
 
@@ -242,8 +286,15 @@ class Density(object):
         e, n, u  = pm.geodetic2enu(glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
         Ne = self.N0*np.exp(-0.5*(e**2/r**2 + n**2/r**2 + u**2/h**2))
 
-        s = (utime.shape[0],)+galt.shape
-        Ne0 = np.broadcast_to(Ne, s)
+        # s = (utime.shape[0],)+galt.shape
+        # Ne0 = np.broadcast_to(Ne, s)
+        #
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = Ne
+        else:
+            Ne0 = np.broadcast_to(Ne, s)
+
 
         return Ne0
 
@@ -281,8 +332,14 @@ class Temperature(object):
             The value to assign at all points (K)
         """
 
-        s = (utime.shape[0],)+galt.shape
-        Ts0 = np.full(s, self.value)
+        # s = (utime.shape[0],)+galt.shape
+        # Ts0 = np.full(s, self.value)
+
+        s = output_shape(utime, galt)
+        if not s:
+            Ts0 = self.value
+        else:
+            Ts0 = np.full(s, self.value)
 
         return Ts0
 
@@ -300,8 +357,14 @@ class Temperature(object):
 
         Ts = self.maxtemp*np.tanh(galt/self.scale_height)
 
-        s = (utime.shape[0],)+galt.shape
-        Ts0 = np.full(s, Ts)
+        # s = (utime.shape[0],)+galt.shape
+        # Ts0 = np.full(s, Ts)
+
+        s = output_shape(utime, galt)
+        if not s:
+            Ts0 = Ts
+        else:
+            Ts0 = np.broadcast_to(Ts, s)
 
         return Ts0
 
@@ -340,7 +403,8 @@ class Velocity(object):
             The vector value to assign at all points [E, N, U] (m/s)
         """
 
-        alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
+        # alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
+        alat, alon = self.apex.geo2apex(glat, glon, galt/1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
         # Find ECEF velocity components for given geodetic velocity at center of points
@@ -352,12 +416,22 @@ class Velocity(object):
         # rescale velocities so that they all have the same magnitude as the original vector
         V_scale = V_map*np.linalg.norm(self.value)/np.linalg.norm(V_map, axis=0)
         # map velocities along field lines back to the original heights
-        V0 = self.apex.map_V_to_height(alat, alon, 300., galt.ravel()/1000., V_scale)
-        # reform original array shape
-        VE = V0.T.reshape(galt.shape+(3,))
+        if not np.isscalar(galt):
+            # map_V_to_height doesn't handle multidimensional arrays, so must flatten and reform
+            V0 = self.apex.map_V_to_height(alat.ravel(), alon.ravel(), 300., galt.ravel()/1000., V_scale.reshape(3,-1))
+            # reform original array shape
+            V0 = V0.T.reshape(galt.shape+(3,))
+        else:
+            V0 = self.apex.map_V_to_height(alat, alon, 300., galt/1000., V_scale)
 
-        s = (utime.shape[0],)+galt.shape+(3,)
-        VE0 = np.broadcast_to(VE, s)
+        s = output_shape(utime, galt)
+        if not s:
+            VE0 = V0
+        else:
+            VE0 = np.broadcast_to(V0, s+(3,))
+
+        # s = (utime.shape[0],)+galt.shape+(3,)
+        # VE0 = np.broadcast_to(VE, s)
 
         return VE0
 
@@ -384,8 +458,15 @@ class Velocity(object):
         # calculate V in geodetic coordinates
         VE = Ve1*e1 + Ve2*e2 + Ve3*e3
 
-        s = (utime.shape[0],)+galt.shape+(3,)
-        VE0 = np.broadcast_to(VE, s)
+        # s = (utime.shape[0],)+galt.shape+(3,)
+        # VE0 = np.broadcast_to(VE, s)
+
+        s = output_shape(utime, galt)
+        if not s:
+            VE0 = VE
+        else:
+            VE0 = np.broadcast_to(VE, s+(3,))
+
 
         return VE0
 
@@ -401,7 +482,14 @@ class Velocity(object):
             The vector value to assign at all points [E, N, U] (m/s)
         """
 
-        s = (utime.shape[0],)+galt.shape+(3,)
-        VE0 = np.broadcast_to(self.value, s)
+        # s = (utime.shape[0],)+galt.shape+(3,)
+        # VE0 = np.broadcast_to(self.value, s)
+
+        s = output_shape(utime, galt)
+        if not s:
+            VE0 = self.value
+        else:
+            VE0 = np.broadcast_to(self.value, s+(3,))
+
 
         return VE0

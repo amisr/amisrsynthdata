@@ -7,7 +7,7 @@ Ionospheric State
 Density
 -------
 
-.. autoclass:: amisrsynthdata.Density.Density
+.. autoclass:: amisrsynthdata.ionosphere.Density
     :members:
     :undoc-members:
     :show-inheritance:
@@ -17,7 +17,7 @@ Temperature
 -----------
 These general temperature functions are used to specify both ion and electron temperature.
 
-.. autoclass:: amisrsynthdata.Temperature.Temperature
+.. autoclass:: amisrsynthdata.ionosphere.Temperature
     :members:
     :undoc-members:
     :show-inheritance:
@@ -26,7 +26,7 @@ These general temperature functions are used to specify both ion and electron te
 Velocity
 --------
 
-.. autoclass:: amisrsynthdata.Velocity.Velocity
+.. autoclass:: amisrsynthdata.ionosphere.Velocity
     :members:
     :undoc-members:
     :show-inheritance:

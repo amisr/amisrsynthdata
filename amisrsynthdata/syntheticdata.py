@@ -71,13 +71,13 @@ class SyntheticData(object):
 
     def calc_radar_measurements(self):
         # caculate scalar ionosphere parameters at each fitted radar bin
-        self.ne = self.iono.density(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
-        self.te = self.iono.etemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
-        self.ti = self.iono.itemp(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ne = self.iono.density(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
+        self.te = self.iono.etemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
+        self.ti = self.iono.itemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
         kvec = self.radar.kvec_all_gates()
-        Vvec = self.iono.velocity(self.utime, self.radar.lat, self.radar.lon, self.radar.alt)
+        Vvec = self.iono.velocity(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
         self.Vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
         self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
@@ -113,7 +113,7 @@ class SyntheticData(object):
         # calculate density in ACF bins
         self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
 
-        ne_p = self.iono.density(self.utime, self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
+        ne_p = self.iono.density(self.utime[:,0], self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
         # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
         # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
         self.NeFromPower['Ne_Mod'] = ne_p
@@ -213,10 +213,10 @@ class SyntheticData(object):
         else:
             idx = np.argmin(np.abs((time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
 
-        ne0 = np.squeeze(self.iono.density(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        te0 = np.squeeze(self.iono.etemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        ti0 = np.squeeze(self.iono.itemp(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
-        ve = np.squeeze(self.iono.velocity(np.array([self.Time['UnixTime'][idx]]), glat, glon, galt))
+        ne0 = np.squeeze(self.iono.density(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(self.Time['UnixTime'][idx, 0], glat, glon, galt))
 
 
         # scaling/rotation of vector to plot in cartopy

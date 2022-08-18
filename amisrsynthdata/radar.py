@@ -2,6 +2,7 @@
 import numpy as np
 import pymap3d as pm
 from importlib_resources import files
+import warnings
 
 # NEEDS MAJOR REFACTORING FOR EFFICIENCY/MODULARIZING
 
@@ -37,7 +38,10 @@ class Radar(object):
         self.slant_range_p = np.arange(*self.acf_slant_range)
         self.lat_p, self.lon_p, self.alt_p = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range_p[None,:], self.site_lat, self.site_lon, self.site_alt)
 
-        self.slant_range = np.array([[np.nanmean(np.where((beam>=altbins[i]) & (beam<altbins[i+1]), self.slant_range_p, np.nan)) for i in range(len(altbins)-1)] for beam in self.alt_p])
+        # supress 'Mean of empty slice' warning so it doesn't clutter output - we expect empty slices at high altitudes
+        with warnings.catch_warnings():
+            warnings.filterwarnings(action='ignore', message='Mean of empty slice')
+            self.slant_range = np.array([[np.nanmean(np.where((beam>=altbins[i]) & (beam<altbins[i+1]), self.slant_range_p, np.nan)) for i in range(len(altbins)-1)] for beam in self.alt_p])
         self.lat, self.lon, self.alt = pm.aer2geodetic(az[:,None], el[:,None], self.slant_range, self.site_lat, self.site_lon, self.site_alt)
 
         ke, kn, ku = pm.aer2enu(az, el, 1.0)
