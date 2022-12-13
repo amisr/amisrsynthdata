@@ -3,6 +3,13 @@ import numpy as np
 import datetime as dt
 import pymap3d as pm
 from apexpy import Apex
+try:
+    from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
+    import gemini3d.read as read
+except ImportError:
+    print('WARNING: pygemini is not installed.  GEMINI functionality will not be available.')
+
+
 
 
 
@@ -301,37 +308,28 @@ class Density(object):
     # add wave fluctuation functions - L. Goodwin code
 
     def gemini(self, utime, glat, glon, galt):
+        """
+        Density output from GEMINI model.
 
-        gemini_output_dir = self.gemini_output_dir
+        Parameters
+        ----------
+        gemini_output_dir: string
+            Path to directory of GEMINI output files
+        """
 
-        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
-        import gemini3d.read as read
-
-        cfg = read.config(gemini_output_dir)
-        xg = read.grid(gemini_output_dir)
-
-        # s = (utime.shape[0],)+galt.shape
-        # s = utime.shape+galt.shape
-        s = output_shape(utime, galt)
-        Ne0 = np.empty(s)
+        xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
-            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='ne')
-
-            # Call pygemini to queary gemini results?
+            dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='ne')
             Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
-            # print(dat['ne'])
-
             Ne0 = Ne.reshape(galt.shape)
 
         else:
+            s = output_shape(utime, galt)
+            Ne0 = np.empty(s)
             for i, ut in enumerate(utime):
-
-                dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var='ne')
-
-                # Call pygemini to queary gemini results?
+                dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var='ne')
                 Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
-
                 Ne0[i] = Ne.reshape(galt.shape)
 
         return Ne0
@@ -406,42 +404,33 @@ class Temperature(object):
 
 
     def gemini(self, utime, glat, glon, galt):
+        """
+        Temperature output from GEMINI model.
 
-        gemini_output_dir = self.gemini_output_dir
+        Parameters
+        ----------
+        gemini_output_dir: string
+            Path to directory of GEMINI output files
+        species: string
+            Which species (ion or electron) should be read from GEMINI output ('Te' or 'Ti')
+        """
 
-        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
-        import gemini3d.read as read
-
-        cfg = read.config(gemini_output_dir)
-        xg = read.grid(gemini_output_dir)
-
-        # s = (utime.shape[0],)+galt.shape
-        # Te0 = np.empty(s)
-        #
-        # for i in range(len(utime)):
-        s = output_shape(utime, galt)
-        Te0 = np.empty(s)
+        xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
-
-            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='Te')
-
-            # Call pygemini to queary gemini results?
-            Te = model2pointsgeogcoords(xg, dat['Te'], galt, glon, glat)
-
-            Te0 = Te.reshape(galt.shape)
+            dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var=self.species)
+            Ts = model2pointsgeogcoords(xg, dat[self.species], galt, glon, glat)
+            Ts0 = Ts.reshape(galt.shape)
 
         else:
-
+            s = output_shape(utime, galt)
+            Ts0 = np.empty(s)
             for i, ut in enumerate(utime):
-                dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var='Te')
+                dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var=self.species)
+                Ts = model2pointsgeogcoords(xg, dat[self.species], galt, glon, glat)
+                Ts0[i] = Ts.reshape(galt.shape)
 
-                # Call pygemini to queary gemini results?
-                Te = model2pointsgeogcoords(xg, dat['Te'], galt, glon, glat)
-
-                Te0[i] = Te.reshape(galt.shape)
-
-        return Te0
+        return Ts0
 
 
 
@@ -570,79 +559,40 @@ class Velocity(object):
         return VE0
 
     def gemini(self, utime, glat, glon, galt):
-        gemini_output_dir = self.gemini_output_dir
+        """
+        Velocity output from GEMINI model.
 
-        from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
-        import gemini3d.read as read
+        Parameters
+        ----------
+        gemini_output_dir: string
+            Path to directory of GEMINI output files
+        """
 
-        cfg = read.config(gemini_output_dir)
-        xg = read.grid(gemini_output_dir)
-
-        # s = (utime.shape[0],)+galt.shape+(3,)
-        s = output_shape(utime, galt)+(3,)
-        Vi0 = np.empty(s)
+        xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
-
-            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v1')
+            dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v1')
             V1 = model2pointsgeogcoords(xg, dat['v1'], galt, glon, glat)
-            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v2')
+            dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v2')
             V2 = model2pointsgeogcoords(xg, dat['v2'], galt, glon, glat)
-            dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v3')
+            dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v3')
             V3 = model2pointsgeogcoords(xg, dat['v3'], galt, glon, glat)
 
-# [egalt,eglon,eglat]=unitvecs_geographic(xg)
-# #^ returns a set of geographic unit vectors on xg; these are in ECEF geomag comps
-# #    like all other unit vectors in xg
-#
-# # each of the components in models basis projected onto geographic unit vectors
-# vgalt=( np.sum(xg["e1"]*egalt,3)*dat["v1"] + np.sum(xg["e2"]*egalt,3)*dat["v2"] +
-#     np.sum(xg["e3"]*egalt,3)*dat["v3"] )
-# vglat=( np.sum(xg["e1"]*eglat,3)*dat["v1"] + np.sum(xg["e2"]*eglat,3)*dat["v2"] +
-#     np.sum(xg["e3"]*eglat,3)*dat["v3"] )
-# vglon=( np.sum(xg["e1"]*eglon,3)*dat["v1"] + np.sum(xg["e2"]*eglon,3)*dat["v2"] +
-#     np.sum(xg["e3"]*eglon,3)*dat["v3"] )
-
-
-
             V = np.array([V1, V2, V3]).T
-            # print(galt.shape, V1.shape, Vi0.shape, V.shape)
-
             Vi0 = V.reshape(galt.shape+(3,))
-            # Vi0[i,:,1] = V2.reshape(galt.shape)
-            # Vi0[i,:,2] = V3.reshape(galt.shape)
-
 
         else:
-
+            s = output_shape(utime, galt)+(3,)
+            Vi0 = np.empty(s)
             for i, ut in enumerate(utime):
-
-                dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v1')
+                dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v1')
                 V1 = model2pointsgeogcoords(xg, dat['v1'], galt, glon, glat)
-                dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v2')
+                dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v2')
                 V2 = model2pointsgeogcoords(xg, dat['v2'], galt, glon, glat)
-                dat = read.frame(gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v3')
+                dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v3')
                 V3 = model2pointsgeogcoords(xg, dat['v3'], galt, glon, glat)
 
-    # [egalt,eglon,eglat]=unitvecs_geographic(xg)
-    # #^ returns a set of geographic unit vectors on xg; these are in ECEF geomag comps
-    # #    like all other unit vectors in xg
-    #
-    # # each of the components in models basis projected onto geographic unit vectors
-    # vgalt=( np.sum(xg["e1"]*egalt,3)*dat["v1"] + np.sum(xg["e2"]*egalt,3)*dat["v2"] +
-    #     np.sum(xg["e3"]*egalt,3)*dat["v3"] )
-    # vglat=( np.sum(xg["e1"]*eglat,3)*dat["v1"] + np.sum(xg["e2"]*eglat,3)*dat["v2"] +
-    #     np.sum(xg["e3"]*eglat,3)*dat["v3"] )
-    # vglon=( np.sum(xg["e1"]*eglon,3)*dat["v1"] + np.sum(xg["e2"]*eglon,3)*dat["v2"] +
-    #     np.sum(xg["e3"]*eglon,3)*dat["v3"] )
-
-
-
                 V = np.array([V1, V2, V3]).T
-                # print(galt.shape, V1.shape, Vi0.shape, V.shape)
-
                 Vi0[i] = V.reshape(galt.shape+(3,))
-                # Vi0[i,:,1] = V2.reshape(galt.shape)
-                # Vi0[i,:,2] = V3.reshape(galt.shape)
 
         return Vi0
