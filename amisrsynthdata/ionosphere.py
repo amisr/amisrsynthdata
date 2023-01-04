@@ -332,6 +332,7 @@ class Density(object):
                 Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
                 Ne0[i] = Ne.reshape(galt.shape)
 
+        print(Ne0.shape)
         return Ne0
 
 
