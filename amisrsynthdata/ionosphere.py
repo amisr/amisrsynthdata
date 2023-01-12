@@ -317,11 +317,23 @@ class Density(object):
             Path to directory of GEMINI output files
         """
 
+        # gemini query function can't handle nans in coordinate arrays, so remove
+        #   and replace in the output array
+        glatf = glat.flatten()
+        glonf = glon.flatten()
+        galtf = galt.flatten()
+        finite_coords = np.any(np.isfinite([glatf, glonf, galtf]), axis=0)
+
+        # find indices where nans will be removed and should be inserted in new arrays
+        replace_nans = np.array([r-i for i,r in enumerate(np.argwhere(~finite_coords).flatten())])
+
         xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
             dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='ne')
-            Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
+            Ne = model2pointsgeogcoords(xg, dat['ne'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+            if np.any(replace_nans):
+                Ne = np.insert(Ne, replace_nans, np.nan)
             Ne0 = Ne.reshape(galt.shape)
 
         else:
@@ -329,10 +341,11 @@ class Density(object):
             Ne0 = np.empty(s)
             for i, ut in enumerate(utime):
                 dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var='ne')
-                Ne = model2pointsgeogcoords(xg, dat['ne'], galt, glon, glat)
+                Ne = model2pointsgeogcoords(xg, dat['ne'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+                if np.any(replace_nans):
+                    Ne = np.insert(Ne, replace_nans, np.nan)
                 Ne0[i] = Ne.reshape(galt.shape)
 
-        print(Ne0.shape)
         return Ne0
 
 
@@ -416,11 +429,23 @@ class Temperature(object):
             Which species (ion or electron) should be read from GEMINI output ('Te' or 'Ti')
         """
 
+        # gemini query function can't handle nans in coordinate arrays, so remove
+        #   and replace in the output array
+        glatf = glat.flatten()
+        glonf = glon.flatten()
+        galtf = galt.flatten()
+        finite_coords = np.any(np.isfinite([glatf, glonf, galtf]), axis=0)
+
+        # find indices where nans will be removed and should be inserted in new arrays
+        replace_nans = np.array([r-i for i,r in enumerate(np.argwhere(~finite_coords).flatten())])
+
         xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
             dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var=self.species)
-            Ts = model2pointsgeogcoords(xg, dat[self.species], galt, glon, glat)
+            Ts = model2pointsgeogcoords(xg, dat[self.species], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+            if np.any(replace_nans):
+                Ts = np.insert(Ts, replace_nans, np.nan)
             Ts0 = Ts.reshape(galt.shape)
 
         else:
@@ -428,7 +453,9 @@ class Temperature(object):
             Ts0 = np.empty(s)
             for i, ut in enumerate(utime):
                 dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(ut), var=self.species)
-                Ts = model2pointsgeogcoords(xg, dat[self.species], galt, glon, glat)
+                Ts = model2pointsgeogcoords(xg, dat[self.species], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+                if np.any(replace_nans):
+                    Ts = np.insert(Ts, replace_nans, np.nan)
                 Ts0[i] = Ts.reshape(galt.shape)
 
         return Ts0
@@ -569,15 +596,31 @@ class Velocity(object):
             Path to directory of GEMINI output files
         """
 
+        # gemini query function can't handle nans in coordinate arrays, so remove
+        #   and replace in the output array
+        glatf = glat.flatten()
+        glonf = glon.flatten()
+        galtf = galt.flatten()
+        finite_coords = np.any(np.isfinite([glatf, glonf, galtf]), axis=0)
+
+        # find indices where nans will be removed and should be inserted in new arrays
+        replace_nans = np.array([r-i for i,r in enumerate(np.argwhere(~finite_coords).flatten())])
+
         xg = read.grid(self.gemini_output_dir)
 
         if not utime.shape:
             dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v1')
-            V1 = model2pointsgeogcoords(xg, dat['v1'], galt, glon, glat)
+            V1 = model2pointsgeogcoords(xg, dat['v1'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+            if np.any(replace_nans):
+                V1 = np.insert(V1, replace_nans, np.nan)
             dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v2')
-            V2 = model2pointsgeogcoords(xg, dat['v2'], galt, glon, glat)
+            V2 = model2pointsgeogcoords(xg, dat['v2'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+            if np.any(replace_nans):
+                V2 = np.insert(V2, replace_nans, np.nan)
             dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime), var='v3')
-            V3 = model2pointsgeogcoords(xg, dat['v3'], galt, glon, glat)
+            V3 = model2pointsgeogcoords(xg, dat['v3'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+            if np.any(replace_nans):
+                V3 = np.insert(V3, replace_nans, np.nan)
 
             V = np.array([V1, V2, V3]).T
             Vi0 = V.reshape(galt.shape+(3,))
@@ -587,11 +630,17 @@ class Velocity(object):
             Vi0 = np.empty(s)
             for i, ut in enumerate(utime):
                 dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v1')
-                V1 = model2pointsgeogcoords(xg, dat['v1'], galt, glon, glat)
+                V1 = model2pointsgeogcoords(xg, dat['v1'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+                if np.any(replace_nans):
+                    V1 = np.insert(V1, replace_nans, np.nan)
                 dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v2')
-                V2 = model2pointsgeogcoords(xg, dat['v2'], galt, glon, glat)
+                V2 = model2pointsgeogcoords(xg, dat['v2'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+                if np.any(replace_nans):
+                    V2 = np.insert(V2, replace_nans, np.nan)
                 dat = read.frame(self.gemini_output_dir, dt.datetime.utcfromtimestamp(utime[i]), var='v3')
-                V3 = model2pointsgeogcoords(xg, dat['v3'], galt, glon, glat)
+                V3 = model2pointsgeogcoords(xg, dat['v3'], galtf[finite_coords], glonf[finite_coords], glatf[finite_coords])
+                if np.any(replace_nans):
+                    V3 = np.insert(V3, replace_nans, np.nan)
 
                 V = np.array([V1, V2, V3]).T
                 Vi0[i] = V.reshape(galt.shape+(3,))
