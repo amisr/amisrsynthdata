@@ -499,6 +499,10 @@ class Velocity(object):
         ----------
         value: list
             The vector value to assign at all points [E, N, U] (m/s)
+        cent_lat: float
+            Geodetic latitude of initial specified vector (deg)
+        cent_lon: float
+            Geodetic longitude of initial specified vector (deg)
         """
 
         # alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
@@ -506,7 +510,8 @@ class Velocity(object):
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
         # Find ECEF velocity components for given geodetic velocity at center of points
-        u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], np.nanmean(map_glat), np.nanmean(map_glon))
+        # u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], np.nanmean(map_glat), np.nanmean(map_glon))
+        u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], self.cent_lat, self.cent_lon)
         # Find ENU components for same velocity translated to all mapped locations
         e, n, u = pm.uvw2enu(u, v, w, map_glat, map_glon)
         u = np.zeros(u.shape)   # set up component to zero
