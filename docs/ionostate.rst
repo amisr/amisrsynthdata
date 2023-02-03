@@ -4,6 +4,15 @@
 Ionospheric State
 =================
 
+All ionospheric state functions take the same input parameters:
+
+  * utime: Unix Time (seconds from January 1, 1970)
+  * glat: Geodetic Latitude (degrees)
+  * glon: Geodetic Longitude (degrees)
+  * galt: Geodetic Altitude (meters)
+
+Other parameters that are needed to define the state should be specified in the appropriate section of the :ref:`configuration file <Configuration File>`.  The parameters that are needed to define different types of ionospheric state functions are listed below.
+
 Density
 -------
 
