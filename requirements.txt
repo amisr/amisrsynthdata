@@ -1,5 +1,0 @@
-numpy
-h5py
-pymap3d
-pyyaml
-importlib_resources
