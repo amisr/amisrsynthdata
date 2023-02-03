@@ -4,6 +4,9 @@
 Ionospheric State
 =================
 
+Universal Parameters
+--------------------
+
 All ionospheric state functions take the same input parameters:
 
   * utime: Unix Time (seconds from January 1, 1970)
