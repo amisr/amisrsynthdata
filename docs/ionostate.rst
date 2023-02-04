@@ -4,6 +4,15 @@
 Ionospheric State
 =================
 
+All ionospheric state functions take the same input parameters:
+
+  * utime: Unix Time (seconds from January 1, 1970)
+  * glat: Geodetic Latitude (degrees)
+  * glon: Geodetic Longitude (degrees)
+  * galt: Geodetic Altitude (meters)
+
+Other parameters that are needed to define the state should be specified in the appropriate section of the :ref:`configuration file <Configuration File>`.  The parameters that are needed to define different types of ionospheric state functions are listed below.
+
 Density
 -------
 
@@ -43,10 +52,11 @@ Function Guidelines
 *******************
 
 Functions must have a unique name from functions already used by that class, and MUST take in the following variable in this order:
-  - Unix Time (seconds since January 1, 1970)
-  - Geodetic Latitude (degrees)
-  - Geodetic Longitude (degrees)
-  - Geodetic Altitude (meters)
+
+  * Unix Time (seconds since January 1, 1970)
+  * Geodetic Latitude (degrees)
+  * Geodetic Longitude (degrees)
+  * Geodetic Altitude (meters)
 
 Latitude, longitude, and altitude can be multidimensional, but they will always all be the same shape.  Unix Time will be a 1D array of any length.  Functions should return scalar parameters (density and temperature) as arrays where the first dimension matches the length of the Unix Time array, and subsequent dimensions match the shape of the position arrays.  Velocity functions should return a similar array, but with one final dimension that holds the three velocity vector components.
 
