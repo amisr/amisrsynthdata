@@ -6,7 +6,9 @@ Usage
 Command Line
 ------------
 
-To run the AMISR synthetic data generator, simply call `amisrsynthdata` from the command line with a configuration file::
+To run the AMISR synthetic data generator, simply call `amisrsynthdata` from the command line with a configuration file.
+
+.. code-block::
 
   amisrsynthdata config.yaml
 
@@ -16,7 +18,9 @@ See :ref:`Configuration File` section of the documentation for details on the fi
 Python
 ------
 
-The modules of amisrsynthdata can be imported directly into python programs.  This is most useful to get truth values at arbitrary points and compare with inversion and interpolation codes.  Create YAML config object to initialize the amisrsynthdta modules by loading an existing `config.yaml` file::
+The modules of amisrsynthdata can be imported directly into python programs.  This is most useful to get truth values at arbitrary points and compare with inversion and interpolation codes.  Create YAML config object to initialize the amisrsynthdta modules by loading an existing `config.yaml` file.
+
+.. code-block:: python
 
   import yaml
 
@@ -28,7 +32,10 @@ Alternatively, hard-code a dictionary with the appropriate fields.  It is import
 
 The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `SyntheticData`.  All three are initialized with the YAML config object discussed above, but all fields may not be necessary for the `Radar` and `Ionosphere` classes.  In general, `Ionosphere` contains functions for calculating ionospheric parameters at specified locations, `Radar` contains information about the radar's position and the locations of all beams and range gates, and `SyntheticData` actually calculates ionospheric parameters at each radar gate location and creates output synthetic data files.
 
-`Radar` example::
+`Radar` Class Example
+*********************
+
+.. code-block:: python
 
   from amisrsynthdata import Radar
 
@@ -40,7 +47,10 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
   # Print geodetic latitude of each range gate
   print(rad.lat)
 
-`Ionosphere` example::
+`Ionosphere` Class Example
+**************************
+
+.. code-block:: python
 
   import datetime as dt
   from amisrsynthdata import Ionosphere
@@ -57,7 +67,10 @@ The amisrsynthdata package contains three classes: `Radar`, `Ionosphere`, and `S
   Te = iono.etemp(utime, glat, glon, alt)
   Ti = iono.itemp(utime, glat, glon, alt)
 
-`SyntheticData` example::
+`SyntheticData` Class Example
+*****************************
+
+.. code-block:: python
 
   from amisrsynthdata import SyntheticData
 

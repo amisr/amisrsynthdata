@@ -11,7 +11,9 @@ Quick Start
 Installation
 ************
 
-The amisrsynthdata package is pure python and can be installed easily with pip::
+The amisrsynthdata package is pure python and can be installed easily with pip:
+
+.. code-block::
 
   $ pip install git+https://github.com/amisr/amisrsynthdata.git
 
@@ -19,7 +21,9 @@ The amisrsynthdata package is pure python and can be installed easily with pip::
 Basic Usage
 ***********
 
-This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used::
+This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used:
+
+.. code-block::
 
   $ amisrsynthdata config.yaml
 
