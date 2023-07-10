@@ -203,7 +203,7 @@ class SyntheticData(object):
 
         # form grid of coordinates for plotting
         alt_layers = np.arange(100.,500.,100.)*1000.
-        e, n = np.meshgrid(np.arange(-500.,500.,100.)*1000., np.arange(-200.,800.,100.)*1000.)
+        e, n = np.meshgrid(np.arange(-500.,500.,10.)*1000., np.arange(-200.,800.,10.)*1000.)
         glat, glon, galt = pm.enu2geodetic(e, n, 0., self.radar.site_lat, self.radar.site_lon, 0.)
 
         glat = np.tile(glat, alt_layers.shape).reshape(glat.shape+alt_layers.shape, order='F')
@@ -240,7 +240,10 @@ class SyntheticData(object):
 
             ax = fig.add_subplot(gs[j,0], projection=proj)
             ax.coastlines()
-            ax.contourf(glon[:,:,j], glat[:,:,j], ne0[:,:,j], vmin=0., vmax=4.e11, cmap='viridis', transform=ccrs.PlateCarree())
+            cs = ax.contourf(glon[:,:,j], glat[:,:,j], ne0[:,:,j], vmin=0., vmax=4.e11, extend='neither', cmap='viridis', transform=ccrs.PlateCarree())
+            cs.cmap.set_over('white')
+            cs.cmap.set_under('grey')
+            cs.changed()
             ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
             ax = fig.add_subplot(gs[j,1], projection=proj)

@@ -348,6 +348,69 @@ class Density(object):
         return Ne0
 
     # add wave fluctuation functions - L. Goodwin code
+    def wave(self, utime, glat, glon, galt):
+        """
+        A wave-like structure, such as traveling ionospheric 
+        distrubances (TID) or gravity waves (GW).
+
+        Parameters
+        ----------
+        A0: float
+            Wave amplitude (m^-3)
+        wavelength: float
+            Wavelength (m)
+        velocity: float
+            Wave velocity (m/s)
+        az: float
+            Propigation direction (deg)
+        orig_lat: float
+            Plane wave origin latitude (deg)
+        orig_lon: float
+            Plane wave origin longitude (deg)
+        orig_alt: float
+            Plane wave origin altiude (m)
+        H: float
+            Scale height for amplitude decay (m)
+
+        This function produces wave purturbations around zero with amplidude dependent
+        on altitude (z) as follows:
+
+        Amplitude = A0*exp((z-orig_alt)^2/H^2)
+
+        If this function is not used in conjunction with a suitable background, it WILL
+        generate negative values for electron density.  If a uniform background density
+        is selected, make sure A0 is less than the uniform background value.  If a 
+        Chapman layer background is desired, the easiest way to ensure positive definite
+        density is to follow these guidlines:
+
+        N0_chap > A0
+        z0_chap = orig_alt
+        H_chap > H
+
+        """
+
+        s = output_shape(utime, galt)
+        if utime.shape:
+            # Some fancy array axis manipulation to get t in the proper shape for brodcasting
+            t = np.moveaxis(np.broadcast_to(utime-self.utime0, s[1:]+(s[0],)), -1, 0)
+        else:
+            t = utime-self.utime0
+
+        # ECEF vector to the center point
+        center_vec = np.array(pm.geodetic2ecef(self.orig_lat, self.orig_lon, self.orig_alt))
+
+        # define norm vector and array of point vectors in ECEF
+        norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., self.orig_lat, self.orig_lon, self.orig_alt))-center_vec
+        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+
+        # calculate distance between each point and the plane
+        r = np.einsum('...i,i->...', point_vec, norm_vec)
+
+        # create wave with sine function
+        Ne0 = self.A0*np.sin(2*np.pi/self.wavelength*(r-self.velocity*t))*np.exp(-0.5*(galt-self.orig_alt)**2/self.H**2)
+
+        return Ne0
+
 
     def gemini(self, utime, glat, glon, galt):
         """
