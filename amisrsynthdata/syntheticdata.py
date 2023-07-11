@@ -18,8 +18,6 @@ class SyntheticData(object):
         output_filename = config['GENERAL']['output_filename']
         err_coef = config['GENERAL']['err_coef']
         add_noise = config['GENERAL']['noise']
-        summary_plot = config['GENERAL'].get('summary_plot', None)
-        summary_plot_time = config['GENERAL'].get('summary_plot_time', None)
 
         # generate ionosphere object
         self.iono = Ionosphere(config)
@@ -35,8 +33,8 @@ class SyntheticData(object):
         if add_noise:
             self.add_measurment_noise()
         self.save_hdf5_output(output_filename)
-        if summary_plot:
-            self.summary_plot(summary_plot, summary_plot_time)
+        if 'SUMMARY_PLOT' in config:
+            self.summary_plot(config['SUMMARY_PLOT'])
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
@@ -187,7 +185,7 @@ class SyntheticData(object):
                 h5.create_dataset('/Time/{}'.format(k), data=v)
 
 
-    def summary_plot(self, output_plot_name, time):
+    def summary_plot(self, config):
 
         # optional imports used ONLY for creating summary plots
         # matplotlib and cartopy are not listed in the package requirments
@@ -202,23 +200,21 @@ class SyntheticData(object):
 
 
         # form grid of coordinates for plotting
-        alt_layers = np.arange(100.,500.,100.)*1000.
-        e, n = np.meshgrid(np.arange(-500.,500.,10.)*1000., np.arange(-200.,800.,10.)*1000.)
+        # Make customizable in config file
+        alt_layers = np.array(config['alt_slices'])
+        e, n = np.meshgrid(np.arange(*config['slice_lon_rng']), np.arange(*config['slice_lat_rng']))
         glat, glon, galt = pm.enu2geodetic(e, n, 0., self.radar.site_lat, self.radar.site_lon, 0.)
 
         glat = np.tile(glat, alt_layers.shape).reshape(glat.shape+alt_layers.shape, order='F')
         glon = np.repeat(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape, order='C')
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
-        if not time:
-            idx = 0
-        else:
-            idx = np.argmin(np.abs((time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
+        tidx = np.argmin(np.abs((config['time']-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
 
-        ne0 = np.squeeze(self.iono.density(self.Time['UnixTime'][idx,0], glat, glon, galt))
-        te0 = np.squeeze(self.iono.etemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
-        ti0 = np.squeeze(self.iono.itemp(self.Time['UnixTime'][idx,0], glat, glon, galt))
-        ve = np.squeeze(self.iono.velocity(self.Time['UnixTime'][idx, 0], glat, glon, galt))
+        ne0 = np.squeeze(self.iono.density(self.Time['UnixTime'][tidx,0], glat, glon, galt))
+        te0 = np.squeeze(self.iono.etemp(self.Time['UnixTime'][tidx,0], glat, glon, galt))
+        ti0 = np.squeeze(self.iono.itemp(self.Time['UnixTime'][tidx,0], glat, glon, galt))
+        ve = np.squeeze(self.iono.velocity(self.Time['UnixTime'][tidx, 0], glat, glon, galt))
 
 
         # scaling/rotation of vector to plot in cartopy
@@ -230,78 +226,75 @@ class SyntheticData(object):
         n = ns*sf
 
 
+        plotting_params = [dict(synthdata=self.ne, param=ne0, cparam=config['dens_colors'], label=r'Ne (m$^{-3}$)', title='Electron Density', output=config['output_prefix']+'ne.png'),
+                           dict(synthdata=self.te, param=te0, cparam=config['etemp_colors'], label=r'Te (K)', title='Electron Temperature', output=config['output_prefix']+'te.png'),
+                           dict(synthdata=self.ti, param=ti0, cparam=config['itemp_colors'], label=r'Ti (K)', title='Ion Temperature', output=config['output_prefix']+'ti.png'),
+                           dict(synthdata=self.Vlos, param=[e,n], cparam=config['vlos_colors'], label=r'Vlos (m/s)', title='Plasma Velocity', output=config['output_prefix']+'vi.png')]
 
         proj = ccrs.AzimuthalEquidistant(central_latitude=self.radar.site_lat, central_longitude=self.radar.site_lon)
+        Nalt = len(alt_layers)
+        wr = [1]*Nalt
+        wr.append(Nalt/2.)
+        gs = gridspec.GridSpec(2, Nalt+1, width_ratios=wr, left=0.1, right=0.95, bottom=0.1, top=0.95, wspace=0.1, hspace=0.1)
+        bidx = np.where(self.radar.beam_codes[:,0]==config['beam'])[0][0]
 
-        fig = plt.figure(figsize=(12,3*(len(alt_layers)+1)))
-        gs = gridspec.GridSpec(len(alt_layers)+1,4, left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.2, hspace=0.15)
+        for p in plotting_params:
 
-        for j in range(len(alt_layers)):
+            fig = plt.figure(figsize=(15,7))
+            fig.suptitle(p['title'])
 
-            ax = fig.add_subplot(gs[j,0], projection=proj)
-            ax.coastlines()
-            cs = ax.contourf(glon[:,:,j], glat[:,:,j], ne0[:,:,j], vmin=0., vmax=4.e11, extend='neither', cmap='viridis', transform=ccrs.PlateCarree())
-            cs.cmap.set_over('white')
-            cs.cmap.set_under('grey')
-            cs.changed()
-            ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
-            ax = fig.add_subplot(gs[j,1], projection=proj)
-            ax.coastlines()
-            ax.quiver(glon[:,:,j], glat[:,:,j], e[:,:,j], n[:,:,j], color='blue', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]/1000.))
+            # Create slice plots
+            for j in range(len(alt_layers)):
+    
+                ax = fig.add_subplot(gs[0,j], projection=proj)
+                ax.coastlines()
+                ax.set_title('{} km'.format(alt_layers[j]/1000.))
 
-            ax = fig.add_subplot(gs[j,2], projection=proj)
-            ax.coastlines()
-            ax.contourf(glon[:,:,j], glat[:,:,j], te0[:,:,j], vmin=0., vmax=5.e3, cmap='inferno', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]/1000.))
+                if p['title'] == 'Plasma Velocity':
+                    ax.quiver(glon[:,:,j], glat[:,:,j], p['param'][0][:,:,j], p['param'][1][:,:,j], color='blue', transform=ccrs.PlateCarree())
 
-            ax = fig.add_subplot(gs[j,3], projection=proj)
-            ax.coastlines()
-            ax.contourf(glon[:,:,j], glat[:,:,j], ti0[:,:,j], vmin=0., vmax=3.e3, cmap='magma', transform=ccrs.PlateCarree())
-            ax.set_title('{} km'.format(alt_layers[j]/1000.))
+                else:
+                    cs = ax.contourf(glon[:,:,j], glat[:,:,j], p['param'][:,:,j], **p['cparam'], transform=ccrs.PlateCarree())
+                    cs.cmap.set_over('white')
+                    cs.cmap.set_under('grey')
+                    cs.changed()
 
-        # x, y, z = pm.geodetic2ecef(self.radar.lat, self.radar.lon, self.radar.alt)
-        x, y, z = pm.geodetic2enu(self.radar.lat, self.radar.lon, self.radar.alt, self.radar.site_lat, self.radar.site_lon, self.radar.site_alt)
-        fp = np.isfinite(self.radar.alt)
+                # Add beam positions
+                aidx = np.nanargmin(np.abs(self.radar.alt-alt_layers[j]),axis=1)
+                aidx0 = np.array([aidx]).T
+                slice_lat = np.take_along_axis(self.radar.lat, aidx0, axis=1)
+                slice_lon = np.take_along_axis(self.radar.lon, aidx0, axis=1)
+                ax.scatter(slice_lon, slice_lat, facecolors='none', edgecolors='k', transform=ccrs.Geodetic())
+                ax.scatter(slice_lon[bidx], slice_lat[bidx], facecolors='none', edgecolors='magenta', transform=ccrs.Geodetic())
 
-        ax = fig.add_subplot(gs[-1,0], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ne[idx,fp], vmin=0., vmax=4.e11, cmap='viridis')
-        ax.xaxis.set_ticklabels([])
-        ax.yaxis.set_ticklabels([])
-        ax.zaxis.set_ticklabels([])
-        # ax.set_box_aspect((1,1,1))
-        ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
-        fig.colorbar(c, label=r'Ne (m$^{-3}$)')
 
-        ax = fig.add_subplot(gs[-1,1], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.Vlos[idx,fp], vmin=-500., vmax=500., cmap='coolwarm')
-        ax.xaxis.set_ticklabels([])
-        ax.yaxis.set_ticklabels([])
-        ax.zaxis.set_ticklabels([])
-        # ax.set_box_aspect((1,1,1))
-        ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
-        fig.colorbar(c, label='V (m/s)')
 
-        ax = fig.add_subplot(gs[-1,2], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.te[idx,fp], vmin=0., vmax=5.e3, cmap='inferno')
-        ax.xaxis.set_ticklabels([])
-        ax.yaxis.set_ticklabels([])
-        ax.zaxis.set_ticklabels([])
-        # ax.set_box_aspect((1,1,1))
-        ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
-        fig.colorbar(c, label='Te (K)')
+            # Create RTI
+            ax = fig.add_subplot(gs[1,:-1])
+            time = self.utime[:,0].astype('datetime64[s]')
+            alt = self.radar.alt[bidx,:]
+            c = ax.pcolormesh(time, alt[np.isfinite(alt)], p['synthdata'][:,bidx,np.isfinite(alt)].T, **p['cparam'])
+            ax.axvline(x=config['time'], color='magenta')
+            ax.set_xlabel('Universal Time')
+            ax.set_ylabel('Altitude (m)')
+            ax.set_title('Beam Number: {:.0f} (az:{:.1f}, el:{:.1f})'.format(self.radar.beam_codes[bidx,0], self.radar.beam_codes[bidx,1], self.radar.beam_codes[bidx,2]))
 
-        ax = fig.add_subplot(gs[-1,3], projection='3d')
-        c = ax.scatter(x[fp], y[fp], z[fp], c=self.ti[idx,fp], vmin=0., vmax=3.e3, cmap='magma')
-        ax.xaxis.set_ticklabels([])
-        ax.yaxis.set_ticklabels([])
-        ax.zaxis.set_ticklabels([])
-        # ax.set_aspect(aspect='equal')
-        ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
-        fig.colorbar(c, label='Ti (K)')
 
-        fig.savefig(output_plot_name)
+            # Create 3D FoV plot
+            x, y, z = pm.geodetic2enu(self.radar.lat, self.radar.lon, self.radar.alt, self.radar.site_lat, self.radar.site_lon, self.radar.site_alt)
+            fp = np.isfinite(self.radar.alt)
+    
+            ax = fig.add_subplot(gs[:,-1], projection='3d')
+            c = ax.scatter(x[fp], y[fp], z[fp], c=p['synthdata'][tidx,fp], **p['cparam'])
+            #ax.xaxis.set_ticklabels([])
+            #ax.yaxis.set_ticklabels([])
+            #ax.zaxis.set_ticklabels([])
+            ax.set_box_aspect((1,1,1))
+            ax.set_box_aspect([ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+            fig.colorbar(c, label=p['label'])
+    
+            fig.savefig(p['output'])
 
 
 
