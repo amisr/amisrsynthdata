@@ -357,25 +357,27 @@ class Density(object):
         ----------
         A0: float
             Wave amplitude (m^-3)
-        wavelength: float
-            Wavelength (m)
-        velocity: float
-            Wave velocity (m/s)
-        az: float
-            Propigation direction (deg)
+        k: list
+            Wavevector [E, N, U] (m/s)
+        P: float
+            Wave period (m/s)
         orig_lat: float
-            Plane wave origin latitude (deg)
+            Geodetic latitude wavevector is defined from (deg)
         orig_lon: float
-            Plane wave origin longitude (deg)
+            Geodetic longitude wavevector is defined from (deg)
         orig_alt: float
-            Plane wave origin altiude (m)
+            Geodetic altiude wavevector is defined from (m)
         H: float
-            Scale height for amplitude decay (m)
+            Scale height for wave amplitude decay (m)
+        wave_alt: float
+            Peak altitude of wave that it should decay away from (m)
 
-        This function produces wave purturbations around zero with amplidude dependent
-        on altitude (z) as follows:
+        The wave has the functional form
 
-        Amplitude = A0*exp((z-orig_alt)^2/H^2)
+        Ne = A0 * sin( 2pi * (k*r + t/P) ) * exp( (z-wave_alt)^2 / H^2 )
+
+        This function produces wave purturbations around zero with amplidude decaying
+        as H^-2 moving away from the specified peak wave altitude.
 
         If this function is not used in conjunction with a suitable background, it WILL
         generate negative values for electron density.  If a uniform background density
@@ -384,7 +386,7 @@ class Density(object):
         density is to follow these guidlines:
 
         N0_chap > A0
-        z0_chap = orig_alt
+        z0_chap = wave_alt
         H_chap > H
 
         """
@@ -396,18 +398,13 @@ class Density(object):
         else:
             t = utime-self.utime0
 
-        # ECEF vector to the center point
-        center_vec = np.array(pm.geodetic2ecef(self.orig_lat, self.orig_lon, self.orig_alt))
-
-        # define norm vector and array of point vectors in ECEF
-        norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., self.orig_lat, self.orig_lon, self.orig_alt))-center_vec
-        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
-
-        # calculate distance between each point and the plane
-        r = np.einsum('...i,i->...', point_vec, norm_vec)
+        # define array of point vectors in ECEF
+        e, n, u = pm.geodetic2enu(glat, glon, galt, self.orig_lat, self.orig_lon, self.orig_alt)
+        point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
         # create wave with sine function
-        Ne0 = self.A0*np.sin(2*np.pi/self.wavelength*(r-self.velocity*t))*np.exp(-0.5*(galt-self.orig_alt)**2/self.H**2)
+        kr = np.einsum('i,...i->...', np.array(self.k), point_vec)
+        Ne0 = self.A0*np.sin(2*np.pi * (kr + t/self.P))*np.exp(-0.5*(galt-self.wave_alt)**2/self.H**2)
 
         return Ne0
 
