@@ -5,7 +5,7 @@
 Configuration File
 ==================
 
-The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an example configuration file is available in the main project repository.  The configuration file requires six main sections: GENERAL (which specifies various options for how the synthetic data generator should be run), RADAR (which specifies the radar mode and configuration options), and DENSITY, VELOCITY, ITEMP, and ETEMP (which specify the values for electron density, plasma drift velocity, ion temperature, and electron temperature, respectively).  The GENERAL and RADAR sections are composed of several standard parameters that need to be specified (described in the tables below).
+The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an `example configuration file <https://github.com/amisr/amisrsynthdata/blob/develop/example_synth_config.yaml>`_ is available in the main project repository.  The configuration file requires six main sections: GENERAL (which specifies various options for how the synthetic data generator should be run), RADAR (which specifies the radar mode and configuration options), and DENSITY, VELOCITY, ITEMP, and ETEMP (which specify the values for electron density, plasma drift velocity, ion temperature, and electron temperature, respectively).  There is an additional optional SUMMARY_PLOT section where plotting parameters for the automatically-generated summary plots can be specified.  The GENERAL and RADAR sections are composed of several standard parameters that need to be specified (described in the tables below).
 
 **IMPORTANT NOTE**: YAML can natively handle scientific notation, but has stringent formatting requirements.  The mantissa must have a decimal point and the sign of the exponent must be included.  This means `4.0e+11` can be used in the configuration files, but `4e11` would generate errors.
 
@@ -21,15 +21,11 @@ GENERAL
 +---------------------+--------------------------------------------------------+----------------------------------+
 | output_filename     | Name out output synthetic data file                    | amisr_synthetic_data_output.h5   |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| ion_mass [2]_       | List of masses of ions to be included in composition   | [16.,32.,30.,28.,14.]            |
+| ion_mass [2]_       | List of masses of ions to be included in composition   | [16., 32., 30., 28., 14.]        |
 +---------------------+--------------------------------------------------------+----------------------------------+
 | err_coef            | Coefficients for r^2 empirical errors (Ne, Ve, Te, Ti) | [1., 1.e-9, 5.e-9, 1.e-9]        |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| noise               | Whether or not to add random noise                     | false                            |
-+---------------------+--------------------------------------------------------+----------------------------------+
-| summary_plot        | Filename for output summary plot                       | synthetic_data_summary_risrn.png |
-+---------------------+--------------------------------------------------------+----------------------------------+
-| summary_plot_time   | Time to plot in the output summary plot                |  2021-09-13 00:03:00             |
+| noise               | Whether or not to add random noise                     | False                            |
 +---------------------+--------------------------------------------------------+----------------------------------+
 
 
@@ -90,5 +86,54 @@ Refer to the API references and the example configuration file for assistance ge
   * If a parameter is not important for your use case, it is simplest to just set it to some reasonable, uniform value.
   * However, remember that some codes filter data based on other parameters (i.e., electron density), so make sure any "filler" values appropriate for the use case.
   * When specifying multiple functions for one parameter, the result is the SUM of each function individually, so a Chapman layer on top of a uniform background will increase the peak density of the Chapman layer.
-  * Both ion and electron temperature can be specified from the same set of functions from the `Temperature` class, however, different functions, or the same function with different parameters, can be used for each.
+  * Both ion and electron temperature can be specified from the same set of functions from the ``Temperature`` class, however, different functions, or the same function with different parameters, can be used for each.
   * If a state function does not exist for a particular ionospheric structure, you can write a new one!
+
+
+SUMMARY_PLOT
+------------
+
+This section is optional.  If it is not included, summary plots will not be created.
+
++-------------------------+-----------------------------------------------------------+----------------------------+
+| Parameter               | Description                                               | Example                    |
++=========================+===========================================================+============================+
+| output_prefix           | Base file name of output summary plots                    | synthdata_summary          |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| time                    | Target time for altitude slices and 3D plot               | 2016-09-13 00:10:00        |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| beam                    | Beam for RTI plot                                         | 64157                      |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| alt_slices              | Altitudes to use for altitude slices (m)                  | [200000., 300000., 400000.]|
++-------------------------+-----------------------------------------------------------+----------------------------+
+| slice_lat_rng           | N-S limits and step side of altidude slice (m)            | [-200000., 800000., 10000.]|
++-------------------------+-----------------------------------------------------------+----------------------------+
+| slice_lon_rng           | E-W limits and step size of altitude slice (m)            | [-500000., 500000., 10000.]| 
++-------------------------+-----------------------------------------------------------+----------------------------+
+| dens_colors             | Limits and color map to use for denity plots              | vmin: 0                    |
+|                         |                                                           |                            |
+|                         |                                                           | vmax: 4.0e+11              |
+|                         |                                                           |                            |
+|                         |                                                           | cmap: viridis              |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| itemp_colors            | Limits and color map to use for ion temperature plots     | vmin: 0                    |
+|                         |                                                           |                            |
+|                         |                                                           | vmax: 3000.                |
+|                         |                                                           |                            |
+|                         |                                                           | cmap: magma                |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| etemp_colors            | Limits and color map to use for electron temperature plots| vmin: 0                    |
+|                         |                                                           |                            |
+|                         |                                                           | vmax: 5000.                |
+|                         |                                                           |                            |
+|                         |                                                           | cmap: inferno              |
++-------------------------+-----------------------------------------------------------+----------------------------+
+| vlos_colors             | Limits and color map to use for velocity plots            | vmin: -500.                |
+|                         |                                                           |                            |
+|                         |                                                           | vmax: 500.                 |
+|                         |                                                           |                            |
+|                         |                                                           | cmap: bwr                  |
++-------------------------+-----------------------------------------------------------+----------------------------+
+
+
+

@@ -41,6 +41,5 @@ The following are NOT currently included in the amisrsynthdata module:
 Contributing
 ------------
 
-Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.
+Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.  Specific instructions on how to add a new state function to describe the ionosphere are available in :ref:`New State Functions`.
 
-To add a new ionospheric state function, write the function as a method of the Ionosphere class.  These functions should take three inputs: geodetic latitude (degrees), geodetic longitude (degrees), and geodetic altitude (meters).  All other inputs should be specified in the config file and accessed through the ``params`` dictionaries.
