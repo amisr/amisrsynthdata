@@ -1,0 +1,113 @@
+# example_synth_config.ini
+
+GENERAL:
+
+  starttime: 2016-09-13 00:00:00
+  endtime: 2016-09-13 00:30:00
+
+  # name of output file containing the synthetic data set - this file format mimics the standard SRI AMISR fitted file format
+  output_filename: synthetic_data.h5
+
+  ion_mass: [16.,32.,30.,28.,14.]
+
+  err_coef: [1.,1.e-9,5.e-9,1.e-9]
+
+  noise: False
+
+
+RADAR:
+
+  # name of site
+  full_name: Poker Flat
+  abbreviation: PFISR
+
+  # radar site coordinates (geodetic lat, lon, alt)
+  site_coords: [65.13,-147.47,213.]   # PFISR
+  # site_coords: [74.72955,-94.90576,145.]  # RISR
+
+  # define beams by beamcode
+  beamcodes: [64016, 64157, 64964, 65066]
+
+  # define beams by azimuth and elevation
+  beam_azimuth: [120., 180.]
+  beam_elevation: [60., 50.]
+
+  # define slant range gates for ACFs (start, stop, step)
+  acf_slant_range: [100000., 800000., 3000.]
+
+  # altitude bins for fitted data (start, stop, step)
+  # include multiple sets to change spatial resolution
+  altitude_bins:
+    - [100000., 150000., 10000.]
+    - [150000., 800000., 50000.]
+
+  # integration period of each time step in simulated data set (this doesn't really matter)
+  integration_period: 60.
+
+
+# Chapman profile on top of a low level background electron density
+DENSITY:
+  - uniform:
+      value: 3.0e+10
+        #  - chapman:
+        #      N0: 4.0e+11
+        #      H: 100000.
+        #      z0: 300000.
+        #      sza: 0.
+
+# Uniform velocity 500 m/s  north
+VELOCITY:
+  - uniform_glat_aligned:
+      value: [0., 500., 0.]
+
+# Electron temperature as a hypertangent function
+ETEMP:
+  - uniform:
+      value: 3000.
+        #  - hypertan:
+        #      maxtemp: 4000.
+        #      scale_height: 100000.
+
+# Uniform ion temperature
+ITEMP:
+  - uniform:
+      value: 1000.
+
+
+SUMMARY_PLOT:
+
+  # Output files will have px.png appended to this
+  output_prefix: synthdata_summary_
+  
+  # Target time for altitude slices and 3D plot
+  time: 2016-09-13 00:10:00
+
+  # Beam for RTI plot
+  beam: 64157
+
+  # Altitudes to use for altitude slices (m)
+  alt_slices: [100000., 200000., 300000., 400000., 500000.]
+
+  # Limits and horizontal step size of altitude slices (m)
+  slice_lon_rng: [-500000., 500000., 10000.]
+  slice_lat_rng: [-200000., 800000., 10000.]
+
+  # Color limits and maps
+  dens_colors:
+    vmin: 0.
+    vmax: 4.e+11
+    cmap: viridis
+  itemp_colors:
+    vmin: 0.
+    vmax: 3000.
+    cmap: magma
+  etemp_colors:
+    vmin: 0.
+    vmax: 5000.
+    cmap: inferno
+  vlos_colors:
+    vmin: -500.
+    vmax: 500.
+    cmap: coolwarm
+
+
