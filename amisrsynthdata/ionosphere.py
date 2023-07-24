@@ -87,10 +87,10 @@ class Ionosphere(object):
         self.ion_mass = config['GENERAL']['ion_mass']
 
         # create lists of all the functions that will be used for each ionospheric state
-        self.density_functions = [Density(type, params, start_utime) for type, params in config['DENSITY'].items()]
-        self.velocity_functions = [Velocity(type, params, start_utime, apex=self.apex) for type, params in config['VELOCITY'].items()]
-        self.etemp_functions = [Temperature(type, params, start_utime) for type, params in config['ETEMP'].items()]
-        self.itemp_functions = [Temperature(type, params, start_utime) for type, params in config['ITEMP'].items()]
+        self.density_functions = [Density(name, params, start_utime) for state_funct in config['DENSITY'] for name, params in state_funct.items()]
+        self.velocity_functions = [Velocity(name, params, start_utime, apex=self.apex) for state_funct in config['VELOCITY'] for name, params in state_funct.items()]
+        self.etemp_functions = [Temperature(name, params, start_utime) for state_funct in config['ETEMP'] for name, params in state_funct.items()]
+        self.itemp_functions = [Temperature(name, params, start_utime) for state_funct in config['ITEMP'] for name, params in state_funct.items()]
 
     def zero_array(self, ut, x, vec=False):
         s = output_shape(ut, x)
