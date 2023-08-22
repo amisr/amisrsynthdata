@@ -76,21 +76,21 @@ ITEMP:
 
 SUMMARY_PLOT:
 
+  # Target time for altitude slices and 3D plot
+  plot_time: 2016-09-13 00:10:00
+
+  # Beam for RTI plot
+  plot_beam: 64157
+
   # Output files will have px.png appended to this
   output_prefix: synthdata_summary_
   
-  # Target time for altitude slices and 3D plot
-  time: 2016-09-13 00:10:00
-
-  # Beam for RTI plot
-  beam: 64157
-
   # Altitudes to use for altitude slices (m)
   alt_slices: [100000., 200000., 300000., 400000., 500000.]
 
   # Limits and horizontal step size of altitude slices (m)
-  slice_lon_rng: [-500000., 500000., 10000.]
-  slice_lat_rng: [-200000., 800000., 10000.]
+  slice_xrng: [-500000., 500000., 10000.]
+  slice_yrng: [-400000., 800000., 10000.]
 
   # Color limits and maps
   dens_colors:
