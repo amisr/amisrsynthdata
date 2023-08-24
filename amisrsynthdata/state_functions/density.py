@@ -145,32 +145,54 @@ class Density(object):
         w = self.width/2.
         h = self.height/2.
 
-        s = (utime.shape[0],)+galt.shape
-        Ne0 = np.empty(s)
+#        s = (utime.shape[0],)+galt.shape
+#        Ne0 = np.empty(s)
+#
+#        for i in range(len(utime)):
+#
+#            # Progress center point to new location
+#            t = utime[i,0]-self.utime0
+#            cent_lat, cent_lon, cent_alt = pm.enu2geodetic(self.velocity[0]*t, self.velocity[1]*t, self.velocity[2]*t, self.orig_lat, self.orig_lon, self.orig_alt)
+#
+#            # ECEF vector to the center point
+#            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
+#
+#            # define norm vector and array of point vectors in ECEF
+#            norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
+#
+#            # print(norm_vec.shape)
+#            point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+#
+#            # calculate distance between each point and the plane
+#            r = np.einsum('...i,i->...', point_vec, norm_vec)
+#
+#            # apply hyperbolic tangent function to create gradient
+#            Ne = self.N0/2.*(np.tanh((r+w)/self.L)-np.tanh((r-w)/self.L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
+#            # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
+#
+#            Ne0[i] = Ne
 
-        for i in range(len(utime)):
+#####################################
+        s = output_shape(utime, galt)
+        if utime.shape:
+            # Some fancy array axis manipulation to get t in the proper shape for brodcasting
+            t = np.moveaxis(np.broadcast_to(utime-self.utime0, s[1:]+(s[0],)), -1, 0)
+        else:
+            t = utime-self.utime0
 
-            # Progress center point to new location
-            t = utime[i,0]-self.utime0
-            cent_lat, cent_lon, cent_alt = pm.enu2geodetic(self.velocity[0]*t, self.velocity[1]*t, self.velocity[2]*t, self.orig_lat, self.orig_lon, self.orig_alt)
+        # define array of point vectors in ECEF
+        e, n, u = pm.geodetic2enu(glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
+        point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
-            # ECEF vector to the center point
-            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
+        # define norm vector and array of point vectors in ECEF
+        center_vec = np.array(pm.geodetic2ecef(self.cent_lat, self.cent_lon, self.cent_alt))
+        norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., self.cent_lat, self.cent_lon, self.cent_alt))-center_vec
 
-            # define norm vector and array of point vectors in ECEF
-            norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
+        # create wave with sine function
+        Vn = np.einsum('i,...i->...', np.array(self.velocity), norm_vec)
+        pn = np.einsum('...i,i->...', point_vec, norm_vec)
 
-            # print(norm_vec.shape)
-            point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
-
-            # calculate distance between each point and the plane
-            r = np.einsum('...i,i->...', point_vec, norm_vec)
-
-            # apply hyperbolic tangent function to create gradient
-            Ne = self.N0/2.*(np.tanh((r+w)/self.L)-np.tanh((r-w)/self.L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
-            # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
-
-            Ne0[i] = Ne
+        Ne0 = self.N0/2.*(np.tanh((pn+Vn*t+w)/self.L)-np.tanh((pn+Vn*t-w)/self.L))*np.exp(-0.5*(galt-self.cent_alt)**2/h**2)
 
         return Ne0
 
@@ -231,7 +253,7 @@ class Density(object):
         k: list
             Wavevector [E, N, U] (m/s)
         P: float
-            Wave period (m/s)
+            Wave period (m)
         orig_lat: float
             Geodetic latitude wavevector is defined from (deg)
         orig_lon: float

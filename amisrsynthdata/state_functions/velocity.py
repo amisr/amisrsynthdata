@@ -87,11 +87,14 @@ class Velocity(object):
         Ve1, Ve2, Ve3 = self.value
 
         # Find base vector at each location
-        _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
-        # reshape basevector arrays to match the original input
-        e1 = e1.T.reshape(glat.shape+(3,))
-        e2 = e2.T.reshape(glat.shape+(3,))
-        e3 = e3.T.reshape(glat.shape+(3,))
+        if np.isscalar(galt):
+            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat, glon, galt/1000.)
+        else:
+            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
+            # reshape basevector arrays to match the original input
+            e1 = e1.T.reshape(glat.shape+(3,))
+            e2 = e2.T.reshape(glat.shape+(3,))
+            e3 = e3.T.reshape(glat.shape+(3,))
 
         # calculate V in geodetic coordinates
         VE = Ve1*e1 + Ve2*e2 + Ve3*e3
@@ -125,7 +128,7 @@ class Velocity(object):
 
         s = output_shape(utime, galt)
         if not s:
-            VE0 = self.value
+            VE0 = np.array(self.value)
         else:
             VE0 = np.broadcast_to(self.value, s+(3,))
 
