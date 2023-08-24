@@ -3,11 +3,12 @@ Test of amisrsynthdata.Radar class
 """
 
 import pytest
-import amisrsynthdata
 import yaml
 import h5py
 import numpy as np
 import pymap3d as pm
+
+from src.radar import Radar
 
 @pytest.fixture
 def radar():
@@ -16,7 +17,7 @@ def radar():
     with open(config_file, 'r') as cf:
         config = yaml.load(cf, Loader=yaml.FullLoader)
 
-    rad = amisrsynthdata.Radar(config)
+    rad = Radar(config)
 
     return rad
 

@@ -9,7 +9,8 @@ import numpy as np
 import datetime as dt
 from apexpy import Apex
 
-import amisrsynthdata
+#import amisrsynthdata
+from src.state_functions import Density, Temperature, Velocity, utils
 
 # Set up time arrays
 sut = np.datetime64('2020-01-01T06:00:00').astype(int)
@@ -54,11 +55,11 @@ vel_functions = [(name, params) for sf in config['VELOCITY'] for name, params in
 @pytest.mark.parametrize('name,params', dens_functions)
 def test_dens_array_shape(name, params, utime, glat, glon, galt):
 
-    dens = amisrsynthdata.state_functions.Density(name, params, sut)
+    dens = Density(name, params, sut)
 
     Ne = dens(utime, glat, glon, galt)
 
-    expected_shape = amisrsynthdata.state_functions.utils.output_shape(utime, galt)
+    expected_shape = utils.output_shape(utime, galt)
 
     if not expected_shape:
         assert np.isscalar(Ne)
@@ -74,7 +75,7 @@ def test_temp_array_shape(name, params, utime, glat, glon, galt):
 
     Ts = temp(utime, glat, glon, galt)
 
-    expected_shape = amisrsynthdata.state_functions.utils.output_shape(utime, galt)
+    expected_shape = utils.output_shape(utime, galt)
 
     if not expected_shape:
         assert np.isscalar(Ts)
@@ -88,11 +89,11 @@ def test_vel_array_shape(name, params, utime, glat, glon, galt):
 
     apex = Apex(sut.astype('datetime64[s]').astype(dt.datetime))
     #apex = Apex(2020)
-    vel = amisrsynthdata.state_functions.Velocity(name, params, sut, apex=apex)
+    vel = Velocity(name, params, sut, apex=apex)
 
     V = vel(utime, glat, glon, galt)
 
-    expected_shape = amisrsynthdata.state_functions.utils.output_shape(utime, galt)
+    expected_shape = utils.output_shape(utime, galt)
     
     if not expected_shape:
         expected_shape = (3,)
@@ -105,7 +106,7 @@ def test_vel_array_shape(name, params, utime, glat, glon, galt):
 @pytest.mark.parametrize('name,params', dens_functions)
 def test_dens_nan_input(name, params):
 
-    dens = amisrsynthdata.state_functions.Density(name, params, sut)
+    dens = Density(name, params, sut)
     Ne = dens(time_0d, glat_nan, glon_nan, galt_nan)
 
     np.testing.assert_equal(np.isnan(Ne), np.isnan(glat_nan))
@@ -113,7 +114,7 @@ def test_dens_nan_input(name, params):
 @pytest.mark.parametrize('name,params', temp_functions)
 def test_temp_nan_input(name, params):
 
-    temp = amisrsynthdata.state_functions.Temperature(name, params, sut)
+    temp = Temperature(name, params, sut)
     Ts = temp(time_0d, glat_nan, glon_nan, galt_nan)
 
     np.testing.assert_equal(np.isnan(Ts), np.isnan(glat_nan))
@@ -122,7 +123,7 @@ def test_temp_nan_input(name, params):
 def test_vel_nan_input(name, params):
 
     apex = Apex(sut.astype('datetime64[s]').astype(dt.datetime))
-    vel = amisrsynthdata.state_functions.Velocity(name, params, sut, apex=apex)
+    vel = Velocity(name, params, sut, apex=apex)
     V = vel(time_0d, glat_nan, glon_nan, galt_nan)
 
     np.testing.assert_equal(np.all(np.isnan(V), axis=-1), np.isnan(glat_nan))

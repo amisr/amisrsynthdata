@@ -3,13 +3,15 @@ Test of amisrsynthdata SyntheticData class
 """
 
 import pytest
-import amisrsynthdata
+#import amisrsynthdata
 import yaml
 import h5py
 import numpy as np
 import datetime as dt
 import filecmp
 import os
+
+from src.sytheticdata import SyntheticData
 
 @pytest.fixture
 def config():
@@ -21,7 +23,7 @@ def config():
 
 @pytest.fixture
 def synthdata(config):
-    sd = amisrsynthdata.SyntheticData(config)
+    sd = SyntheticData(config)
     return sd
 
 @pytest.fixture

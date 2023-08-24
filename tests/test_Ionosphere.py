@@ -3,10 +3,11 @@ Test of amisrsynthdata Ionosphere class
 """
 
 import pytest
-import amisrsynthdata
+#import amisrsynthdata
 import yaml
 import numpy as np
 from apexpy import Apex
+from src.ionosphere import Ionosphere
 
 @pytest.fixture
 def config():
@@ -18,7 +19,7 @@ def config():
 
 @pytest.fixture
 def ionosphere(config):
-    iono = amisrsynthdata.Ionosphere(config)
+    iono = Ionosphere(config)
     return iono
 
 @pytest.fixture
