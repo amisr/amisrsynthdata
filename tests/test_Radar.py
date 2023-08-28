@@ -7,13 +7,14 @@ import yaml
 import h5py
 import numpy as np
 import pymap3d as pm
+import os
 
-from src.radar import Radar
+from amisrsynthdata.radar import Radar
 
 @pytest.fixture
 def radar():
 
-    config_file = 'config.yaml'
+    config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
     with open(config_file, 'r') as cf:
         config = yaml.load(cf, Loader=yaml.FullLoader)
 
@@ -24,7 +25,7 @@ def radar():
 @pytest.fixture
 def datafile():
     
-    filename = 'synthetic_data.h5'
+    filename = os.path.join(os.path.dirname(__file__), 'synthetic_data.h5')
     h5file = h5py.File(filename, 'r')
     
     return h5file

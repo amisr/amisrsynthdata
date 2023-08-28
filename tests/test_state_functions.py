@@ -8,9 +8,10 @@ import yaml
 import numpy as np
 import datetime as dt
 from apexpy import Apex
+import os
 
 #import amisrsynthdata
-from src.state_functions import Density, Temperature, Velocity, utils
+from amisrsynthdata.state_functions import Density, Temperature, Velocity, utils
 
 # Set up time arrays
 sut = np.datetime64('2020-01-01T06:00:00').astype(int)
@@ -42,7 +43,7 @@ galt_nan[5] = np.nan
 
 
 # Set up state function inputs
-config_file = 'state_functions_config.yaml'
+config_file = os.path.join(os.path.dirname(__file__), 'state_functions_config.yaml')
 with open(config_file, 'r') as cf:
     config = yaml.load(cf, Loader=yaml.FullLoader)
  
@@ -71,7 +72,7 @@ def test_dens_array_shape(name, params, utime, glat, glon, galt):
 @pytest.mark.parametrize('name,params', temp_functions)
 def test_temp_array_shape(name, params, utime, glat, glon, galt):
 
-    temp = amisrsynthdata.state_functions.Temperature(name, params, sut)
+    temp = Temperature(name, params, sut)
 
     Ts = temp(utime, glat, glon, galt)
 
