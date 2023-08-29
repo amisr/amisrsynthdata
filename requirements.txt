@@ -1,8 +1,0 @@
-numpy
-h5py
-pymap3d
-apexpy
-pyyaml
-importlib_resources
-matplotlib
-cartopy

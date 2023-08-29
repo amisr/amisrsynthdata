@@ -13,6 +13,14 @@ readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["AMISR", "synthetic", "data"]
 requires-python = ">=3.7"
+dependencies = [
+    "numpy",
+    "h5py",
+    "pymap3d",
+    "apexpy",
+    "pyyaml",
+    "importlib_resources",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering",
@@ -22,6 +30,9 @@ classifiers = [
     "Programming Language :: Python",
     "Operating System :: OS Independent",
 ]
+
+[project.optional-dependencies]
+plots = ["matplotlib", "cartopy"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"
