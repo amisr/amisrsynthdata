@@ -9,7 +9,7 @@ jobs:
 
   unittest:
     name: Unit Testing
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
@@ -28,7 +28,7 @@ jobs:
           #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Install package
         run: |
-          pip install .
+          pip install '.[plots]'
       - name: Test with pytest
         run: pytest
 
