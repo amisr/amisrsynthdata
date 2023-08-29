@@ -32,7 +32,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-plots = ["matplotlib", "cartopy"]
+plots = ["matplotlib", "shapely", "pyshp", "pyproj", "cartopy"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"
