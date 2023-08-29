@@ -5,3 +5,4 @@ apexpy
 pyyaml
 importlib_resources
 matplotlib
+cartopy
