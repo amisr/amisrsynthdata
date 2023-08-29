@@ -4,4 +4,4 @@ pymap3d
 apexpy
 pyyaml
 importlib_resources
-
+matplotlib
