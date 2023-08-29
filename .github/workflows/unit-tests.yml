@@ -28,7 +28,7 @@ jobs:
           pip install pytest
       - name: Install package
         run: |
-          pip install '.[plots]'
+          pip install .
       - name: Test with pytest
         run: pytest
 
