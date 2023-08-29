@@ -30,9 +30,13 @@ class Density(object):
 
         s = output_shape(utime, galt)
         if not s:
-            Ne0 = self.value
+            if np.isnan(galt):
+                Ne0 = np.nan
+            else:
+                Ne0 = self.value
         else:
             Ne0 = np.full(s, self.value)
+            Ne0[...,np.isnan(galt)] = np.nan
 
         return Ne0
 

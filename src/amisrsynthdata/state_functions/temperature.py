@@ -36,9 +36,13 @@ class Temperature(object):
 
         s = output_shape(utime, galt)
         if not s:
-            Ts0 = self.value
+            if np.isnan(galt):
+                Ts0 = np.nan
+            else:
+                Ts0 = self.value
         else:
             Ts0 = np.full(s, self.value)
+            Ts0[...,np.isnan(galt)] = np.nan
 
         return Ts0
 

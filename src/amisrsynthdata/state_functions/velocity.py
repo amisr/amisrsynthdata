@@ -128,9 +128,15 @@ class Velocity(object):
 
         s = output_shape(utime, galt)
         if not s:
-            VE0 = np.array(self.value)
+            if np.isnan(galt):
+                VE0 = np.array([np.nan, np.nan, np.nan])
+            else:
+                VE0 = np.array(self.value)
         else:
-            VE0 = np.broadcast_to(self.value, s+(3,))
+            VE0 = np.broadcast_to(self.value, s+(3,)).copy()
+            VE0[...,np.isnan(galt),0] = np.nan
+            VE0[...,np.isnan(galt),1] = np.nan
+            VE0[...,np.isnan(galt),2] = np.nan
 
 
         return VE0

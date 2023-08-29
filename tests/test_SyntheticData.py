@@ -79,11 +79,9 @@ def test_generate_radar_measurements(synthdata, config):
     kvec = synthdata.radar.kvec_all_gates()
     truth_vlos = np.dot(kvec, config['VELOCITY'][0]['uniform_glat_aligned']['value'])
 
-    print(vlos.shape, truth_vlos.shape)
-   
-    assert np.allclose(ne, config['DENSITY'][0]['uniform']['value'])
-    assert np.allclose(ti, config['ITEMP'][0]['uniform']['value'])
-    assert np.allclose(te, config['ETEMP'][0]['uniform']['value'])
+    assert np.allclose(ne[np.isfinite(ne)], config['DENSITY'][0]['uniform']['value'])
+    assert np.allclose(ti[np.isfinite(ti)], config['ITEMP'][0]['uniform']['value'])
+    assert np.allclose(te[np.isfinite(te)], config['ETEMP'][0]['uniform']['value'])
     assert np.allclose(vlos, truth_vlos, equal_nan=True)
 
 def test_generate_errors(synthdata, config, datafile):
