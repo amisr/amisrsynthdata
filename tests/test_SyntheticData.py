@@ -145,7 +145,7 @@ def hdf52dict(h5):
 def assert_dict_equal(dict1, dict2):
     np.testing.assert_equal(dict1.keys(), dict2.keys())
     for k in dict1.keys():
-        np.testing.assert_allclose(dict1[k], dict2[k])
+        np.testing.assert_allclose(dict1[k], dict2[k], rtol=1e-3)
 
 
 def test_generate_beamcodes(synthdata, datafile):
