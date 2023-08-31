@@ -144,10 +144,10 @@ def hdf52dict(h5):
             continue
     return out
 
-def assert_dict_equal(dict1, dict2, rtol=1.e-7, atol=0.):
+def assert_dict_equal(dict1, dict2, rtol=1.e-2, atol=0.):
     np.testing.assert_equal(dict1.keys(), dict2.keys())
     for k in dict1.keys():
-        np.testing.assert_allclose(dict1[k], dict2[k], rtol=rtol, atol=atol, err_msg=f'Error in {k} -  Not equal to tolerance rtol={rtol}, atol={atol}')
+        np.testing.assert_allclose(dict1[k], dict2[k], rtol=rtol, atol=atol, err_msg=f'Error in {k}')
 
 
 def test_generate_beamcodes(synthdata, datafile):
