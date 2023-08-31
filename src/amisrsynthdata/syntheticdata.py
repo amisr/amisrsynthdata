@@ -250,7 +250,7 @@ class SyntheticData(object):
 
         FittedParams['Noise'] = np.full(s+(3,), np.nan)
 
-        FittedParams['dNe'] = self.ne_err
+        FittedParams['dNe'] = np.broadcast_to(self.ne_err, s)
         FittedParams['Errors'] = np.full(s+(len(self.iono.ion_mass)+1,4), np.nan)
         FittedParams['Errors'][:,:,:,0,1] = self.ti_err
         FittedParams['Errors'][:,:,:,-1,1] = self.te_err

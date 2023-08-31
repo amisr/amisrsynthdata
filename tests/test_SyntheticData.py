@@ -69,8 +69,8 @@ def test_generate_time_array(synthdata, config):
     dt_et = dt.datetime.strptime(endtime, '%Y-%m-%dT%H:%M:%S')
     utime, time = synthdata.generate_time_array(dt_st, dt_et)
 
-    assert np.array_equal(utime, truth_utime)
-    assert np.array_equal(time, truth_time)
+    np.testing.assert_allclose(utime, truth_utime)
+    np.testing.assert_equal(time, truth_time)
 
 def test_generate_radar_measurements(synthdata, config):
 
@@ -79,10 +79,11 @@ def test_generate_radar_measurements(synthdata, config):
     kvec = synthdata.radar.kvec_all_gates()
     truth_vlos = np.dot(kvec, config['VELOCITY'][0]['uniform_glat_aligned']['value'])
 
-    assert np.allclose(ne[np.isfinite(ne)], config['DENSITY'][0]['uniform']['value'])
-    assert np.allclose(ti[np.isfinite(ti)], config['ITEMP'][0]['uniform']['value'])
-    assert np.allclose(te[np.isfinite(te)], config['ETEMP'][0]['uniform']['value'])
-    assert np.allclose(vlos, truth_vlos, equal_nan=True)
+    np.testing.assert_allclose(ne[np.isfinite(ne)], config['DENSITY'][0]['uniform']['value'])
+    np.testing.assert_allclose(ti[np.isfinite(ti)], config['ITEMP'][0]['uniform']['value'])
+    np.testing.assert_allclose(te[np.isfinite(te)], config['ETEMP'][0]['uniform']['value'])
+    np.testing.assert_allclose(vlos, np.broadcast_to(truth_vlos, vlos.shape))
+    # Also check that these are the same shape as radar arrays
 
 def test_generate_errors(synthdata, config, datafile):
     truth_ne_err = datafile['FittedParams/dNe'][:]
@@ -93,11 +94,11 @@ def test_generate_errors(synthdata, config, datafile):
 
     ne_err, ti_err, te_err, vlos_err, ne_notr_err = synthdata.generate_errors(config['GENERAL']['err_coef'])
 
-    assert np.allclose(ne_err, truth_ne_err, equal_nan=True)
-    assert np.allclose(ti_err, truth_ti_err, equal_nan=True)
-    assert np.allclose(te_err, truth_te_err, equal_nan=True)
-    assert np.allclose(vlos_err, truth_vlos_err, equal_nan=True)
-    #assert np.allclose(ne_notr_err, truth_ne_notr_err)
+    np.testing.assert_allclose(np.broadcast_to(ne_err, truth_ne_err.shape), truth_ne_err)
+    np.testing.assert_allclose(np.broadcast_to(ti_err, truth_ti_err.shape), truth_ti_err)
+    np.testing.assert_allclose(np.broadcast_to(te_err, truth_te_err.shape), truth_te_err)
+    np.testing.assert_allclose(np.broadcast_to(vlos_err, truth_vlos_err.shape), truth_vlos_err)
+    np.testing.assert_allclose(np.broadcast_to(ne_notr_err, truth_ne_notr_err.shape), truth_ne_notr_err)
 
 def test_noisy_measurements(synthdata):
 
@@ -143,20 +144,16 @@ def hdf52dict(h5):
             continue
     return out
 
-def assert_dict_equal(dict1, dict2):
+def assert_dict_equal(dict1, dict2, rtol=1.e-7, atol=0.):
     np.testing.assert_equal(dict1.keys(), dict2.keys())
     for k in dict1.keys():
-        np.testing.assert_allclose(dict1[k], dict2[k], rtol=1e-3)
+        np.testing.assert_allclose(dict1[k], dict2[k], rtol=rtol, atol=atol, err_msg=f'Error in {k} -  Not equal to tolerance rtol={rtol}, atol={atol}')
 
 
 def test_generate_beamcodes(synthdata, datafile):
-
     beamcodes = synthdata.generate_beamcodes()
     truth_beamcodes = datafile['BeamCodes'][:]
-
-    assert np.array_equal(beamcodes, truth_beamcodes, equal_nan=True)
-
-
+    np.testing.assert_allclose(beamcodes, truth_beamcodes)
 
 def test_generate_fitted_params(synthdata, datafile):
 
@@ -171,7 +168,6 @@ def test_generate_fitted_params(synthdata, datafile):
     assert_dict_equal(ne_from_power, truth_ne_from_power)
 
 def test_generate_time(synthdata, datafile):
-
     time = synthdata.generate_time()
     truth_time = hdf52dict(datafile['Time'])
     assert_dict_equal(time, truth_time)
@@ -199,12 +195,13 @@ def test_create_hdf5_output(synthdata):
 
 # Won't run on GHActions for CI
 # Issue with installing caropy (specifically dependency on proj)
-#def test_create_summary_plots(synthdata, config):
-#    synthdata.create_summary_plots(**config['SUMMARY_PLOT'])
-#    prefix = config['SUMMARY_PLOT']['output_prefix']
-#
-#    for s in ['ne', 'ti', 'te', 'vlos']:
-#        plotname = f'{prefix}{s}.png'
-#        assert os.path.isfile(plotname)
-#        os.remove(plotname)
+@pytest.mark.skipif(os.getenv("GITHUB_ACTIONS") == "true", reason="Test doesn't work in Github Actions due to challenges installing cartopy.")
+def test_create_summary_plots(synthdata, config):
+    synthdata.create_summary_plots(**config['SUMMARY_PLOT'])
+    prefix = config['SUMMARY_PLOT']['output_prefix']
+
+    for s in ['ne', 'ti', 'te', 'vlos']:
+        plotname = f'{prefix}{s}.png'
+        assert os.path.isfile(plotname)
+        os.remove(plotname)
 

@@ -22,15 +22,6 @@ def radar():
 
     return rad
 
-@pytest.fixture
-def datafile():
-    
-    filename = os.path.join(os.path.dirname(__file__), 'synthetic_data.h5')
-    h5file = h5py.File(filename, 'r')
-    
-    return h5file
-
-
 def test_init(radar):
     assert radar.radar_name == 'Poker Flat'
     assert radar.radar_abbrev == 'PFISR'
@@ -40,19 +31,15 @@ def test_init(radar):
     assert radar.integration_period == 60.
 
 
-#def test_beamcodes(radar, datafile):
-#    bc_array = datafile['BeamCodes'][:]
-#    assert np.array_equal(radar.beam_codes, bc_array, equal_nan=True)
-
 def test_beams_from_beam_codes(radar):
     beamcodes = [64016, 64157, 64964, 65066]
     truth_az = [  14.04, -154.3 ,  -34.69,   75.03]
     truth_el = [90.  , 77.5 , 66.09, 65.56]
     truth_ksys = [np.nan, np.nan, np.nan, np.nan]
     azimuth, elevation, ksys = radar.beams_from_beam_codes(beamcodes)
-    assert np.array_equal(azimuth, truth_az)
-    assert np.array_equal(elevation, truth_el)
-    assert np.array_equal(ksys, truth_ksys, equal_nan=True)
+    np.testing.assert_allclose(azimuth, truth_az)
+    np.testing.assert_allclose(elevation, truth_el)
+    np.testing.assert_allclose(ksys, truth_ksys)
 
 def test_beams_from_az_el(radar):
     azimuth = [  14.04, -154.3 ,  -34.69,   75.03]
@@ -60,8 +47,8 @@ def test_beams_from_az_el(radar):
     truth_bc = [90000, 90001, 90002, 90003]
     truth_ksys = [np.nan, np.nan, np.nan, np.nan]
     beamcodes, ksys = radar.beams_from_az_el(azimuth, elevation)
-    assert np.array_equal(beamcodes, truth_bc)
-    assert np.array_equal(ksys, truth_ksys, equal_nan=True)
+    np.testing.assert_allclose(beamcodes, truth_bc)
+    np.testing.assert_allclose(ksys, truth_ksys)
     
 def test_caculate_acf_gates(radar):
     slant_range_config = [80000., 800000., 3000.]
@@ -77,10 +64,10 @@ def test_caculate_acf_gates(radar):
 
     slant_range, lat, lon, alt = radar.calculate_acf_gates(slant_range_config)
 
-    assert np.array_equal(slant_range, truth_sr)
-    assert np.array_equal(lat, truth_lat)
-    assert np.array_equal(lon, truth_lon)
-    assert np.array_equal(alt, truth_alt)
+    np.testing.assert_allclose(slant_range, truth_sr)
+    np.testing.assert_allclose(lat, truth_lat)
+    np.testing.assert_allclose(lon, truth_lon)
+    np.testing.assert_allclose(alt, truth_alt)
 
 def test_calculate_gates(radar):
 
@@ -101,36 +88,10 @@ def test_calculate_gates(radar):
 
     slant_range, lat, lon, alt = radar.calculate_gates([[100000., 800000., 50000.]])
 
-    assert np.array_equal(slant_range, truth_sr, equal_nan=True)
-    assert np.array_equal(lat, truth_lat, equal_nan=True)
-    assert np.array_equal(lon, truth_lon, equal_nan=True)
-    assert np.array_equal(alt, truth_alt, equal_nan=True)
-
-#def test_slant_range_p(radar, datafile):
-#    sr_array = datafile['NeFromPower/Range'][:]
-#    assert np.array_equal(radar.acf_slant_range, sr_array)
-#
-#def test_slant_range_p_coords(radar):
-#
-#    for bc, lat_p, lon_p, alt_p in zip(radar.beam_codes, radar.lat_p, radar.lon_p, radar.alt_p):
-#        az = bc[1]
-#        el = bc[2]
-#        lat, lon, alt = pm.aer2geodetic(az, el, radar.slant_range_p, radar.site_lat, radar.site_lon, radar.site_alt)
-#        assert np.allclose(lat_p, lat)
-#        assert np.allclose(lon_p, lon)
-#        assert np.allclose(alt_p, alt)
-#
-#def test_slant_range(radar, datafile):
-#    sr_array = datafile['FittedParams/Range'][:]
-#    assert np.allclose(radar.slant_range, sr_array, equal_nan=True)
-#
-#def test_slat_range_coords(radar, datafile):
-#    lat_array = datafile['Geomag/Latitude'][:]
-#    lon_array = datafile['Geomag/Longitude'][:]
-#    alt_array = datafile['Geomag/Altitude'][:]
-#    assert np.allclose(radar.lat, lat_array, equal_nan=True)
-#    assert np.allclose(radar.lon, lon_array, equal_nan=True)
-#    assert np.allclose(radar.alt, alt_array, equal_nan=True)
+    np.testing.assert_allclose(slant_range, truth_sr)
+    np.testing.assert_allclose(lat, truth_lat)
+    np.testing.assert_allclose(lon, truth_lon)
+    np.testing.assert_allclose(alt, truth_alt)
 
 def test_kvec(radar):
 
@@ -138,8 +99,6 @@ def test_kvec(radar):
 
     truth_kvec = list()
     for sr, az, el in zip(radar.slant_range, radar.beam_azimuth, radar.beam_elevation):
-        #az = bc[1]
-        #el = bc[2]
         # aer -> uvw
         e, n, u = pm.aer2enu(az, el, 1.0)
         u, v, w = pm.enu2uvw(e, n, u, radar.site_lat, radar.site_lon, radar.site_alt)
@@ -149,6 +108,5 @@ def test_kvec(radar):
         ke, kn, ku = pm.uvw2enu(u, v, w, lat, lon)
         truth_kvec.append(np.array([ke, kn, ku]).T)
 
-
-    assert np.array_equal(kvec, truth_kvec, equal_nan=True)
+    np.testing.assert_allclose(kvec, truth_kvec)
 
