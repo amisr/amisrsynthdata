@@ -31,9 +31,6 @@ class Temperature(object):
             The value to assign at all points (K)
         """
 
-        # s = (utime.shape[0],)+galt.shape
-        # Ts0 = np.full(s, self.value)
-
         s = output_shape(utime, galt)
         if not s:
             if np.isnan(galt):
@@ -59,9 +56,6 @@ class Temperature(object):
         """
 
         Ts = self.maxtemp*np.tanh(galt/self.scale_height)
-
-        # s = (utime.shape[0],)+galt.shape
-        # Ts0 = np.full(s, Ts)
 
         s = output_shape(utime, galt)
         if not s:

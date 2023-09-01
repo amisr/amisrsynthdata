@@ -68,9 +68,6 @@ class Velocity(object):
         else:
             VE0 = np.broadcast_to(V0, s+(3,))
 
-        # s = (utime.shape[0],)+galt.shape+(3,)
-        # VE0 = np.broadcast_to(VE, s)
-
         return VE0
 
     def uniform_mlat_aligned(self, utime, glat, glon, galt):
@@ -99,9 +96,6 @@ class Velocity(object):
         # calculate V in geodetic coordinates
         VE = Ve1*e1 + Ve2*e2 + Ve3*e3
 
-        # s = (utime.shape[0],)+galt.shape+(3,)
-        # VE0 = np.broadcast_to(VE, s)
-
         s = output_shape(utime, galt)
         if not s:
             VE0 = VE
@@ -122,9 +116,6 @@ class Velocity(object):
         value: list
             The vector value to assign at all points [E, N, U] (m/s)
         """
-
-        # s = (utime.shape[0],)+galt.shape+(3,)
-        # VE0 = np.broadcast_to(self.value, s)
 
         s = output_shape(utime, galt)
         if not s:

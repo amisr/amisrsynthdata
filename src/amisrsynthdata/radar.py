@@ -1,10 +1,9 @@
-# Radar.py
+# radar.py
 import numpy as np
 import pymap3d as pm
 from importlib_resources import files
 import warnings
 
-# NEEDS MAJOR REFACTORING FOR EFFICIENCY/MODULARIZING
 
 class Radar(object):
 
@@ -29,16 +28,6 @@ class Radar(object):
         self.beam_azimuth = np.concatenate((beam_az1, beam_az2))
         self.beam_elevation = np.concatenate((beam_el1, beam_el2))
         self.beam_ksys = np.concatenate((beam_ksys1, beam_ksys2))
-
-        # Save or calculate "on-the-fly"?
-        # add_beam function? - probably not
-
-        # Initializing Radar should basically set everything up
-        # Not much to calculate here that isn't based on standard radar characteristics
-        # Maybe time windows based on integration periods?
-
-        #az = self.beam_codes[:,1]
-        #el = self.beam_codes[:,2]
 
         alt_bin_config = config['RADAR']['altitude_bins']
         slant_range_config = config['RADAR']['acf_slant_range']
@@ -67,12 +56,6 @@ class Radar(object):
 
         return beamcodes, beam_ksys
 
-       # # combine both beam arrays
-       # self.beam_codes = np.concatenate((beams_bc, beams_ae), axis=0)
-
-       # az = self.beam_codes[:,1]
-       # el = self.beam_codes[:,2]
-
     def calculate_acf_gates(self, slant_range_config):
 
         # form slant range bins
@@ -93,9 +76,6 @@ class Radar(object):
         lat, lon, alt = pm.aer2geodetic(self.beam_azimuth[:,None], self.beam_elevation[:,None], slant_range, self.site_lat, self.site_lon, self.site_alt)
         return slant_range, lat, lon, alt
 
-        #ke, kn, ku = pm.aer2enu(az, el, 1.0)
-        #self.kvec = np.array([ke, kn, ku]).T  # Not needed
-
 
     def kvec_all_gates(self):
 
@@ -107,14 +87,3 @@ class Radar(object):
         return kvec
 
 
-#    def read_config(self, config):
-#
-#        self.radar_name = config['RADAR']['full_name']
-#        self.radar_abbrev = config['RADAR']['abbreviation']
-#        self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
-#        self.beamcodes = config['RADAR'].get('beamcodes', [])
-#        self.beam_azimuth = config['RADAR'].get('beam_azimuth', [])
-#        self.beam_elevation = config['RADAR'].get('beam_elevation', [])
-#        self.altitude_bins = config['RADAR']['altitude_bins']
-#        self.acf_slant_range = config['RADAR']['acf_slant_range']
-#        self.integration_period = config['RADAR']['integration_period']

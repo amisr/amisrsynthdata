@@ -1,4 +1,4 @@
-# SyntheticData.py
+# syntheticdata.py
 
 from .ionosphere import Ionosphere
 from .radar import Radar
@@ -31,26 +31,6 @@ class SyntheticData(object):
 
         self.ne_err, self.ti_err, self.te_err, self.vlos_err, self.ne_notr_err = self.generate_errors(err_coef)
 
-
-#    def run_everything()
-#        # Can be in init??
-#        create_measurement_arrays()
-#        add_nois()  # option
-#        # These should be independent functions
-#        save_output_file()
-#        create_summary_plots()
-#
-#    def generate_output():
-#        self.generate_time_array(starttime, endtime)
-#        self.generate_geomag()
-#        self.generate_site(starttime)
-#        self.calc_radar_measurements()
-#        self.calc_errors(err_coef)
-#        if add_noise:
-#            self.add_measurment_noise()
-#        self.save_hdf5_output(output_filename)
-#        if 'SUMMARY_PLOT' in config:
-#            self.summary_plot(config['SUMMARY_PLOT'])
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
@@ -95,131 +75,6 @@ class SyntheticData(object):
 
         return ne, ti, te, vlos, ne_notr
 
-#    def output_time(self):
-#        # Everything below this can be a seperate "create time arrays" function - only useful for output
-#
-#        self.Time = {'UnixTime':self.utime}
-#
-#        self.Time['Day'] = np.array([[t.day for t in ip] for ip in time])
-#        self.Time['Month'] = np.array([[t.month for t in ip] for ip in time])
-#        self.Time['Year'] = np.array([[t.year for t in ip] for ip in time])
-#        self.Time['doy'] = np.array([[t.timetuple().tm_yday for t in ip] for ip in time])
-#        self.Time['dtime'] = np.array([[(t-dt.datetime(t.year,t.month,t.day,0,0,0)).total_seconds()/3600. for t in ip] for ip in time])
-#
-#        _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,0])
-#        _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=time[:,1])
-#        self.Time['MagneticLocalTimeSite'] = np.array([mlt0,mlt1]).T
-
-#    def generate_geomag(self):
-#        # generate Geomag array
-#        # Reqires running IGRF to get all fields
-#        self.Geomag = {'Latitude':self.radar.lat, 'Longitude':self.radar.lon, 'Altitude':self.radar.alt}
-#
-#
-#    def generate_site(self, st):
-#        self.Site = {'Latitude':self.radar.site_lat, 'Longitude':self.radar.site_lon, 'Altitude':self.radar.site_alt, 'Code':0}
-#        mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
-#        _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=dt.datetime(st.year,st.month,st.day,0,0,0))
-#        self.Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
-#        # self.Site.update(MagneticLatitude=0., MagneticLongitude=0., MagneticLocalTimeMidnight=0.)
-
-
-#    def generate_radar_measurements(self):
-#        # caculate scalar ionosphere parameters at each fitted radar bin
-#        ne = self.iono.density(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
-#        te = self.iono.etemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
-#        ti = self.iono.itemp(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
-#
-#        # calculate LoS velocity for each bin by taking the dot product of the radar kvector and the velocity field
-#        kvec = self.radar.kvec_all_gates()
-#        Vvec = self.iono.velocity(self.utime[:,0], self.radar.lat, self.radar.lon, self.radar.alt)
-#        vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
-#
-#        ne_notr = self.iono.density(self.utime[:,0], self.radar.acf_lat, self.radar.acf_lon, self.radar.acf_alt)
-#        return ne, te, ti, vlos, ne_notr
-
-#    def output_fitted_params(self):
-#
-#        self.Geomag.update(ke=kvec[:,:,0], kn=kvec[:,:,1], kz=kvec[:,:,2])
-#
-#
-#        self.FittedParams = {'Altitude':self.radar.alt, 'IonMass':self.iono.ion_mass, 'Range':self.radar.slant_range}
-#
-#
-#        # create fit and error arrays that match the shape of whats in the processed fitted files
-#        # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
-#        # assume only O+, but include fields for other parameters so array is a general shape
-#        s = (self.utime.shape[0],)+self.radar.slant_range.shape
-#        self.FittedParams['Fits'] = np.full(s+(len(self.iono.ion_mass)+1,4), np.nan)
-#        self.FittedParams['Fits'][:,:,:,0,1] = self.ti
-#        self.FittedParams['Fits'][:,:,:,-1,1] = self.te
-#        self.FittedParams['Fits'][:,:,:,0,3] = self.Vlos
-#        self.FittedParams['Fits'][:,:,:,-1,3] = self.Vlos
-#        self.FittedParams['Fits'][:,:,:,:,0] = np.zeros(s+(len(self.iono.ion_mass)+1,))
-#        self.FittedParams['Fits'][:,:,:,0,0] = np.ones(s)
-#        self.FittedParams['Fits'][:,:,:,-1,0] = np.ones(s)
-#
-#        # do this kind of stuff with explicit broadcasting
-#        # self.FittedParams['Ne'] = np.full(s, np.nan)
-#        # self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
-#        self.FittedParams['Ne'] = self.ne
-#
-#        self.FittedParams['Noise'] = np.full(s+(3,), np.nan)
-#
-#        # fit info
-#        self.FitInfo = {'chi2':np.full(s, 1.0), 'dof':np.full(s, 26), 'fitcode':np.full(s, 1), 'nfev':np.full(s, 0)}
-#
-#
-#        # calculate density in ACF bins
-#        self.NeFromPower = {'Altitude':self.radar.alt_p, 'Range':self.radar.slant_range_p}
-#
-#        ne_p = self.iono.density(self.utime[:,0], self.radar.lat_p, self.radar.lon_p, self.radar.alt_p)
-#        # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
-#        # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
-#        self.NeFromPower['Ne_Mod'] = ne_p
-#        self.NeFromPower['Ne_NoTr'] = ne_p
-#        self.NeFromPower['SNR'] = np.full(self.radar.slant_range_p.shape, np.nan)
-#        self.NeFromPower['dNeFrac'] = np.full(self.NeFromPower['Ne_NoTr'].shape, np.nan)
-
-#    def generate_errors(self, err_coef):
-#
-#        # Need to make this more rigerous
-#        ne_err = err_coef[0] * self.radar.slant_range**2
-#        ve_err = err_coef[1] * self.radar.slant_range**2
-#        te_err = err_coef[2] * self.radar.slant_range**2
-#        ti_err = err_coef[3] * self.radar.slant_range**2
-#        ne_notr_err = err_coef[0] * self.radar.acf_slant_range**2
-#
-#        return ne_err, ve_err, te_err, ti_err, ne_notr_err
-
-#    def calc_errors(self, error_coeff):
-#        # fill out hdf5 arrays
-#        self.FittedParams['dNe'] = np.broadcast_to(ne_err, self.FittedParams['Ne'].shape)
-#        self.FittedParams['Errors'] = np.full(self.FittedParams['Fits'].shape, np.nan)
-#        self.FittedParams['Errors'][:,:,:,0,1] = ti_err
-#        self.FittedParams['Errors'][:,:,:,-1,1] = te_err
-#        self.FittedParams['Errors'][:,:,:,0,3] = ve_err
-#        self.FittedParams['Errors'][:,:,:,-1,3] = ve_err
-
-
-#    def add_measurment_noise(self):
-#
-#        # fitted parameters
-#        self.FittedParams['Ne'] = np.random.normal(loc=self.FittedParams['Ne'], scale=self.FittedParams['dNe'])
-#
-#        # ACF parameters
-#        self.NeFromPower['Ne_Mod'] = np.random.normal(loc=self.NeFromPower['Ne_Mod'], scale=self.NeFromPower['dNeFrac'])
-#        self.NeFromPower['Ne_NoTr'] = np.random.normal(loc=self.NeFromPower['Ne_NoTr'], scale=self.NeFromPower['dNeFrac'])
-
-#    def noisy_mesurements(self):
-#        ne = np.random.normal(loc=self.ne, scale=self.ne_err)
-#        ti = np.random.normal(loc=self.ti, scale=self.ti_err)
-#        te = np.random.normal(loc=self.te, scale=self.te_err)
-#        vlos = np.random.normal(loc=self.vlos, scale=self.vlos_err)
-#        ne_notr = np.random.normal(loc=self.ne_notr, scale=self.ne_notr_err)
-#
-#        return ne, ti, te, vlos, ne_notr
-
     def generate_beamcodes(self):
 
         beamcodes = np.array([self.radar.beam_codes, self.radar.beam_azimuth, self.radar.beam_elevation,  self.radar.beam_ksys]).T
@@ -243,9 +98,6 @@ class SyntheticData(object):
         FittedParams['Fits'][:,:,:,0,0] = np.ones(s)
         FittedParams['Fits'][:,:,:,-1,0] = np.ones(s)
 
-        # do this kind of stuff with explicit broadcasting
-        # self.FittedParams['Ne'] = np.full(s, np.nan)
-        # self.FittedParams['Ne'] = np.broadcast_to(self.ne, s)
         FittedParams['Ne'] = self.ne
 
         FittedParams['Noise'] = np.full(s+(3,), np.nan)
@@ -264,8 +116,6 @@ class SyntheticData(object):
         # calculate density in ACF bins
         NeFromPower = {'Altitude':self.radar.acf_alt, 'Range':self.radar.acf_slant_range}
 
-        # self.NeFromPower['Ne_Mod'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
-        # self.NeFromPower['Ne_NoTr'] = np.broadcast_to(ne_p, (self.utime.shape[0],)+ne_p.shape)
         NeFromPower['Ne_Mod'] = self.ne_notr
         NeFromPower['Ne_NoTr'] = self.ne_notr
         NeFromPower['SNR'] = np.full(self.radar.acf_slant_range.shape, np.nan)
@@ -305,7 +155,6 @@ class SyntheticData(object):
         mlat, mlon = self.iono.apex.geo2apex(self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt/1000.)
         _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt', height=self.radar.site_alt/1000., datetime=self.time[0,0])
         Site.update(MagneticLatitude=mlat, MagneticLongitude=mlon, MagneticLocalTimeMidnight=mlt)
-        # self.Site.update(MagneticLatitude=0., MagneticLongitude=0., MagneticLocalTimeMidnight=0.)
 
         return Site
 
@@ -379,7 +228,6 @@ class SyntheticData(object):
         glon = np.repeat(glon, alt_layers.shape).reshape(glon.shape+alt_layers.shape, order='C')
         galt = np.broadcast_to(alt_layers, galt.shape+alt_layers.shape)
 
-        #tidx = np.argmin(np.abs((plot_time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.Time['UnixTime'][:,0]))
         tidx = np.argmin(np.abs((plot_time-dt.datetime.utcfromtimestamp(0)).total_seconds()-self.utime[:,0]))
 
         ne0 = np.squeeze(self.iono.density(self.utime[tidx,0], glat, glon, galt))
