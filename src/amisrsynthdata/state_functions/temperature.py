@@ -4,6 +4,8 @@ from .utils import *
 # Because ion and electron temperature functions tend to be similar, they are both caputred
 #   within this function.  Ions and Electrons DO NOT have to use the same background function
 #   or parameters, these are specified seperately in the config file.
+
+
 class Temperature(object):
     def __init__(self, type, params, utime0):
 
@@ -16,10 +18,8 @@ class Temperature(object):
         for param, value in params.items():
             setattr(self, param, value)
 
-
     def __call__(self, utime, glat, glon, galt):
         return self.Ts_function(utime, glat, glon, galt)
-
 
     def uniform(self, utime, glat, glon, galt):
         """
@@ -39,7 +39,7 @@ class Temperature(object):
                 Ts0 = self.value
         else:
             Ts0 = np.full(s, self.value)
-            Ts0[...,np.isnan(galt)] = np.nan
+            Ts0[..., np.isnan(galt)] = np.nan
 
         return Ts0
 
@@ -55,7 +55,7 @@ class Temperature(object):
             Vertical scale height (m)
         """
 
-        Ts = self.maxtemp*np.tanh(galt/self.scale_height)
+        Ts = self.maxtemp * np.tanh(galt / self.scale_height)
 
         s = output_shape(utime, galt)
         if not s:
@@ -64,7 +64,6 @@ class Temperature(object):
             Ts0 = np.broadcast_to(Ts, s)
 
         return Ts0
-
 
     def gemini(self, utime, glat, glon, galt):
         """
@@ -81,14 +80,15 @@ class Temperature(object):
         gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)
 
         if not utime.shape:
-            Ts0 = gh.query_model(dt.datetime.utcfromtimestamp(utime), self.species)
+            Ts0 = gh.query_model(
+                dt.datetime.utcfromtimestamp(utime),
+                self.species)
 
         else:
             s = output_shape(utime, galt)
             Ts0 = np.empty(s)
             for i, ut in enumerate(utime):
-                Ts0[i] = gh.query_model(dt.datetime.utcfromtimestamp(ut), self.species)
+                Ts0[i] = gh.query_model(
+                    dt.datetime.utcfromtimestamp(ut), self.species)
 
         return Ts0
-
-

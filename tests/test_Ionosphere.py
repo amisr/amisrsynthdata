@@ -10,6 +10,7 @@ from apexpy import Apex
 from amisrsynthdata.ionosphere import Ionosphere
 from amisrsynthdata.state_functions import utils
 
+
 @pytest.fixture
 def config():
     config_file = os.path.join(os.path.dirname(__file__), 'config.yaml')
@@ -23,6 +24,7 @@ def ionosphere(config):
     iono = Ionosphere(config)
     return iono
 
+
 # Set up time arrays
 sut = np.datetime64('2020-01-01T06:00:00').astype(int)
 eut = np.datetime64('2020-01-01T07:00:00').astype(int)
@@ -32,14 +34,14 @@ time_1d = np.arange(sut, eut, 60.)
 # Set up position arrays
 glat_0d = 66.0
 glon_0d = -147.0
-galt_0d = 300.*1000.
+galt_0d = 300. * 1000.
 
 glat_1d = np.linspace(65.0, 67.0, 10)
 glon_1d = np.linspace(-145.0, -149.0, 10)
-galt_1d = np.linspace(300.0, 400.0, 10)*1000.
+galt_1d = np.linspace(300.0, 400.0, 10) * 1000.
 
 glat_2d, glon_2d = np.meshgrid(glat_1d, glon_1d)
-galt_2d = np.full(glat_2d.shape, 300.*1000.)
+galt_2d = np.full(glat_2d.shape, 300. * 1000.)
 
 glat_3d, glon_3d, galt_3d = np.meshgrid(glat_1d, glon_1d, galt_1d)
 
@@ -50,7 +52,19 @@ def test_init(ionosphere, config):
 
 
 @pytest.mark.parametrize('utime', [time_0d, time_1d])
-@pytest.mark.parametrize('glat,glon,galt', [(glat_0d,glon_0d,galt_0d), (glat_1d,glon_1d,galt_1d), (glat_2d,glon_2d,galt_2d), (glat_3d,glon_3d,galt_3d)])
+@pytest.mark.parametrize('glat,glon,galt',
+                         [(glat_0d,
+                           glon_0d,
+                           galt_0d),
+                          (glat_1d,
+                           glon_1d,
+                           galt_1d),
+                             (glat_2d,
+                              glon_2d,
+                              galt_2d),
+                             (glat_3d,
+                              glon_3d,
+                              galt_3d)])
 class TestIonosphereFunctions:
 
     def test_density(self, ionosphere, config, utime, glat, glon, galt):
@@ -60,7 +74,7 @@ class TestIonosphereFunctions:
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
             assert dens.shape == expected_shape
-    
+
     def test_itemp(self, ionosphere, config, utime, glat, glon, galt):
         itemp = ionosphere.itemp(utime, glat, glon, galt)
         truth_itemp = config['ITEMP'][0]['uniform']['value']
@@ -76,15 +90,16 @@ class TestIonosphereFunctions:
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
             assert etemp.shape == expected_shape
-    
+
     def test_velocity(self, ionosphere, config, utime, glat, glon, galt):
         vel = ionosphere.velocity(utime, glat, glon, galt)
-        truth_vel =  np.broadcast_to(config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape)
+        truth_vel = np.broadcast_to(
+            config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape)
         np.testing.assert_allclose(vel, truth_vel)
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
-            assert vel.shape == expected_shape+(3,)
-    
+            assert vel.shape == expected_shape + (3,)
+
     def test_sum_density(self, config, utime, glat, glon, galt):
         config['DENSITY'].append({'uniform': {'value': 5.e10}})
         iono = Ionosphere(config)
@@ -94,8 +109,7 @@ class TestIonosphereFunctions:
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
             assert dens.shape == expected_shape
-    
-    
+
     def test_sum_itemp(self, config, utime, glat, glon, galt):
         config['ITEMP'].append({'uniform': {'value': 2000.}})
         iono = Ionosphere(config)
@@ -105,8 +119,7 @@ class TestIonosphereFunctions:
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
             assert itemp.shape == expected_shape
-    
-    
+
     def test_sum_etemp(self, config, utime, glat, glon, galt):
         config['ETEMP'].append({'uniform': {'value': 2000.}})
         iono = Ionosphere(config)
@@ -116,18 +129,19 @@ class TestIonosphereFunctions:
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
             assert etemp.shape == expected_shape
-    
-    
+
     def test_sum_velocity(self, config, utime, glat, glon, galt):
-        config['VELOCITY'].append({'uniform_glat_aligned': {'value': [200., 0., 0]}})
+        config['VELOCITY'].append(
+            {'uniform_glat_aligned': {'value': [200., 0., 0]}})
         iono = Ionosphere(config)
         vel = iono.velocity(utime, glat, glon, galt)
-        truth_vel = np.broadcast_to(config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape) + np.array([200., 0., 0.])
+        truth_vel = np.broadcast_to(
+            config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape) + np.array([200., 0., 0.])
         np.testing.assert_allclose(vel, truth_vel)
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
-            assert vel.shape == expected_shape+(3,)
-    
+            assert vel.shape == expected_shape + (3,)
+
 
 @pytest.mark.parametrize('utime', [time_0d, time_1d])
 @pytest.mark.parametrize('galt', [galt_0d, galt_1d, galt_2d, galt_3d])
@@ -145,8 +159,7 @@ class TestZeroArray:
         zout = ionosphere.zero_array(utime, galt, vec=True)
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
-            np.testing.assert_array_equal(np.zeros(expected_shape+(3,)), zout)
+            np.testing.assert_array_equal(
+                np.zeros(expected_shape + (3,)), zout)
         else:
             np.testing.assert_array_equal(np.zeros(3), zout)
-
-

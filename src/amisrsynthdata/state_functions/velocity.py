@@ -1,7 +1,8 @@
 import numpy as np
 import pymap3d as pm
-#from apexpy import Apex
+# from apexpy import Apex
 from .utils import *
+
 
 class Velocity(object):
     def __init__(self, type, params, utime0, apex=None):
@@ -17,11 +18,8 @@ class Velocity(object):
         for param, value in params.items():
             setattr(self, param, value)
 
-
-
     def __call__(self, utime, glat, glon, galt):
         return self.Vi_function(utime, glat, glon, galt)
-
 
     def uniform(self, utime, glat, glon, galt):
         """
@@ -41,32 +39,39 @@ class Velocity(object):
         """
 
         # alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
-        alat, alon = self.apex.geo2apex(glat, glon, galt/1000.)
+        alat, alon = self.apex.geo2apex(glat, glon, galt / 1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
         # Find ECEF velocity components for given geodetic velocity at center of points
         # u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], np.nanmean(map_glat), np.nanmean(map_glon))
-        u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], self.cent_lat, self.cent_lon)
-        # Find ENU components for same velocity translated to all mapped locations
+        u, v, w = pm.enu2uvw(
+            self.value[0], self.value[1], self.value[2], self.cent_lat, self.cent_lon)
+        # Find ENU components for same velocity translated to all mapped
+        # locations
         e, n, u = pm.uvw2enu(u, v, w, map_glat, map_glon)
         u = np.zeros(u.shape)   # set up component to zero
-        V_map = np.array([e,n,u])
-        # rescale velocities so that they all have the same magnitude as the original vector
-        V_scale = V_map*np.linalg.norm(self.value)/np.linalg.norm(V_map, axis=0)
+        V_map = np.array([e, n, u])
+        # rescale velocities so that they all have the same magnitude as the
+        # original vector
+        V_scale = V_map * \
+            np.linalg.norm(self.value) / np.linalg.norm(V_map, axis=0)
         # map velocities along field lines back to the original heights
         if not np.isscalar(galt):
-            # map_V_to_height doesn't handle multidimensional arrays, so must flatten and reform
-            V0 = self.apex.map_V_to_height(alat.ravel(), alon.ravel(), 300., galt.ravel()/1000., V_scale.reshape(3,-1))
+            # map_V_to_height doesn't handle multidimensional arrays, so must
+            # flatten and reform
+            V0 = self.apex.map_V_to_height(alat.ravel(), alon.ravel(
+            ), 300., galt.ravel() / 1000., V_scale.reshape(3, -1))
             # reform original array shape
-            V0 = V0.T.reshape(galt.shape+(3,))
+            V0 = V0.T.reshape(galt.shape + (3,))
         else:
-            V0 = self.apex.map_V_to_height(alat, alon, 300., galt/1000., V_scale)
+            V0 = self.apex.map_V_to_height(
+                alat, alon, 300., galt / 1000., V_scale)
 
         s = output_shape(utime, galt)
         if not s:
             VE0 = V0
         else:
-            VE0 = np.broadcast_to(V0, s+(3,))
+            VE0 = np.broadcast_to(V0, s + (3,))
 
         return VE0
 
@@ -85,26 +90,26 @@ class Velocity(object):
 
         # Find base vector at each location
         if np.isscalar(galt):
-            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat, glon, galt/1000.)
+            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(
+                glat, glon, galt / 1000.)
         else:
-            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
+            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(
+                glat.ravel(), glon.ravel(), galt.ravel() / 1000.)
             # reshape basevector arrays to match the original input
-            e1 = e1.T.reshape(glat.shape+(3,))
-            e2 = e2.T.reshape(glat.shape+(3,))
-            e3 = e3.T.reshape(glat.shape+(3,))
+            e1 = e1.T.reshape(glat.shape + (3,))
+            e2 = e2.T.reshape(glat.shape + (3,))
+            e3 = e3.T.reshape(glat.shape + (3,))
 
         # calculate V in geodetic coordinates
-        VE = Ve1*e1 + Ve2*e2 + Ve3*e3
+        VE = Ve1 * e1 + Ve2 * e2 + Ve3 * e3
 
         s = output_shape(utime, galt)
         if not s:
             VE0 = VE
         else:
-            VE0 = np.broadcast_to(VE, s+(3,))
-
+            VE0 = np.broadcast_to(VE, s + (3,))
 
         return VE0
-
 
     def uniform_glat_aligned(self, utime, glat, glon, galt):
         """
@@ -124,11 +129,10 @@ class Velocity(object):
             else:
                 VE0 = np.array(self.value)
         else:
-            VE0 = np.broadcast_to(self.value, s+(3,)).copy()
-            VE0[...,np.isnan(galt),0] = np.nan
-            VE0[...,np.isnan(galt),1] = np.nan
-            VE0[...,np.isnan(galt),2] = np.nan
-
+            VE0 = np.broadcast_to(self.value, s + (3,)).copy()
+            VE0[..., np.isnan(galt), 0] = np.nan
+            VE0[..., np.isnan(galt), 1] = np.nan
+            VE0[..., np.isnan(galt), 2] = np.nan
 
         return VE0
 
@@ -151,7 +155,7 @@ class Velocity(object):
             Vi0 = np.moveaxis([V1, V2, V3], 0, -1)
 
         else:
-            s = output_shape(utime, galt)+(3,)
+            s = output_shape(utime, galt) + (3,)
             Vi0 = np.empty(s)
             for i, ut in enumerate(utime):
                 V1 = gh.query_model(dt.datetime.utcfromtimestamp(ut), 'v1')

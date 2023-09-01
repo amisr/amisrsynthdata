@@ -2,6 +2,7 @@ import numpy as np
 import pymap3d as pm
 from .utils import *
 
+
 class Density(object):
     def __init__(self, type, params, utime0):
 
@@ -13,10 +14,8 @@ class Density(object):
         for param, value in params.items():
             setattr(self, param, value)
 
-
     def __call__(self, utime, glat, glon, galt):
         return self.Ne_function(utime, glat, glon, galt)
-
 
     def uniform(self, utime, glat, glon, galt):
         """
@@ -36,10 +35,9 @@ class Density(object):
                 Ne0 = self.value
         else:
             Ne0 = np.full(s, self.value)
-            Ne0[...,np.isnan(galt)] = np.nan
+            Ne0[..., np.isnan(galt)] = np.nan
 
         return Ne0
-
 
     def chapman(self, utime, glat, glon, galt):
         """
@@ -64,8 +62,9 @@ class Density(object):
         """
 
         # From Schunk and Nagy, 2009; eqn 11.57
-        zp = (galt-self.z0)/self.H
-        Ne = self.N0*np.exp(0.5*(1-zp-np.exp(-zp)/np.cos(self.sza*np.pi/180.)))
+        zp = (galt - self.z0) / self.H
+        Ne = self.N0 * \
+            np.exp(0.5 * (1 - zp - np.exp(-zp) / np.cos(self.sza * np.pi / 180.)))
 
         s = output_shape(utime, galt)
         if not s:
@@ -94,17 +93,31 @@ class Density(object):
         """
 
         # ECEF vector to the center point
-        center_vec = np.array(pm.geodetic2ecef(self.cent_lat, self.cent_lon, 0.))
+        center_vec = np.array(
+            pm.geodetic2ecef(
+                self.cent_lat,
+                self.cent_lon,
+                0.))
 
         # define norm vector and array of point vectors in ECEF
-        norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., self.cent_lat, self.cent_lon, 0.))-center_vec
-        point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
+        norm_vec = np.array(
+            pm.aer2ecef(
+                self.az,
+                0.,
+                1.,
+                self.cent_lat,
+                self.cent_lon,
+                0.)) - center_vec
+        point_vec = np.moveaxis(
+            np.array(
+                pm.geodetic2ecef(
+                    glat, glon, galt)), 0, -1) - center_vec
 
         # calculate distance between each point and the plane
         r = np.einsum('...i,i->...', point_vec, norm_vec)
 
         # apply hyperbolic tangent function to create gradient
-        Ne = self.N0*(np.tanh(r/self.L)+1)
+        Ne = self.N0 * (np.tanh(r / self.L) + 1)
 
         # s = (utime.shape[0],)+galt.shape
         # Ne0 = np.broadcast_to(Ne, s)
@@ -114,7 +127,6 @@ class Density(object):
             Ne0 = Ne
         else:
             Ne0 = np.broadcast_to(Ne, s)
-
 
         return Ne0
 
@@ -146,8 +158,8 @@ class Density(object):
             Patch velocity [E, N, U] (m/s)
         """
 
-        w = self.width/2.
-        h = self.height/2.
+        w = self.width / 2.
+        h = self.height / 2.
 
 #        s = (utime.shape[0],)+galt.shape
 #        Ne0 = np.empty(s)
@@ -179,27 +191,41 @@ class Density(object):
 #####################################
         s = output_shape(utime, galt)
         if utime.shape:
-            # Some fancy array axis manipulation to get t in the proper shape for brodcasting
-            t = np.moveaxis(np.broadcast_to(utime-self.utime0, s[1:]+(s[0],)), -1, 0)
+            # Some fancy array axis manipulation to get t in the proper shape
+            # for brodcasting
+            t = np.moveaxis(np.broadcast_to(
+                utime - self.utime0, s[1:] + (s[0],)), -1, 0)
         else:
-            t = utime-self.utime0
+            t = utime - self.utime0
 
         # define array of point vectors in ECEF
-        e, n, u = pm.geodetic2enu(glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
+        e, n, u = pm.geodetic2enu(
+            glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
         point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
         # define norm vector and array of point vectors in ECEF
-        center_vec = np.array(pm.geodetic2ecef(self.cent_lat, self.cent_lon, self.cent_alt))
-        norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., self.cent_lat, self.cent_lon, self.cent_alt))-center_vec
+        center_vec = np.array(
+            pm.geodetic2ecef(
+                self.cent_lat,
+                self.cent_lon,
+                self.cent_alt))
+        norm_vec = np.array(
+            pm.aer2ecef(
+                self.az,
+                0.,
+                1.,
+                self.cent_lat,
+                self.cent_lon,
+                self.cent_alt)) - center_vec
 
         # create wave with sine function
         Vn = np.einsum('i,...i->...', np.array(self.velocity), norm_vec)
         pn = np.einsum('...i,i->...', point_vec, norm_vec)
 
-        Ne0 = self.N0/2.*(np.tanh((pn+Vn*t+w)/self.L)-np.tanh((pn+Vn*t-w)/self.L))*np.exp(-0.5*(galt-self.cent_alt)**2/h**2)
+        Ne0 = self.N0 / 2. * (np.tanh((pn + Vn * t + w) / self.L) - np.tanh(
+            (pn + Vn * t - w) / self.L)) * np.exp(-0.5 * (galt - self.cent_alt)**2 / h**2)
 
         return Ne0
-
 
     def circle_patch(self, utime, glat, glon, galt):
         """
@@ -221,11 +247,12 @@ class Density(object):
             Geodetic altitude of center of patch (m)
         """
 
-        r = self.width/2.
-        h = self.height/2.
+        r = self.width / 2.
+        h = self.height / 2.
 
-        e, n, u  = pm.geodetic2enu(glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
-        Ne = self.N0*np.exp(-0.5*(e**2/r**2 + n**2/r**2 + u**2/h**2))
+        e, n, u = pm.geodetic2enu(
+            glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
+        Ne = self.N0 * np.exp(-0.5 * (e**2 / r**2 + n**2 / r**2 + u**2 / h**2))
 
         # s = (utime.shape[0],)+galt.shape
         # Ne0 = np.broadcast_to(Ne, s)
@@ -236,13 +263,12 @@ class Density(object):
         else:
             Ne0 = np.broadcast_to(Ne, s)
 
-
         return Ne0
 
     # add wave fluctuation functions - L. Goodwin code
     def wave(self, utime, glat, glon, galt):
         """
-        A wave-like structure, such as traveling ionospheric distrubances (TID) 
+        A wave-like structure, such as traveling ionospheric distrubances (TID)
         or gravity waves (GW). The wave has the functional form:
 
         Ne = A0 * sin( 2pi * (k*r + t/P) ) * exp( (z-wave_alt)^2 / H^2 )
@@ -273,7 +299,7 @@ class Density(object):
         -----
         If this function is not used in conjunction with a suitable background, it WILL
         generate negative values for electron density.  If a uniform background density
-        is selected, make sure A0 is less than the uniform background value.  If a 
+        is selected, make sure A0 is less than the uniform background value.  If a
         Chapman layer background is desired, the easiest way to ensure positive definite
         density is to follow these guidlines:
 
@@ -287,18 +313,21 @@ class Density(object):
 
         s = output_shape(utime, galt)
         if utime.shape:
-            # Some fancy array axis manipulation to get t in the proper shape for brodcasting
-            t = np.moveaxis(np.broadcast_to(utime-self.utime0, s[1:]+(s[0],)), -1, 0)
+            # Some fancy array axis manipulation to get t in the proper shape
+            # for brodcasting
+            t = np.moveaxis(np.broadcast_to(
+                utime - self.utime0, s[1:] + (s[0],)), -1, 0)
         else:
-            t = utime-self.utime0
+            t = utime - self.utime0
 
         # define array of point vectors in ECEF
-        e, n, u = pm.geodetic2enu(glat, glon, galt, self.orig_lat, self.orig_lon, self.orig_alt)
+        e, n, u = pm.geodetic2enu(
+            glat, glon, galt, self.orig_lat, self.orig_lon, self.orig_alt)
         point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
         # create wave with sine function
         kr = np.einsum('i,...i->...', np.array(self.k), point_vec)
-        Ne0 = self.A0*np.sin(2*np.pi * (kr + t/self.P))*np.exp(-0.5*(galt-self.wave_alt)**2/self.H**2)
+        Ne0 = self.A0 * np.sin(2 * np.pi * (kr + t / self.P)) * \
+            np.exp(-0.5 * (galt - self.wave_alt)**2 / self.H**2)
 
         return Ne0
-
