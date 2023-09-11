@@ -1,9 +1,11 @@
 import numpy as np
-from .utils import *
+import datetime as dt
+from .utils import output_shape, gemini_helper
 
-# Because ion and electron temperature functions tend to be similar, they are both caputred
-#   within this function.  Ions and Electrons DO NOT have to use the same background function
-#   or parameters, these are specified seperately in the config file.
+# Because ion and electron temperature functions tend to be similar, they are
+#   both caputred within this function.  Ions and Electrons DO NOT have to use
+#   the same background function or parameters, these are specified seperately
+#   in the config file.
 
 
 class Temperature(object):
@@ -74,7 +76,8 @@ class Temperature(object):
         gemini_output_dir: string
             Path to directory of GEMINI output files
         species: string
-            Which species (ion or electron) should be read from GEMINI output ('Te' or 'Ti')
+            Which species (ion or electron) should be read from GEMINI output
+            ('Te' or 'Ti')
         """
 
         gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)

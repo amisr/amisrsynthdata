@@ -14,7 +14,9 @@ class Radar(object):
         # These can be initalization parameters
         self.radar_name = config['RADAR']['full_name']
         self.radar_abbrev = config['RADAR']['abbreviation']
-        self.site_lat, self.site_lon, self.site_alt = config['RADAR']['site_coords']
+        (self.site_lat,
+         self.site_lon,
+         self.site_alt) = config['RADAR']['site_coords']
 
         beam_bc1 = config['RADAR'].get('beamcodes', [])
         beam_az1, beam_el1, beam_ksys1 = self.beams_from_beam_codes(beam_bc1)
@@ -32,17 +34,22 @@ class Radar(object):
         alt_bin_config = config['RADAR']['altitude_bins']
         slant_range_config = config['RADAR']['acf_slant_range']
 
-        self.acf_slant_range, self.acf_lat, self.acf_lon, self.acf_alt = self.calculate_acf_gates(
-            slant_range_config)
-        self.slant_range, self.lat, self.lon, self.alt = self.calculate_gates(
-            alt_bin_config)
+        (self.acf_slant_range,
+         self.acf_lat,
+         self.acf_lon,
+         self.acf_alt) = self.calculate_acf_gates(slant_range_config)
+        (self.slant_range,
+         self.lat,
+         self.lon,
+         self.alt) = self.calculate_gates(alt_bin_config)
 
         self.integration_period = config['RADAR']['integration_period']
 
     def beams_from_beam_codes(self, beamcodes):
         # beams defined by standard beam code (beamcode files in package data)
         bc_file = files('amisrsynthdata.beamcodes').joinpath(
-            'bcotable_{}.txt'.format(self.radar_abbrev.lower().replace('-', '')))
+            'bcotable_{}.txt'.format(
+                self.radar_abbrev.lower().replace('-', '')))
         bc_data = np.loadtxt(bc_file)
 
         idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
@@ -63,7 +70,9 @@ class Radar(object):
         # form slant range bins
         slant_range_p = np.arange(*slant_range_config)
         lat_p, lon_p, alt_p = pm.aer2geodetic(
-            self.beam_azimuth[:, None], self.beam_elevation[:, None], slant_range_p[None, :], self.site_lat, self.site_lon, self.site_alt)
+            self.beam_azimuth[:, None], self.beam_elevation[:, None],
+            slant_range_p[None, :],
+            self.site_lat, self.site_lon, self.site_alt)
         return slant_range_p, lat_p, lon_p, alt_p
 
     def calculate_gates(self, alt_bins_config):
@@ -77,10 +86,13 @@ class Radar(object):
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 action='ignore', message='Mean of empty slice')
-            slant_range = np.array([[np.nanmean(np.where((beam >= altbins[i]) & (
-                beam < altbins[i + 1]), self.acf_slant_range, np.nan)) for i in range(len(altbins) - 1)] for beam in self.acf_alt])
+            slant_range = np.array([[np.nanmean(
+                np.where((beam >= altbins[i]) & (beam < altbins[i + 1]),
+                         self.acf_slant_range, np.nan))
+                for i in range(len(altbins) - 1)] for beam in self.acf_alt])
         lat, lon, alt = pm.aer2geodetic(
-            self.beam_azimuth[:, None], self.beam_elevation[:, None], slant_range, self.site_lat, self.site_lon, self.site_alt)
+            self.beam_azimuth[:, None], self.beam_elevation[:, None],
+            slant_range, self.site_lat, self.site_lon, self.site_alt)
         return slant_range, lat, lon, alt
 
     def kvec_all_gates(self):

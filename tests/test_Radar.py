@@ -4,7 +4,6 @@ Test of amisrsynthdata.Radar class
 
 import pytest
 import yaml
-import h5py
 import numpy as np
 import pymap3d as pm
 import os
@@ -88,7 +87,8 @@ def test_calculate_gates(radar):
                 radar.acf_alt[b] < altbins[i + 1])).flatten()
             sr = np.mean(radar.acf_slant_range[abidx])
             lat, lon, alt = pm.aer2geodetic(
-                radar.beam_azimuth[b], radar.beam_elevation[b], sr, radar.site_lat, radar.site_lon, radar.site_alt)
+                radar.beam_azimuth[b], radar.beam_elevation[b], sr,
+                radar.site_lat, radar.site_lon, radar.site_alt)
             truth_sr[b, i] = sr
             truth_lat[b, i] = lat
             truth_lon[b, i] = lon

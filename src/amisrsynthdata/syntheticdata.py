@@ -16,11 +16,7 @@ class SyntheticData(object):
 
         starttime = config['GENERAL']['starttime']  # init input
         endtime = config['GENERAL']['endtime']      # init input
-        # input directly to write function
-        output_filename = config['GENERAL']['output_filename']
         err_coef = config['GENERAL']['err_coef']
-        # option on calc_radar_measurements
-        add_noise = config['GENERAL']['noise']
 
         # generate ionosphere object
         self.iono = Ionosphere(config)
@@ -30,36 +26,45 @@ class SyntheticData(object):
 
         self.utime, self.time = self.generate_time_array(starttime, endtime)
 
-        self.ne, self.ti, self.te, self.vlos, self.ne_notr = self.generate_radar_measurements()
+        (
+            self.ne,
+            self.ti,
+            self.te,
+            self.vlos,
+            self.ne_notr
+        ) = self.generate_radar_measurements()
 
-        self.ne_err, self.ti_err, self.te_err, self.vlos_err, self.ne_notr_err = self.generate_errors(
-            err_coef)
+        (
+            self.ne_err,
+            self.ti_err,
+            self.te_err,
+            self.vlos_err,
+            self.ne_notr_err
+        ) = self.generate_errors(err_coef)
 
     def generate_time_array(self, starttime, endtime):
         # create time arrays
         ust = (starttime - dt.datetime.utcfromtimestamp(0)).total_seconds()
         num_tstep = int(
-            (endtime -
-             starttime).total_seconds() /
+            (endtime - starttime).total_seconds() /
             self.radar.integration_period)
-        utime = np.array([ust +
-                          np.arange(0, num_tstep) *
-                          self.radar.integration_period, ust +
-                          np.arange(1, num_tstep +
-                                    1) *
-                          self.radar.integration_period]).T
-        time = np.array([[dt.datetime.utcfromtimestamp(t)
-                        for t in ut] for ut in utime])
+        utime = np.array([
+            ust + np.arange(0, num_tstep) * self.radar.integration_period,
+            ust + np.arange(1, num_tstep + 1) * self.radar.integration_period
+            ]).T
+        time = np.array([
+            [dt.datetime.utcfromtimestamp(t) for t in ut] for ut in utime
+            ])
         return utime, time
 
     def generate_radar_measurements(self):
         # caculate scalar ionosphere parameters at each fitted radar bin
-        ne = self.iono.density(
-            self.utime[:, 0], self.radar.lat, self.radar.lon, self.radar.alt)
-        ti = self.iono.itemp(
-            self.utime[:, 0], self.radar.lat, self.radar.lon, self.radar.alt)
-        te = self.iono.etemp(
-            self.utime[:, 0], self.radar.lat, self.radar.lon, self.radar.alt)
+        ne = self.iono.density(self.utime[:, 0], self.radar.lat,
+                               self.radar.lon, self.radar.alt)
+        ti = self.iono.itemp(self.utime[:, 0], self.radar.lat,
+                             self.radar.lon, self.radar.alt)
+        te = self.iono.etemp(self.utime[:, 0], self.radar.lat,
+                             self.radar.lon, self.radar.alt)
 
         # calculate LoS velocity for each bin by taking the dot product of the
         # radar kvector and the velocity field
@@ -69,8 +74,8 @@ class SyntheticData(object):
         vlos = np.einsum('...i,k...i->k...', kvec, Vvec)
 
         # calculate ACF density
-        ne_notr = self.iono.density(
-            self.utime[:, 0], self.radar.acf_lat, self.radar.acf_lon, self.radar.acf_alt)
+        ne_notr = self.iono.density(self.utime[:, 0], self.radar.acf_lat,
+                                    self.radar.acf_lon, self.radar.acf_alt)
         return ne, ti, te, vlos, ne_notr
 
     def generate_errors(self, err_coef):
@@ -108,8 +113,10 @@ class SyntheticData(object):
             'IonMass': self.iono.ion_mass,
             'Range': self.radar.slant_range}
 
-        # create fit and error arrays that match the shape of whats in the processed fitted files
-        # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4 (fraction, temperature, coll. freq., LoS speed)
+        # create fit and error arrays that match the shape of whats in the
+        # processed fitted files
+        # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4
+        #   (fraction, temperature, coll. freq., LoS speed)
         # assume only O+, but include fields for other parameters so array is a
         # general shape
         s = (self.utime.shape[0],) + self.radar.slant_range.shape
@@ -138,16 +145,17 @@ class SyntheticData(object):
 
         # fit info
         FitInfo = {
-            'chi2': np.full(
-                s, 1.0), 'dof': np.full(
-                s, 26), 'fitcode': np.full(
-                s, 1), 'nfev': np.full(
-                    s, 0)}
+            'chi2': np.full(s, 1.0),
+            'dof': np.full(s, 26),
+            'fitcode': np.full(s, 1),
+            'nfev': np.full(s, 0)
+            }
 
         # calculate density in ACF bins
         NeFromPower = {
             'Altitude': self.radar.acf_alt,
-            'Range': self.radar.acf_slant_range}
+            'Range': self.radar.acf_slant_range
+            }
 
         NeFromPower['Ne_Mod'] = self.ne_notr
         NeFromPower['Ne_NoTr'] = self.ne_notr
@@ -167,14 +175,19 @@ class SyntheticData(object):
         Time['Year'] = np.array([[t.year for t in ip] for ip in self.time])
         Time['doy'] = np.array(
             [[t.timetuple().tm_yday for t in ip] for ip in self.time])
-        Time['dtime'] = np.array([[(t -
-                                    dt.datetime(t.year, t.month, t.day, 0, 0, 0)).total_seconds() /
-                                   3600. for t in ip] for ip in self.time])
+        Time['dtime'] = np.array([
+            [(t - dt.datetime(t.year, t.month, t.day, 0, 0, 0)
+              ).total_seconds() / 3600. for t in ip]
+            for ip in self.time])
 
-        _, mlt0 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon,
-                                         'geo', 'mlt', height=self.radar.site_alt / 1000., datetime=self.time[:, 0])
-        _, mlt1 = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon,
-                                         'geo', 'mlt', height=self.radar.site_alt / 1000., datetime=self.time[:, 1])
+        _, mlt0 = self.iono.apex.convert(
+                self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt',
+                height=self.radar.site_alt / 1000., datetime=self.time[:, 0]
+                )
+        _, mlt1 = self.iono.apex.convert(
+                self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt',
+                height=self.radar.site_alt / 1000., datetime=self.time[:, 1]
+                )
         Time['MagneticLocalTimeSite'] = np.array([mlt0, mlt1]).T
 
         return Time
@@ -198,9 +211,11 @@ class SyntheticData(object):
             'Altitude': self.radar.site_alt,
             'Code': 0}
         mlat, mlon = self.iono.apex.geo2apex(
-            self.radar.site_lat, self.radar.site_lon, height=self.radar.site_alt / 1000.)
-        _, mlt = self.iono.apex.convert(self.radar.site_lat, self.radar.site_lon,
-                                        'geo', 'mlt', height=self.radar.site_alt / 1000., datetime=self.time[0, 0])
+            self.radar.site_lat, self.radar.site_lon,
+            height=self.radar.site_alt / 1000.)
+        _, mlt = self.iono.apex.convert(
+            self.radar.site_lat, self.radar.site_lon, 'geo', 'mlt',
+            height=self.radar.site_alt / 1000., datetime=self.time[0, 0])
         Site.update(
             MagneticLatitude=mlat,
             MagneticLongitude=mlon,
@@ -296,8 +311,10 @@ class SyntheticData(object):
             import cartopy.crs as ccrs
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
-                'In order to create summary plots, the optional modules matplotlib (https://matplotlib.org/) '
-                'and cartopy (https://scitools.org.uk/cartopy/docs/latest/) must be installed.') from e
+                'In order to create summary plots, the optional modules '
+                'matplotlib (https://matplotlib.org/) and cartopy '
+                '(https://scitools.org.uk/cartopy/docs/latest/) must be '
+                'installed.') from e
 
         # form grid of coordinates for plotting
         # Make customizable in config file
@@ -320,9 +337,9 @@ class SyntheticData(object):
             order='C')
         galt = np.broadcast_to(alt_layers, galt.shape + alt_layers.shape)
 
-        tidx = np.argmin(np.abs((plot_time -
-                                 dt.datetime.utcfromtimestamp(0)).total_seconds() -
-                                self.utime[:, 0]))
+        tidx = np.argmin(np.abs(
+            (plot_time - dt.datetime.utcfromtimestamp(0)).total_seconds() -
+            self.utime[:, 0]))
 
         ne0 = np.squeeze(self.iono.density(
             self.utime[tidx, 0], glat, glon, galt))
@@ -405,20 +422,13 @@ class SyntheticData(object):
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
-                    ax.quiver(glon[:, :, j], glat[:, :, j], p['param'][0][:, :, j],
-                              p['param'][1][:, :, j], color='blue', transform=ccrs.PlateCarree())
+                    ax.quiver(glon[:, :, j], glat[:, :, j],
+                              p['param'][0][:, :, j], p['param'][1][:, :, j],
+                              color='blue', transform=ccrs.PlateCarree())
 
                 else:
-                    cs = ax.contourf(glon[:,
-                                          :,
-                                          j],
-                                     glat[:,
-                                          :,
-                                          j],
-                                     p['param'][:,
-                                                :,
-                                                j],
-                                     **p['cparam'],
+                    cs = ax.contourf(glon[:, :, j], glat[:, :, j],
+                                     p['param'][:, :, j], **p['cparam'],
                                      transform=ccrs.PlateCarree())
                     cs.cmap.set_over('white')
                     cs.cmap.set_under('grey')
@@ -426,9 +436,7 @@ class SyntheticData(object):
 
                 # Add beam positions
                 aidx = np.nanargmin(
-                    np.abs(
-                        self.radar.alt -
-                        alt_layers[j]),
+                    np.abs(self.radar.alt - alt_layers[j]),
                     axis=1)
                 aidx0 = np.array([aidx]).T
                 slice_lat = np.take_along_axis(self.radar.lat, aidx0, axis=1)
@@ -466,8 +474,9 @@ class SyntheticData(object):
                     self.radar.beam_elevation[bidx]))
 
             # Create 3D FoV plot
-            x, y, z = pm.geodetic2enu(self.radar.lat, self.radar.lon, self.radar.alt,
-                                      self.radar.site_lat, self.radar.site_lon, self.radar.site_alt)
+            x, y, z = pm.geodetic2enu(
+                self.radar.lat, self.radar.lon, self.radar.alt,
+                self.radar.site_lat, self.radar.site_lon, self.radar.site_alt)
             fp = np.isfinite(self.radar.alt)
 
             ax = fig.add_subplot(gs[:, -1], projection='3d')
@@ -478,19 +487,21 @@ class SyntheticData(object):
             # ax.zaxis.set_ticklabels([])
             ax.set_box_aspect((1, 1, 1))
             ax.set_box_aspect(
-                [ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')() for a in 'xyz')])
+                [ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')()
+                 for a in 'xyz')])
             fig.colorbar(c, label=p['label'])
 
             fig.savefig(p['output'])
 
 
 def main():
-    help_string = 'Program to generate synthetic data for multibeam, AMISR like incoherent scatter radars.'
+    help_string = 'Program to generate synthetic data for multibeam, AMISR-'
+    'like incoherent scatter radars.'
 
     # Build the argument parser tree
     parser = ArgumentParser(description=help_string,
                             formatter_class=RawDescriptionHelpFormatter)
-    arg = parser.add_argument(
+    parser.add_argument(
         'synth_config_file',
         help='Configuration file for synthetic data set.')
     args = vars(parser.parse_args())

@@ -1,7 +1,8 @@
 import numpy as np
 import pymap3d as pm
+import datetime as dt
 # from apexpy import Apex
-from .utils import *
+from .utils import output_shape, gemini_helper
 
 
 class Velocity(object):
@@ -23,10 +24,12 @@ class Velocity(object):
 
     def uniform(self, utime, glat, glon, galt):
         """
-        Uniform velocity at all points.  Uniform velocity is caluclated by translating the
-        velocity vetor to all points in cartesain coordinates, then adjusting the vertical velocity
-        to zero and renormalizing so they all have the same magnitude.  This creates the approximate
-        effect of uniform velocity across the entire FoV regardless of the local coordinate system.
+        Uniform velocity at all points.  Uniform velocity is caluclated by
+        translating the velocity vetor to all points in cartesain coordinates,
+        then adjusting the vertical velocity to zero and renormalizing so they
+        all have the same magnitude.  This creates the approximate effect of
+        uniform velocity across the entire FoV regardless of the local
+        coordinate system.
 
         Parameters
         ----------
@@ -38,14 +41,14 @@ class Velocity(object):
             Geodetic longitude of initial specified vector (deg)
         """
 
-        # alat, alon = self.apex.geo2apex(glat.ravel(), glon.ravel(), galt.ravel()/1000.)
         alat, alon = self.apex.geo2apex(glat, glon, galt / 1000.)
         map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
-        # Find ECEF velocity components for given geodetic velocity at center of points
-        # u, v, w = pm.enu2uvw(self.value[0], self.value[1], self.value[2], np.nanmean(map_glat), np.nanmean(map_glon))
+        # Find ECEF velocity components for given geodetic velocity at center
+        # of points
         u, v, w = pm.enu2uvw(
-            self.value[0], self.value[1], self.value[2], self.cent_lat, self.cent_lon)
+            self.value[0], self.value[1], self.value[2],
+            self.cent_lat, self.cent_lon)
         # Find ENU components for same velocity translated to all mapped
         # locations
         e, n, u = pm.uvw2enu(u, v, w, map_glat, map_glon)
@@ -77,13 +80,15 @@ class Velocity(object):
 
     def uniform_mlat_aligned(self, utime, glat, glon, galt):
         """
-        Velocity will have the same Apex magnetic components at all points.  This is useful for flows
-        expected to align with magnetic meridians (i.e., in the auroral zone).
+        Velocity will have the same Apex magnetic components at all points.
+        This is useful for flows expected to align with magnetic meridians
+        (i.e., in the auroral zone).
 
         Parameters
         ----------
         value: list
-            The Apex vector value to assign at all points [mag E, mag N, mag U] (m/s)
+            The Apex vector value to assign at all points
+            [mag E, mag N, mag U] (m/s)
         """
 
         Ve1, Ve2, Ve3 = self.value
@@ -113,8 +118,9 @@ class Velocity(object):
 
     def uniform_glat_aligned(self, utime, glat, glon, galt):
         """
-        Velocity will have the same Geodetic components at all points.  CAUTION: This is probably not
-        the most appropriate function for creating a "uniform" field close to the poles.
+        Velocity will have the same Geodetic components at all points.
+        CAUTION: This is probably not the most appropriate function for
+        creating a "uniform" field close to the poles.
 
         Parameters
         ----------

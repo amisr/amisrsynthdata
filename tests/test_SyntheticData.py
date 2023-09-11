@@ -244,7 +244,8 @@ def test_create_hdf5_output(synthdata):
 
 
 @pytest.mark.skipif(os.getenv("GITHUB_ACTIONS") == "true",
-                    reason="Test doesn't work in Github Actions due to challenges installing cartopy.")
+                    reason="Test doesn't work in Github Actions due to "
+                           "challenges installing cartopy.")
 def test_create_summary_plots(synthdata, config):
     synthdata.create_summary_plots(**config['SUMMARY_PLOT'])
     prefix = config['SUMMARY_PLOT']['output_prefix']

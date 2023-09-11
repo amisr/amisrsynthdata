@@ -23,5 +23,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8
       - name: Run linter
-        run: flake8 . --count --statistic
+        run: flake8 . --count --statistic --per-file-ignores="__init__.py:F401"
 

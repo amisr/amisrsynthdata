@@ -3,7 +3,8 @@ try:
     from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
     import gemini3d.read as read
 except ImportError:
-    print('WARNING: pygemini is not installed.  GEMINI functionality will not be available.')
+    print('WARNING: pygemini is not installed.  GEMINI functionality will '
+          'not be available.')
 
 
 def output_shape(ut, x):
@@ -46,7 +47,8 @@ class gemini_helper(object):
         # find indices where NaNs will be removed and should be inserted in new
         # arrays
         self.nan_idx = np.array(
-            [r - i for i, r in enumerate(np.argwhere(~finite_coords).flatten())])
+            [r - i for i, r in
+             enumerate(np.argwhere(~finite_coords).flatten())])
         # return coordinate arrays without NaNs
         return glatf[finite_coords], glonf[finite_coords], galtf[finite_coords]
 

@@ -1,6 +1,7 @@
 import numpy as np
 import pymap3d as pm
-from .utils import *
+import datetime as dt
+from .utils import output_shape, gemini_helper
 
 
 class Density(object):
@@ -64,7 +65,8 @@ class Density(object):
         # From Schunk and Nagy, 2009; eqn 11.57
         zp = (galt - self.z0) / self.H
         Ne = self.N0 * \
-            np.exp(0.5 * (1 - zp - np.exp(-zp) / np.cos(self.sza * np.pi / 180.)))
+            np.exp(0.5 * (1 - zp - np.exp(-zp) / np.cos(
+                self.sza * np.pi / 180.)))
 
         s = output_shape(utime, galt)
         if not s:
@@ -132,9 +134,11 @@ class Density(object):
 
     def tubular_patch(self, utime, glat, glon, galt):
         """
-        "Infintite tubular patch" of the variety that has traditionally been used to model polar cap patchs
-        in numerical models.  Formed from two hyperbolic tangients in the horizontal direction and a
-        Gaussian in the vertical direction.  A non-zero velocity will make the patch move in time.
+        "Infintite tubular patch" of the variety that has traditionally been
+        used to model polar cap patchs in numerical models.  Formed from two
+        hyperbolic tangients in the horizontal direction and a Gaussian in the
+        vertical direction.  A non-zero velocity will make the patch move in
+        time.
 
         Parameters
         ----------
@@ -161,34 +165,6 @@ class Density(object):
         w = self.width / 2.
         h = self.height / 2.
 
-#        s = (utime.shape[0],)+galt.shape
-#        Ne0 = np.empty(s)
-#
-#        for i in range(len(utime)):
-#
-#            # Progress center point to new location
-#            t = utime[i,0]-self.utime0
-#            cent_lat, cent_lon, cent_alt = pm.enu2geodetic(self.velocity[0]*t, self.velocity[1]*t, self.velocity[2]*t, self.orig_lat, self.orig_lon, self.orig_alt)
-#
-#            # ECEF vector to the center point
-#            center_vec = np.array(pm.geodetic2ecef(cent_lat, cent_lon, cent_alt))
-#
-#            # define norm vector and array of point vectors in ECEF
-#            norm_vec = np.array(pm.aer2ecef(self.az, 0., 1., cent_lat, cent_lon, cent_alt))-center_vec
-#
-#            # print(norm_vec.shape)
-#            point_vec = np.moveaxis(np.array(pm.geodetic2ecef(glat, glon, galt)), 0, -1)-center_vec
-#
-#            # calculate distance between each point and the plane
-#            r = np.einsum('...i,i->...', point_vec, norm_vec)
-#
-#            # apply hyperbolic tangent function to create gradient
-#            Ne = self.N0/2.*(np.tanh((r+w)/self.L)-np.tanh((r-w)/self.L))*np.exp(-0.5*(galt-cent_alt)**2/h**2)
-#            # Ne = N0/2.*(np.tanh((r+w)/L)-np.tanh((r-w)/L))
-#
-#            Ne0[i] = Ne
-
-#####################################
         s = output_shape(utime, galt)
         if utime.shape:
             # Some fancy array axis manipulation to get t in the proper shape
@@ -223,7 +199,8 @@ class Density(object):
         pn = np.einsum('...i,i->...', point_vec, norm_vec)
 
         Ne0 = self.N0 / 2. * (np.tanh((pn + Vn * t + w) / self.L) - np.tanh(
-            (pn + Vn * t - w) / self.L)) * np.exp(-0.5 * (galt - self.cent_alt)**2 / h**2)
+            (pn + Vn * t - w) / self.L)) * np.exp(
+                    -0.5 * (galt - self.cent_alt)**2 / h**2)
 
         return Ne0
 
@@ -268,13 +245,13 @@ class Density(object):
     # add wave fluctuation functions - L. Goodwin code
     def wave(self, utime, glat, glon, galt):
         """
-        A wave-like structure, such as traveling ionospheric distrubances (TID)
-        or gravity waves (GW). The wave has the functional form:
+        A wave-like structure, such as traveling ionospheric distrubances
+        (TID) or gravity waves (GW). The wave has the functional form:
 
         Ne = A0 * sin( 2pi * (k*r + t/P) ) * exp( (z-wave_alt)^2 / H^2 )
 
-        This function produces wave purturbations around zero with amplitude decaying
-        as H^-2 moving away from the specified peak wave altitude.
+        This function produces wave purturbations around zero with amplitude
+        decaying as H^-2 moving away from the specified peak wave altitude.
 
         Parameters
         ----------
@@ -297,11 +274,12 @@ class Density(object):
 
         Notes
         -----
-        If this function is not used in conjunction with a suitable background, it WILL
-        generate negative values for electron density.  If a uniform background density
-        is selected, make sure A0 is less than the uniform background value.  If a
-        Chapman layer background is desired, the easiest way to ensure positive definite
-        density is to follow these guidlines:
+        If this function is not used in conjunction with a suitable background,
+        it WILL generate negative values for electron density.  If a uniform
+        background density is selected, make sure A0 is less than the uniform
+        background value.  If a Chapman layer background is desired, the
+        easiest way to ensure positive definite density is to follow these
+        guidlines:
 
         N0_chap > A0
 
@@ -331,3 +309,29 @@ class Density(object):
             np.exp(-0.5 * (galt - self.wave_alt)**2 / self.H**2)
 
         return Ne0
+
+    def gemini(self, utime, glat, glon, galt):
+        """
+        Electron density output from GEMINI model.
+
+        Parameters
+        ----------
+        gemini_output_dir: string
+            Path to directory of GEMINI output files
+        """
+
+        gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)
+
+        if not utime.shape:
+            Ts0 = gh.query_model(
+                dt.datetime.utcfromtimestamp(utime),
+                self.species)
+
+        else:
+            s = output_shape(utime, galt)
+            Ts0 = np.empty(s)
+            for i, ut in enumerate(utime):
+                Ts0[i] = gh.query_model(
+                    dt.datetime.utcfromtimestamp(ut), 'ne')
+
+        return Ts0

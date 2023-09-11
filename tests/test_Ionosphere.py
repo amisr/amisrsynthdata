@@ -93,8 +93,8 @@ class TestIonosphereFunctions:
 
     def test_velocity(self, ionosphere, config, utime, glat, glon, galt):
         vel = ionosphere.velocity(utime, glat, glon, galt)
-        truth_vel = np.broadcast_to(
-            config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape)
+        truth_vel0 = config['VELOCITY'][0]['uniform_glat_aligned']['value']
+        truth_vel = np.broadcast_to(truth_vel0, vel.shape)
         np.testing.assert_allclose(vel, truth_vel)
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:
@@ -135,8 +135,9 @@ class TestIonosphereFunctions:
             {'uniform_glat_aligned': {'value': [200., 0., 0]}})
         iono = Ionosphere(config)
         vel = iono.velocity(utime, glat, glon, galt)
-        truth_vel = np.broadcast_to(
-            config['VELOCITY'][0]['uniform_glat_aligned']['value'], vel.shape) + np.array([200., 0., 0.])
+        truth_vel0 = config['VELOCITY'][0]['uniform_glat_aligned']['value']
+        truth_vel0 = truth_vel0 + np.array([200., 0., 0.])
+        truth_vel = np.broadcast_to(truth_vel0, vel.shape)
         np.testing.assert_allclose(vel, truth_vel)
         expected_shape = utils.output_shape(utime, galt)
         if expected_shape:

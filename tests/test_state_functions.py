@@ -9,7 +9,8 @@ import numpy as np
 import datetime as dt
 from apexpy import Apex
 import os
-from amisrsynthdata.state_functions import Density, Temperature, Velocity, utils
+from amisrsynthdata.state_functions import Density, Temperature, Velocity
+from amisrsynthdata.state_functions import utils
 
 # Set up time arrays
 sut = np.datetime64('2020-01-01T06:00:00').astype(int)
