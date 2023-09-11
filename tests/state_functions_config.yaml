@@ -1,0 +1,61 @@
+DENSITY:
+  - uniform:
+      value: 3.e+11
+  - chapman:
+      N0: 5.e+11
+      z0: 300000.
+      H: 50000.
+      sza: 0.
+  - gradient:
+      N0: 5.e+11
+      L: 10000.
+      cent_lat: 66.0
+      cent_lon: -147.0
+      az: 30.
+  - tubular_patch:
+      N0: 4.e+11
+      L: 50000.
+      width: 150000.
+      height: 200000.
+      cent_lat: 66.0
+      cent_lon: -147.0
+      cent_alt: 300.
+      az: -40.
+      velocity: [100., 200., 0.]
+  - circle_patch:
+      N0: 4.e+11
+      width: 300000.
+      height: 100000.
+      cent_lat: 66.0
+      cent_lon: -147.0
+      cent_alt: 350.
+  - wave:
+      A0: 1.e+11
+      k: [50., 100., 30.]
+      P: 1800.
+      orig_lat: 66.0
+      orig_lon: -147.0
+      orig_alt: 300.
+      H: 50000.
+      wave_alt: 300.
+
+TEMPERATURE:
+  - uniform:
+      value: 2500.
+  - hypertan:
+      maxtemp: 5000.
+      scale_height: 100000.
+        #  - gemini:
+        #      gemini_output_dir: /Users/e30737/Desktop/Data/GEMINI/OSSE_2cc_2_pot_3-28/
+        #      species: Te
+
+VELOCITY:
+  - uniform:
+      value: [200., 300., 0.]
+      cent_lat: 66.0
+      cent_lon: -147.0
+  - uniform_mlat_aligned:
+      value: [400., 100., 0.]
+  - uniform_glat_aligned:
+      value: [100., 200., 0.]
+

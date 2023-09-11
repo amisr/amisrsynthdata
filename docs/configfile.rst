@@ -67,19 +67,19 @@ RADAR
 IONOSPHERE
 ----------
 
-The four ionospheric state sections (DENSITY, VELOCITY, ETEMP, ITEMP) should each contain at least one section defining the function that should be used to define that variable.  These sections should be named by the function that will be used and have sub-parameters that specify whatever parameters that function needs.  As an example, the following specifies density should be a standard Chapman profile with NmF2 = 4.0e+11 m-3, hmF2 = 300000 m, a scale height of 100000 m, and solar zenith angle as 0.
+The four ionospheric state sections (DENSITY, VELOCITY, ETEMP, ITEMP) should each contain at least one section defining the function that should be used to define that variable.  If multiple functions are listed, the sum of the functions will be used.  These sections should be named by the function that will be used and have sub-parameters that specify whatever parameters that function needs.  As an example, the following specifies density should be a standard Chapman profile with NmF2 = 4.0e+11 m-3, hmF2 = 300000 m, a scale height of 100000 m, and solar zenith angle as 0.
 
 .. code-block::
 
   DENSITY:
-    chapman:
-      N0: 4.0e+11
-      H: 100000.
-      z0: 300000.
-      sza: 0.
+    - chapman:
+        N0: 4.0e+11
+        H: 100000.
+        z0: 300000.
+        sza: 0.
 
 
-Which parameters are specified in these sections will vary based on the function selected.  Details about which functions are currently available for each ionospheric state parameters and what inputs they need are available in the :ref:`Ionospheric State` section of the documentation.  Multiple functions can be specified for each of the four state parameters, in which case the package will sum all functions evaluated at each point.  This allows the user to create more complicated patterns, such as a patch on top of a background Chapman layer.
+Note the ``-`` prepending the function name but the function parameters are listed as a dash-free indented list.  This syntax is very important to follow exactly so the configuration file is read in correctly.  Which parameters are specified in these sections will vary based on the function selected.  Details about which functions are currently available for each ionospheric state parameters and what inputs they need are available in the :ref:`Ionospheric State` section of the documentation.  Multiple functions can be specified for each of the four state parameters, in which case the package will sum all functions evaluated at each point.  This allows the user to create more complicated patterns, such as a patch on top of a background Chapman layer.
 
 Refer to the API references and the example configuration file for assistance generating the ionospheric state sections, however there are a few general tips to keep in mind for constructing a sensible ionosphere.
 

@@ -3,13 +3,13 @@ try:
     from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
     import gemini3d.read as read
 except ImportError:
-    print('WARNING: pygemini is not installed.  GEMINI functionality will not be available.')
-
-
+    print('WARNING: pygemini is not installed.  GEMINI functionality will '
+          'not be available.')
 
 
 def output_shape(ut, x):
-    # determine the appropriate output shape for the given time and position inputs
+    # determine the appropriate output shape for the given time and position
+    # inputs
     if (np.isscalar(ut) and np.isscalar(x)):
         s = None
     elif np.isscalar(ut):
@@ -17,8 +17,9 @@ def output_shape(ut, x):
     elif np.isscalar(x):
         s = ut.shape
     else:
-        s = ut.shape+x.shape
+        s = ut.shape + x.shape
     return s
+
 
 class gemini_helper(object):
     """
@@ -26,6 +27,7 @@ class gemini_helper(object):
     There are a few intricacies with properly calling the gemini3d functions,
     and this class serves to limit excessive copy/paste code blocks.
     """
+
     def __init__(self, gemini_output_dir, glat, glon, galt):
         self.gemini_output_dir = gemini_output_dir
         self.out_shape = galt.shape
@@ -36,13 +38,17 @@ class gemini_helper(object):
         self.xg = read.grid(self.gemini_output_dir)
 
     def remove_nans(self, glat, glon, galt):
-        # find/save the locations of NaNs and remove them from coordinate arrays
+        # find/save the locations of NaNs and remove them from coordinate
+        # arrays
         glatf = glat.flatten()
         glonf = glon.flatten()
         galtf = galt.flatten()
         finite_coords = np.any(np.isfinite([glatf, glonf, galtf]), axis=0)
-        # find indices where NaNs will be removed and should be inserted in new arrays
-        self.nan_idx = np.array([r-i for i,r in enumerate(np.argwhere(~finite_coords).flatten())])
+        # find indices where NaNs will be removed and should be inserted in new
+        # arrays
+        self.nan_idx = np.array(
+            [r - i for i, r in
+             enumerate(np.argwhere(~finite_coords).flatten())])
         # return coordinate arrays without NaNs
         return glatf[finite_coords], glonf[finite_coords], galtf[finite_coords]
 
@@ -56,9 +62,12 @@ class gemini_helper(object):
         # Use gemini3d fuctions to get interpolated parameters and reform the
         #   arrays correctly
         dat = read.frame(self.gemini_output_dir, time, var=param)
-        P = model2pointsgeogcoords(self.xg, dat[param], self.galtf, self.glonf, self.glatf)
+        P = model2pointsgeogcoords(
+            self.xg,
+            dat[param],
+            self.galtf,
+            self.glonf,
+            self.glatf)
         P = self.replace_nans(P)
         P0 = P.reshape(self.out_shape)
         return P0
-
-
