@@ -9,7 +9,7 @@ authors = [
   { name="L. Lamarche", email="leslie.lamarche@sri.com" },
 ]
 description = "Tool for generating synthetic AMISR data files."
-readme = "README.rst"
+#readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["AMISR", "synthetic", "data"]
 requires-python = ">=3.7"
