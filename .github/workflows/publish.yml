@@ -5,7 +5,7 @@ name: Publish amisrsynthdata to PyPI
 
 on:
   pull_request:
-    branches: ['main','develop']
+    branches: ['auto_publish']
   release:
     types: [published]
   # push
@@ -17,7 +17,7 @@ jobs:
     environment:
       #name: pypi
       name: testpypi
-      url: https://pypi.org/p/amisrsynthdata
+      url: https://test.pypi.org/project/amisrsynthdata
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
