@@ -27,7 +27,7 @@ This package installs the command line tool `amisrsynthdata`, which is used alon
 
   $ amisrsynthdata config.yaml
 
-The `Configuration File` sections contains information about the contents of these configuration files and how to construct one.
+Refer to the `configuration file docs <https://amisrsynthdata.readthedocs.io/en/latest/configfile.html#>`_ for information about the contents of these configuration files and how to construct one.
 
 Limitations
 -----------
@@ -37,6 +37,11 @@ The following are NOT currently included in the amisrsynthdata module:
 1. Any kind of proper treatment or simulation of ISR theory - The module effectively assumes the radar measures plasma parameters perfectly at a particular location, although empirical errors can be added.
 2. Integration over a time period or smearing along the length of pulses, as well as pulse coding.
 3. Madrigal data format - Currently files are only generated in the SRI data format.
+
+Documentation
+-------------
+
+Full documentation for amisrsynthdata is available on `ReadTheDocs <https://amisrsynthdata.readthedocs.io/en/latest/index.html>`_.
 
 Contributing
 ------------
