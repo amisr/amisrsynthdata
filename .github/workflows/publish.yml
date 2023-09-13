@@ -1,0 +1,65 @@
+# This workflow will build the distribution and publish it to PyPI
+# Based on: https://packaging.python.org/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+
+name: Publish amisrsynthdata to PyPI
+
+on:
+  pull_request:
+    branches: ['main']
+  release:
+    types: [published]
+
+jobs:
+  pypi-publish:
+    name: Upload release to PyPI
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/amisrsynthdata
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+    # retrieve your distributions here
+    - name: Checkout latest push
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install pypa/build
+      run: python -m pip install build --user
+    - name: Build a binary wheel and a source tarball
+      run: python -m build --sdist --wheel --outdir dist/
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+
+  test-pypi-publish:
+    name: Upload release to TestPyPI
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/amisrsynthdata
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+    steps:
+    # retrieve your distributions here
+    - name: Checkout latest push
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install pypa/build
+      run: python -m pip install build --user
+    - name: Build a binary wheel and a source tarball
+      run: python -m build --sdist --wheel --outdir dist/
+    - name: Publish package distributions to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        skip_existing: true
+        verbose: true
+        repository-url: https://test.pypi.org/legacy/
+
+

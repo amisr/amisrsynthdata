@@ -1,0 +1,27 @@
+# This workflow will install flake8 and run linter
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Run linter on amisrsynthdata
+
+on: push
+
+jobs:
+
+  unittest:
+    name: Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout latest push
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+      - name: Run linter
+        run: flake8 . --count --statistic --per-file-ignores="__init__.py:F401"
+

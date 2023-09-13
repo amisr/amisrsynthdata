@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "amisrsynthdata"
+version = "0.0.4"
+authors = [
+  { name="L. Lamarche", email="leslie.lamarche@sri.com" },
+]
+description = "Tool for generating synthetic AMISR data files."
+readme = "README.rst"
+license = { file = "LICENSE" }
+keywords = ["AMISR", "synthetic", "data"]
+requires-python = ">=3.7"
+dependencies = [
+    "numpy",
+    "h5py",
+    "pymap3d",
+    "apexpy",
+    "pyyaml",
+    "importlib_resources",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib", "cartopy"]
+
+[project.urls]
+"Homepage" = "https://github.com/amisr/amisrsynthdata"
+"Bug Tracker" = "https://github.com/amisr/amisrsynthdata/issues"
+
+[project.scripts]
+    amisrsynthdata = "amisrsynthdata.syntheticdata:main"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "src"
+]
+addopts = [
+    "--import-mode=importlib",
+]
