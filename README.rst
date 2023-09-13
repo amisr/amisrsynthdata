@@ -27,7 +27,7 @@ This package installs the command line tool `amisrsynthdata`, which is used alon
 
   $ amisrsynthdata config.yaml
 
-The :ref:`Configuration File` sections contains information about the contents of these configuration files and how to construct one.
+The `Configuration File` sections contains information about the contents of these configuration files and how to construct one.
 
 Limitations
 -----------
@@ -41,5 +41,5 @@ The following are NOT currently included in the amisrsynthdata module:
 Contributing
 ------------
 
-Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.  Specific instructions on how to add a new state function to describe the ionosphere are available in :ref:`New State Functions`.
+Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.  Specific instructions on how to add a new state function to describe the ionosphere are available in `New State Functions`.
 
