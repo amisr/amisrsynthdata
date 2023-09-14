@@ -17,7 +17,6 @@ dependencies = [
     "numpy",
     "h5py",
     "pymap3d",
-    "apexpy",
     "pyyaml",
     "importlib_resources",
 ]
@@ -33,6 +32,7 @@ classifiers = [
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
+apex = ["apexpy"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"

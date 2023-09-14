@@ -9,7 +9,7 @@ build:
 python:
   install:
     - method: pip
-      path: .
+      path: . 
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
