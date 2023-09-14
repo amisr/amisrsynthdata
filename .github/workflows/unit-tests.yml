@@ -28,7 +28,7 @@ jobs:
           pip install pytest
       - name: Install package
         run: |
-          pip install .
+          pip install .[apex]
       - name: Test with pytest
         run: pytest
 
