@@ -54,7 +54,7 @@ class Radar(object):
         # beams defined by standard beam code (beamcode files in package data)
         radar_key = self.radar_abbrev.lower().replace('-', '')
         filename = f'bcotable_{radar_key}.txt'
-        bc_file = files('amisrsynthdata').joinpath('beamcodes',filename)
+        bc_file = files('amisrsynthdata').joinpath('beamcodes', filename)
         bc_data = np.loadtxt(bc_file)
 
         idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
