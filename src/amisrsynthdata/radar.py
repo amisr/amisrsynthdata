@@ -1,8 +1,13 @@
 # radar.py
 import numpy as np
 import pymap3d as pm
-from importlib.resources import files
 import warnings
+
+import sys
+if sys.version_info < (3, 9):
+    from importlib_resources import files
+else:
+    from importlib.resources import files
 
 
 class Radar(object):
@@ -47,9 +52,9 @@ class Radar(object):
 
     def beams_from_beam_codes(self, beamcodes):
         # beams defined by standard beam code (beamcode files in package data)
-        bc_file = files('amisrsynthdata.beamcodes').joinpath(
-            'bcotable_{}.txt'.format(
-                self.radar_abbrev.lower().replace('-', '')))
+        radar_key = self.radar_abbrev.lower().replace('-', '')
+        filename = f'bcotable_{radar_key}.txt'
+        bc_file = files('amisrsynthdata').joinpath('beamcodes',filename)
         bc_data = np.loadtxt(bc_file)
 
         idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
