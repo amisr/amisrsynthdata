@@ -67,7 +67,7 @@ RADAR
 IONOSPHERE
 ----------
 
-The four ionospheric state sections (DENSITY, VELOCITY, ETEMP, ITEMP) should each contain at least one section defining the function that should be used to define that variable.  If multiple functions are listed, the sum of the functions will be used.  These sections should be named by the function that will be used and have sub-parameters that specify whatever parameters that function needs.  As an example, the following specifies density should be a standard Chapman profile with NmF2 = 4.0e+11 m-3, hmF2 = 300000 m, a scale height of 100000 m, and solar zenith angle as 0.
+The four ionospheric state sections (DENSITY, VELOCITY, ETEMP, ITEMP) should each contain at least one section defining the function that should be used to define that variable.  If multiple functions are listed, the sum of the functions will be used.  These sections should be named by the function that will be used and have sub-parameters that specify whatever parameters that function needs.  As an example, the following specifies density should be a standard Chapman profile with NmF2 = 4.0e+11 m :sup:`-3`, hmF2 = 300000 m, a scale height of 100000 m, and solar zenith angle of 0 degrees.
 
 .. code-block::
 
@@ -87,7 +87,7 @@ Refer to the API references and the example configuration file for assistance ge
   * However, remember that some codes filter data based on other parameters (i.e., electron density), so make sure any "filler" values appropriate for the use case.
   * When specifying multiple functions for one parameter, the result is the SUM of each function individually, so a Chapman layer on top of a uniform background will increase the peak density of the Chapman layer.
   * Both ion and electron temperature can be specified from the same set of functions from the ``Temperature`` class, however, different functions, or the same function with different parameters, can be used for each.
-  * If a state function does not exist for a particular ionospheric structure, you can write a new one!
+  * If a state function does not exist for a particular ionospheric structure, you can :ref:`write a new one <New State Functions>`!
 
 
 SUMMARY_PLOT
@@ -106,11 +106,11 @@ This section is optional.  If it is not included, summary plots will not be crea
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | alt_slices              | Altitudes to use for altitude slices (m)                  | [200000., 300000., 400000.]|
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| slice_lat_rng           | N-S limits and step side of altidude slice (m)            | [-200000., 800000., 10000.]|
+| slice_lat_rng           | N-S limits and step side of altitude slice (m)            | [-200000., 800000., 10000.]|
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | slice_lon_rng           | E-W limits and step size of altitude slice (m)            | [-500000., 500000., 10000.]| 
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| dens_colors             | Limits and color map to use for denity plots              | vmin: 0                    |
+| dens_colors             | Limits and color map to use for density plots             | vmin: 0                    |
 |                         |                                                           |                            |
 |                         |                                                           | vmax: 4.0e+11              |
 |                         |                                                           |                            |

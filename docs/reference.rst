@@ -4,7 +4,7 @@ API Reference
 SyntheticData
 -------------
 
-.. autoclass:: amisrsynthdata.SyntheticData
+.. autoclass:: amisrsynthdata.syntheticdata.SyntheticData
     :members:
     :undoc-members:
     :show-inheritance:
@@ -13,7 +13,7 @@ SyntheticData
 Radar
 -----
 
-.. autoclass:: amisrsynthdata.Radar
+.. autoclass:: amisrsynthdata.radar.Radar
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,7 +22,7 @@ Radar
 Ionosphere
 ----------
 
-.. autoclass:: amisrsynthdata.Ionosphere
+.. autoclass:: amisrsynthdata.ionosphere.Ionosphere
     :members:
     :undoc-members:
     :show-inheritance:

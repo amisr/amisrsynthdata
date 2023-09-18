@@ -3,7 +3,9 @@ Contributing
 
 Bug reports, feature suggestions and other contributions are greatly
 appreciated! While I can't promise to implement everything, I will always try
-to respond in a timely manner.
+to respond in a timely manner.  Please ensure all bug reports, feature
+requests, and contribution discussions abide by the
+`Code of Conduct <https://amisrsynthdata.readthedocs.io/en/latest/conduct.html#>`_.
 
 Short version
 -------------
@@ -39,17 +41,18 @@ If you are proposing a feature:
 Development
 -----------
 
-To add new features or fix existing bugs in  `amisrsynthdata`, and contribute
+To add new features or fix existing bugs in amisrsynthdata, and contribute
 them back to the main repository:
 
-1. Set up `amisrsynthdata` locally for development by following the `Developer 
-   Installation` instructions. 
+1. Set up amisrsynthdata locally for development by following the `development 
+   installation <https://amisrsynthdata.readthedocs.io/en/latest/installation.html##development>`_
+   instructions. 
 
 3. Create a branch for local development based off of the ``develop`` branch
 
 .. code-block::
 
-    git checkout -b name-of-your-bugfix-or-feature origin/develop
+    git checkout -b name-of-new-feature origin/develop
 
 4. Make changes locally. Add tests for bugs and new features in the relevant
    test file in the ``tests`` directory. The tests are run with ``pytest``
@@ -68,7 +71,7 @@ them back to the main repository:
 
     git add .
     git commit -m "Brief description of your changes"
-    git push origin name-of-your-bugfix-or-feature
+    git push origin name-of-new-feature
 
 
 6. Submit a pull request through the GitHub website. Pull requests should be

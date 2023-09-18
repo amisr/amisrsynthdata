@@ -18,7 +18,7 @@ See :ref:`Configuration File` section of the documentation for details on the fi
 Python
 ------
 
-The modules of amisrsynthdata can be imported directly into python programs.  This is most useful to get truth values at arbitrary points and compare with inversion and interpolation codes.  Create YAML config object to initialize the amisrsynthdta modules by loading an existing ``config.yaml`` file.
+The modules of amisrsynthdata can be imported directly into python programs.  This is most useful to get truth values at arbitrary points and compare with inversion and interpolation codes.  Create YAML config object to initialize the amisrsynthdata modules by loading an existing ``config.yaml`` file.
 
 .. code-block:: python
 
@@ -37,7 +37,7 @@ The amisrsynthdata package contains three classes: ``Radar``, ``Ionosphere``, an
 
 .. code-block:: python
 
-  from amisrsynthdata import Radar
+  from amisrsynthdata.radar import Radar
 
   rad = Radar(config)
 
@@ -53,7 +53,7 @@ The amisrsynthdata package contains three classes: ``Radar``, ``Ionosphere``, an
 .. code-block:: python
 
   import datetime as dt
-  from amisrsynthdata import Ionosphere
+  from amisrsynthdata.ionosphere import Ionosphere
 
   iono = Ionosphere(config)
 
@@ -72,7 +72,7 @@ The amisrsynthdata package contains three classes: ``Radar``, ``Ionosphere``, an
 
 .. code-block:: python
 
-  from amisrsynthdata import SyntheticData
+  from amisrsynthdata.syntheticdata import SyntheticData
 
   sd = SyntheticData(config)
 

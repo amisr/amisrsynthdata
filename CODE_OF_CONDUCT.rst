@@ -76,10 +76,8 @@ reporter of any incident.
 Attribution
 -----------
 
-This Code of Conduct is adapted from the `Contributor Covenant <https://www.contributor-covenant.org
->`_,
+This Code of Conduct is adapted from the `Contributor Covenant <https://www.contributor-covenant.org>`_,
 version `2.1 <https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>`_.
 
-For answers to common questions about this code of conduct, see the `FAQ <https://www.contributor-covenant.org/faq>`_. `Translations <https://www.contributor-covenant.org/translations
->`_ are also available.
+For answers to common questions about this code of conduct, see the `FAQ <https://www.contributor-covenant.org/faq>`_. `Translations <https://www.contributor-covenant.org/translations>`_ are also available.
 
