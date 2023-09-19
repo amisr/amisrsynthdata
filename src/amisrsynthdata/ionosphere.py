@@ -201,4 +201,3 @@ class Ionosphere(object):
         for fun in self.velocity_functions:
             vel = vel + fun(utime, glat, glon, galt)
         return vel
-
