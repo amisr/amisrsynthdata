@@ -11,6 +11,14 @@ import yaml
 
 
 class SyntheticData(object):
+    """
+    Class for creating synthetic amisr data based on config options.
+
+    Parameters
+    ----------
+    config : :obj:`yaml`
+        Configuration parameters
+    """
 
     def __init__(self, config):
 
@@ -43,6 +51,23 @@ class SyntheticData(object):
         ) = self.generate_errors(err_coef)
 
     def generate_time_array(self, starttime, endtime):
+        """
+        Generate time arrays.
+
+        Parameters
+        ----------
+        starttime : :obj:`datetime.datetime`
+            Start time for synthetic data
+        endtime : :obj:`datetime.datetime`
+            End time for synthetic data
+
+        Returns
+        -------
+        utime : np.ndarray of floats
+            Array of unix timestamps
+        time : np.ndarray of :obj:`datetime.datetime`
+            Array of datetime.datetime objects
+        """
         # create time arrays
         ust = (starttime - dt.datetime.utcfromtimestamp(0)).total_seconds()
         num_tstep = int(
@@ -58,6 +83,28 @@ class SyntheticData(object):
         return utime, time
 
     def generate_radar_measurements(self):
+        """
+        Generate the basic radar measurmeents at each point in the
+        field-of-view.  These include:
+        * Elecron density (Ne)
+        * Ion temperature (Ti)
+        * Electron temperature (Te)
+        * Line-of-Site plasma velocity (Vlos)
+
+        Returns
+        -------
+        ne : np.ndarray
+            Electron density at the fitted range gates
+        ti : np.ndarray
+            Ion temperature at the fitted range gates
+        te : np.ndarray
+            Electron temperature at the fitted range gates
+        vlos : np.ndarray
+            Line-of-Site velocity at the fitted range gates
+        ne_notr : np.ndarray
+            Electron density at the ACF range gates
+        """
+
         # caculate scalar ionosphere parameters at each fitted radar bin
         ne = self.iono.density(self.utime[:, 0], self.radar.lat,
                                self.radar.lon, self.radar.alt)
@@ -79,7 +126,32 @@ class SyntheticData(object):
         return ne, ti, te, vlos, ne_notr
 
     def generate_errors(self, err_coef):
+        """
+        Generate error values associated with each radar measurment. This is
+        a simple approximation where errors are proportional to the distance
+        to the radar squared.
 
+            err = C*r^2
+
+        Parameters
+        ----------
+        err_coef : list of floats
+            Coeffients (C) for each radar parameter, in the order
+            [Ne, Ti, Te, Vlos]
+
+        Returns
+        -------
+        ne_err : np.ndarray
+            Electron density error at the fitted range gates
+        ti_err : np.ndarray
+            Ion temperatrue error at the fitted range gates
+        te_err : np.ndarray
+            Electron temperatrue error at the fitted range gates
+        vlos_err : np.ndarray
+            LoS velocity error at the fitted range gates
+        ne_notr_err : np.ndarray
+            Electron density error at the ACF range gates
+        """
         # Need to make this more rigerous
         ne_err = err_coef[0] * self.radar.slant_range**2
         ti_err = err_coef[1] * self.radar.slant_range**2
@@ -90,6 +162,24 @@ class SyntheticData(object):
         return ne_err, ti_err, te_err, vlos_err, ne_notr_err
 
     def noisy_measurements(self):
+        """
+        Return the radar measurements with gaussian random noise proportional
+        to their error measurements.
+
+        Returns
+        -------
+        ne : np.ndarray
+            Noisy electron density at the fitted range gates
+        ti : np.ndarray
+            Noisy ion temperature at the fitted range gates
+        te : np.ndarray
+            Noisy electron temperature at the fitted range gates
+        vlos : np.ndarray
+            Noisy line-of-Site velocity at the fitted range gates
+        ne_notr : np.ndarray
+            Noisy electron density at the ACF range gates
+        """
+
         ne = np.random.normal(loc=self.ne, scale=self.ne_err)
         ti = np.random.normal(loc=self.ti, scale=self.ti_err)
         te = np.random.normal(loc=self.te, scale=self.te_err)
@@ -99,6 +189,15 @@ class SyntheticData(object):
         return ne, ti, te, vlos, ne_notr
 
     def generate_beamcodes(self):
+        """
+        Generate beamcode array.  This is a Nbeam x 4 array where the four
+        columns are beamcode, azimuth, elevation, and ksys.
+
+        Returns
+        -------
+        beamcodes : np.ndarray
+            Radar beamcode array
+        """
 
         beamcodes = np.array([self.radar.beam_codes,
                               self.radar.beam_azimuth,
@@ -107,6 +206,20 @@ class SyntheticData(object):
         return beamcodes
 
     def generate_fitted_params(self):
+        """
+        Generate FittedParams, FitInfo, and NeFromPower output dictionaries.
+        These are the main outputs that contain actual measurements and
+        information about the measurements.
+
+        Returns
+        -------
+        FittedParams : dict
+            Main fitted meausrement output
+        FitInfo : dict
+            Information about the quality of fit
+        NeFromPower : dict
+            Measruements from the ACF range gates (electron density only)
+        """
 
         FittedParams = {
             'Altitude': self.radar.alt,
@@ -165,8 +278,15 @@ class SyntheticData(object):
         return FittedParams, FitInfo, NeFromPower
 
     def generate_time(self):
-        # Everything below this can be a seperate "create time arrays" function
-        # - only useful for output
+        """
+        Generate dictionary of the various time formats included in the
+        standard output.
+
+        Returns
+        -------
+        Time : dict
+           Various formats for output timestamps
+        """
 
         Time = {'UnixTime': self.utime}
 
@@ -193,6 +313,15 @@ class SyntheticData(object):
         return Time
 
     def generate_geomag(self):
+        """
+        Generate dictionary with fitted range gate coordinates and information.
+
+        Returns
+        -------
+        Geomag : dict
+            Coordinates of fitted range gates
+        """
+
         # generate Geomag array
         # Reqires running IGRF to get all fields
         Geomag = {
@@ -205,6 +334,16 @@ class SyntheticData(object):
         return Geomag
 
     def generate_site(self):
+        """
+        Generate Site dictionary containing information about the site
+        coordinates.
+
+        Returns
+        -------
+        Site : dict
+            Coordinates for the site in various systems
+        """
+
         Site = {
             'Latitude': self.radar.site_lat,
             'Longitude': self.radar.site_lon,
@@ -224,6 +363,14 @@ class SyntheticData(object):
         return Site
 
     def create_hdf5_output(self, outfilename):
+        """
+        Generate output parameter arrays and save them to an hdf5 file.
+
+        Parameters
+        ----------
+        outfilename : str
+            Name of output file
+        """
 
         beamcodes = self.generate_beamcodes()
 
@@ -301,6 +448,43 @@ class SyntheticData(object):
                              vlos_colors={'vmin': -500.,
                                           'vmax': 500.,
                                           'cmap': 'coolwarm'}):
+        """
+        Create basic summary plots of the synthetic dataset.  These are
+        thumbnail plots intended to confirm you set up your dataset correctly
+        rather than for any kind of analysis.  They include altitude slices
+        of the ionosphere at different altitudes, a RTI plot of a particular
+        beam, and a 3D plot of the full radar FoV.  A seperate png will be
+        created for each of the four ISR parameters.
+
+        Parameters
+        ----------
+        plot_time : :obj:`datetime.datetime`
+            Time to plot in the aliude slice and 3D FoV plots
+        plot_beam : float
+            Beamcode of beam to plot for the RTI
+        output_prefix : str
+            Start of the name of the saved output plots, including path
+        alt_slices : list of floats
+            Altitudes at which to create the slice plots
+        slice_xrng : list of floats
+            Definition of the horizontal grid in the x-drection
+            (start, stop, step)
+        slice_yrng : list of floats
+            Definition of the horizontal grid in the y-drection
+            (start, stop, step)
+        dens_colors : dict
+            Dictionary listing plotting parameters for electron density,
+            specifically ``vmin``, ``vmax``, and ``cmap``
+        itemp_colors : dict
+            Dictionary listing plotting parameters for ion temperature,
+            specifically ``vmin``, ``vmax``, and ``cmap``
+        etemp_colors : dict
+            Dictionary listing plotting parameters for electron temperature,
+            specifically ``vmin``, ``vmax``, and ``cmap``
+        vlos_colors : dict
+            Dictionary listing plotting parameters for line-of-sight velocity,
+            specifically ``vmin``, ``vmax``, and ``cmap``
+        """
 
         # optional imports used ONLY for creating summary plots
         # matplotlib and cartopy are not listed in the package requirments
