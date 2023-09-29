@@ -8,9 +8,16 @@ from .state_functions.utils import output_shape
 
 
 class Ionosphere(object):
+    """
+    Class describing the ionosphere used to create synthetic data.
+
+    Parameters
+    ----------
+    config : :obj:`yaml`
+        Ionosphere configuration parameters
+    """
 
     def __init__(self, config):
-
         starttime = config['GENERAL']['starttime']
         start_utime = (
             starttime -
@@ -50,6 +57,28 @@ class Ionosphere(object):
             params in state_funct.items()]
 
     def zero_array(self, ut, x, vec=False):
+        """
+        Generate an array of zeros of the correct output shape based on input
+        time an coordinate arrays.  This can then be indexed and populated
+        with values.
+
+        Parameters
+        ----------
+        ut : float or np.ndarray
+            time or time array
+        x : float or np.ndarray
+            coordinate or coordinate array
+        vec: bool
+            Flag indicating whether or not the returned array should add a
+            dimension for vector components
+
+        Returns
+        -------
+        float or np.ndarray
+            Either float 0.0 for scalar input or an array full of zeros
+            of the correct shape
+        """
+
         s = output_shape(ut, x)
         if vec:
             if not s:
@@ -63,25 +92,112 @@ class Ionosphere(object):
             return np.zeros(s)
 
     def density(self, utime, glat, glon, galt):
+        """
+        Calculate density at the requested times and locations
+
+        Parameters
+        ----------
+        utime : float or np.ndarray
+            Unix Time
+        glat : float or np.ndarray
+            Geodetic Latitude
+        glon : float or np.ndarray
+            Geodetic Longitude
+        galt : float or np.ndarray
+            Geodetic Altitude
+
+        Returns
+        -------
+        float or np.ndarray
+            Density values at each of the input times and locations
+
+        """
         dens = self.zero_array(utime, galt)
         for fun in self.density_functions:
             dens = dens + fun(utime, glat, glon, galt)
         return dens
 
-    def velocity(self, utime, glat, glon, galt):
-        vel = self.zero_array(utime, galt, vec=True)
-        for fun in self.velocity_functions:
-            vel = vel + fun(utime, glat, glon, galt)
-        return vel
+    def itemp(self, utime, glat, glon, galt):
+        """
+        Calculate ion temperature at the requested times and locations
+
+        Parameters
+        ----------
+        utime : float or np.ndarray
+            Unix Time
+        glat : float or np.ndarray
+            Geodetic Latitude
+        glon : float or np.ndarray
+            Geodetic Longitude
+        galt : float or np.ndarray
+            Geodetic Altitude
+
+        Returns
+        -------
+        float or np.ndarray
+            Ion temperature values at each of the input times and locations
+
+        """
+        itemp = self.zero_array(utime, galt)
+        for fun in self.itemp_functions:
+            itemp = itemp + fun(utime, glat, glon, galt)
+        return itemp
 
     def etemp(self, utime, glat, glon, galt):
+        """
+        Calculate electron temperature at the requested times and locations
+
+        Parameters
+        ----------
+        utime : float or np.ndarray
+            Unix Time
+        glat : float or np.ndarray
+            Geodetic Latitude
+        glon : float or np.ndarray
+            Geodetic Longitude
+        galt : float or np.ndarray
+            Geodetic Altitude
+
+        Returns
+        -------
+        float or np.ndarray
+            Electron temperature values at each of the input times and
+            locations
+
+        """
         etemp = self.zero_array(utime, galt)
         for fun in self.etemp_functions:
             etemp = etemp + fun(utime, glat, glon, galt)
         return etemp
 
-    def itemp(self, utime, glat, glon, galt):
-        itemp = self.zero_array(utime, galt)
-        for fun in self.itemp_functions:
-            itemp = itemp + fun(utime, glat, glon, galt)
-        return itemp
+    def velocity(self, utime, glat, glon, galt):
+        """
+        Calculate velocity at the requested times and locations
+
+        Parameters
+        ----------
+        utime : float or np.ndarray
+            Unix Time
+        glat : float or np.ndarray
+            Geodetic Latitude
+        glon : float or np.ndarray
+            Geodetic Longitude
+        galt : float or np.ndarray
+            Geodetic Altitude
+
+        Returns
+        -------
+        np.ndarray
+            Velocity components at each of the input times and locations
+
+        Note
+        ----
+        The returned velocity array will be one dimension larger than the
+        input time and coordinate arrays to account for the three velocity
+        components (east, north, up)
+
+        """
+        vel = self.zero_array(utime, galt, vec=True)
+        for fun in self.velocity_functions:
+            vel = vel + fun(utime, glat, glon, galt)
+        return vel

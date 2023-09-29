@@ -17,6 +17,8 @@ Welcome to amisrsynthdata's documentation!
    configfile
    ionostate
    reference
+   contributing
+   conduct
 
 
 

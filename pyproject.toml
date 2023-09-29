@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "amisrsynthdata"
-version = "0.0.4"
+version = "1.0.0"
 authors = [
   { name="L. Lamarche", email="leslie.lamarche@sri.com" },
 ]
@@ -17,9 +17,8 @@ dependencies = [
     "numpy",
     "h5py",
     "pymap3d",
-    "apexpy",
     "pyyaml",
-    "importlib_resources",
+    "importlib_resources; python_version < '3.9'",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -31,8 +30,15 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+procdbtools = ["beamcodes/*.txt"]
+
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
+apex = ["apexpy"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"

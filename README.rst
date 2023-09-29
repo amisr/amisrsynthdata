@@ -1,8 +1,6 @@
 amisrsynthdata
 ==============
 
-Module for generating synthetic AMISR data files
-
 This module provides tools to create synthetic data files for the AMISR (Advanced Module Incoherent Scatter Radar) systems.  The files are based on both a specified ionospheric state and a radar configuration.  This can be used to generate synthetic data in the "SRI data format" both for the three existing AMISRs and for hypothetical future "AMISR-like" systems.  Primarily, it was designed to help test the functionality of various inversion algorithms that attempt to create a complete picture of ionospheric state parameters from discrete measurements by creating a way to check the output of these algorithms against known "truth" data.  Please note that this module does NOT attempt to simulate any aspect of fundamental ISR theory.
 
 Quick Start
@@ -15,7 +13,10 @@ The amisrsynthdata package is pure python and can be installed easily with pip:
 
 .. code-block::
 
-  $ pip install git+https://github.com/amisr/amisrsynthdata.git
+  $ pip install amisrsynthdata
+
+Additional `installation instructions <https://amisrsynthdata.readthedocs.io/en/latest/installation.html#>`_
+are also available.
 
 
 Basic Usage
@@ -46,5 +47,5 @@ Full documentation for amisrsynthdata is available on `ReadTheDocs <https://amis
 Contributing
 ------------
 
-Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Create a pull request to submit contributions, or open an issue if you would like to request new features or report a bug.  Specific instructions on how to add a new state function to describe the ionosphere are available in `New State Functions`.
+Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Contributions can take the form of `issues <https://github.com/amisr/amisrsynthdata/issues>`_ to report bugs and request new features and `pull requests <https://github.com/amisr/amisrsynthdata/pulls>`_ to submit new code.  Please refer to the `contributing guidelines <https://amisrsynthdata.readthedocs.io/en/latest/contributing.html#>`_ for more details.  Specific instructions on how to add a new state function to describe the ionosphere are available in `New State Functions <https://amisrsynthdata.readthedocs.io/en/latest/ionostate.html#>`_.
 
