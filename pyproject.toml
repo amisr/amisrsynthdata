@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "amisrsynthdata"
-version = "0.0.4"
+version = "1.0.0"
 authors = [
   { name="L. Lamarche", email="leslie.lamarche@sri.com" },
 ]
