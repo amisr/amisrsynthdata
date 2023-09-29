@@ -30,6 +30,12 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+procdbtools = ["beamcodes/*.txt"]
+
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
 apex = ["apexpy"]
