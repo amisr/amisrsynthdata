@@ -112,7 +112,7 @@ This section is optional.  If it is not included, summary plots will not be crea
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | dens_colors             | Limits and color map to use for density plots             | vmin: 0                    |
 |                         |                                                           |                            |
-|                         |                                                           | vmax: 4.5e+11              |
+|                         |                                                           | vmax: 5.0e+11              |
 |                         |                                                           |                            |
 |                         |                                                           | cmap: viridis              |
 +-------------------------+-----------------------------------------------------------+----------------------------+

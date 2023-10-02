@@ -95,7 +95,7 @@ SUMMARY_PLOT:
   # Color limits and maps
   dens_colors:
     vmin: 0.
-    vmax: 4.5e+11
+    vmax: 5.0e+11
     cmap: viridis
   itemp_colors:
     vmin: 0.
