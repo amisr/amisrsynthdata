@@ -100,19 +100,19 @@ This section is optional.  If it is not included, summary plots will not be crea
 +=========================+===========================================================+============================+
 | output_prefix           | Base file name of output summary plots                    | synthdata_summary          |
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| time                    | Target time for altitude slices and 3D plot               | 2016-09-13 00:10:00        |
+| plot_time               | Target time for altitude slices and 3D plot               | 2016-09-13 00:10:00        |
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| beam                    | Beam for RTI plot                                         | 64157                      |
+| plot_beam               | Beam for RTI plot                                         | 64157                      |
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | alt_slices              | Altitudes to use for altitude slices (m)                  | [200000., 300000., 400000.]|
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| slice_lat_rng           | N-S limits and step side of altitude slice (m)            | [-200000., 800000., 10000.]|
+| slice_xrng              | E-W limits and step side of altitude slice (m)            | [-500000., 500000., 10000.]|
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| slice_lon_rng           | E-W limits and step size of altitude slice (m)            | [-500000., 500000., 10000.]| 
+| slice_yrng              | N-S limits and step size of altitude slice (m)            | [-450000., 550000., 10000.]| 
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | dens_colors             | Limits and color map to use for density plots             | vmin: 0                    |
 |                         |                                                           |                            |
-|                         |                                                           | vmax: 4.0e+11              |
+|                         |                                                           | vmax: 5.0e+11              |
 |                         |                                                           |                            |
 |                         |                                                           | cmap: viridis              |
 +-------------------------+-----------------------------------------------------------+----------------------------+

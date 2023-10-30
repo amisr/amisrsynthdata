@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "amisrsynthdata"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
   { name="L. Lamarche", email="leslie.lamarche@sri.com" },
 ]
@@ -34,7 +34,7 @@ classifiers = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-procdbtools = ["beamcodes/*.txt"]
+amisrsynthdata = ["beamcodes/*.txt"]
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
