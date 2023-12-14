@@ -25,6 +25,7 @@ class SyntheticData(object):
         starttime = config['GENERAL']['starttime']  # init input
         endtime = config['GENERAL']['endtime']      # init input
         err_coef = config['GENERAL']['err_coef']
+        self.include_noise = config['GENERAL']['noise']
 
         # generate ionosphere object
         self.iono = Ionosphere(config)
@@ -226,6 +227,12 @@ class SyntheticData(object):
             'IonMass': self.iono.ion_mass,
             'Range': self.radar.slant_range}
 
+        # Add noise to measured parameters
+        if self.include_noise:
+            ne, ti, te, vlos, ne_notr = self.noisy_measurements()
+        else:
+            ne, ti, te, vlos, ne_notr = (self.ne, self.ti, self.te, self.vlos, self.ne_notr)
+
         # create fit and error arrays that match the shape of whats in the
         # processed fitted files
         # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4
@@ -235,16 +242,16 @@ class SyntheticData(object):
         s = (self.utime.shape[0],) + self.radar.slant_range.shape
         FittedParams['Fits'] = np.full(
             s + (len(self.iono.ion_mass) + 1, 4), np.nan)
-        FittedParams['Fits'][:, :, :, 0, 1] = self.ti
-        FittedParams['Fits'][:, :, :, -1, 1] = self.te
-        FittedParams['Fits'][:, :, :, 0, 3] = self.vlos
-        FittedParams['Fits'][:, :, :, -1, 3] = self.vlos
+        FittedParams['Fits'][:, :, :, 0, 1] = ti
+        FittedParams['Fits'][:, :, :, -1, 1] = te
+        FittedParams['Fits'][:, :, :, 0, 3] = vlos
+        FittedParams['Fits'][:, :, :, -1, 3] = vlos
         FittedParams['Fits'][:, :, :, :, 0] = np.zeros(
             s + (len(self.iono.ion_mass) + 1,))
         FittedParams['Fits'][:, :, :, 0, 0] = np.ones(s)
         FittedParams['Fits'][:, :, :, -1, 0] = np.ones(s)
 
-        FittedParams['Ne'] = self.ne
+        FittedParams['Ne'] = ne
 
         FittedParams['Noise'] = np.full(s + (3,), np.nan)
 
@@ -270,10 +277,10 @@ class SyntheticData(object):
             'Range': self.radar.acf_slant_range
             }
 
-        NeFromPower['Ne_Mod'] = self.ne_notr
-        NeFromPower['Ne_NoTr'] = self.ne_notr
+        NeFromPower['Ne_Mod'] = ne_notr
+        NeFromPower['Ne_NoTr'] = ne_notr
         NeFromPower['SNR'] = np.full(self.radar.acf_slant_range.shape, np.nan)
-        NeFromPower['dNeFrac'] = self.ne_notr_err / self.ne_notr
+        NeFromPower['dNeFrac'] = self.ne_notr_err / ne_notr
 
         return FittedParams, FitInfo, NeFromPower
 
@@ -543,33 +550,36 @@ class SyntheticData(object):
         e = es * sf
         n = ns * sf
 
+        if self.include_noise:
+            ne, ti, te, vlos, ne_notr = self.noisy_measurements()
+        else:
+            ne, ti, te, vlos, ne_notr = (self.ne, self.ti, self.te, self.vlos, self.ne_notr)
+
         plotting_params = [
             dict(
-                synthdata=self.ne,
+                synthdata=ne,
                 param=ne0,
                 cparam=dens_colors,
                 label=r'Ne (m$^{-3}$)',
                 title='Electron Density',
                 output=output_prefix + 'ne.png'),
             dict(
-                synthdata=self.ti,
+                synthdata=ti,
                 param=ti0,
                 cparam=itemp_colors,
                 label=r'Ti (K)',
                 title='Ion Temperature',
                 output=output_prefix + 'ti.png'),
             dict(
-                synthdata=self.te,
+                synthdata=te,
                 param=te0,
                 cparam=etemp_colors,
                 label=r'Te (K)',
                 title='Electron Temperature',
                 output=output_prefix + 'te.png'),
             dict(
-                synthdata=self.vlos,
-                param=[
-                    e,
-                    n],
+                synthdata=vlos,
+                param=[e, n],
                 cparam=vlos_colors,
                 label=r'Vlos (m/s)',
                 title='Plasma Velocity',
