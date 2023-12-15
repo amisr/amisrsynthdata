@@ -135,7 +135,7 @@ class SyntheticData(object):
 
             err = C*r^2
 
-        Here, C is `rel_err` and r is the radar slant range divided by 
+        Here, C is `rel_err` and r is the radar slant range divided by
         `err_ref_rng`, such that the ouput will have the specified relative
         error at the specified reference range.
 
@@ -160,6 +160,7 @@ class SyntheticData(object):
         ne_notr_err : np.ndarray
             Electron density error at the ACF range gates
         """
+
         # Need to make this more rigerous
         r = self.radar.slant_range / err_ref_rng
         ne_err = rel_err * r**2 * self.ne
@@ -169,14 +170,7 @@ class SyntheticData(object):
         r_sr = self.radar.acf_slant_range / err_ref_rng
         ne_notr_err = rel_err * r_sr**2 * self.ne_notr
 
-        #ne_err = err_coef[0] * self.radar.slant_range**2
-        #ti_err = err_coef[1] * self.radar.slant_range**2
-        #te_err = err_coef[2] * self.radar.slant_range**2
-        #vlos_err = err_coef[3] * self.radar.slant_range**2
-        #ne_notr_err = err_coef[0] * self.radar.acf_slant_range**2
-
         return ne_err, ti_err, te_err, vlos_err, ne_notr_err
-        #return rel_err
 
     def noisy_measurements(self):
         """
@@ -247,7 +241,8 @@ class SyntheticData(object):
         if self.include_noise:
             ne, ti, te, vlos, ne_notr = self.noisy_measurements()
         else:
-            ne, ti, te, vlos, ne_notr = (self.ne, self.ti, self.te, self.vlos, self.ne_notr)
+            ne, ti, te, vlos, ne_notr = (
+                    self.ne, self.ti, self.te, self.vlos, self.ne_notr)
 
         # create fit and error arrays that match the shape of whats in the
         # processed fitted files
@@ -567,9 +562,9 @@ class SyntheticData(object):
         n = ns * sf
 
         if self.include_noise:
-            ne, ti, te, vlos, ne_notr = self.noisy_measurements()
+            ne, ti, te, vlos, _ = self.noisy_measurements()
         else:
-            ne, ti, te, vlos, ne_notr = (self.ne, self.ti, self.te, self.vlos, self.ne_notr)
+            ne, ti, te, vlos = (self.ne, self.ti, self.te, self.vlos)
 
         plotting_params = [
             dict(
@@ -632,10 +627,12 @@ class SyntheticData(object):
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
-                    # Only plot a subset of the vector grid to keep the plot readable
-                    s = [int(N/10)+1 for N in glon[:,:,j].shape]
+                    # Only plot a subset of the vector grid to keep the plot
+                    #  readable
+                    s = [int(N/10)+1 for N in glon[:, :, j].shape]
                     ax.quiver(glon[::s[0], ::s[1], j], glat[::s[0], ::s[1], j],
-                              p['param'][0][::s[0], ::s[1], j], p['param'][1][::s[0], ::s[1], j],
+                              p['param'][0][::s[0], ::s[1], j],
+                              p['param'][1][::s[0], ::s[1], j],
                               color='blue', transform=ccrs.PlateCarree())
 
                 else:
