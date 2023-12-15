@@ -632,8 +632,10 @@ class SyntheticData(object):
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
-                    ax.quiver(glon[:, :, j], glat[:, :, j],
-                              p['param'][0][:, :, j], p['param'][1][:, :, j],
+                    # Only plot a subset of the vector grid to keep the plot readable
+                    s = [int(N/10)+1 for N in glon[:,:,j].shape]
+                    ax.quiver(glon[::s[0], ::s[1], j], glat[::s[0], ::s[1], j],
+                              p['param'][0][::s[0], ::s[1], j], p['param'][1][::s[0], ::s[1], j],
                               color='blue', transform=ccrs.PlateCarree())
 
                 else:
