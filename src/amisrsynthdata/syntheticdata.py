@@ -24,7 +24,8 @@ class SyntheticData(object):
 
         starttime = config['GENERAL']['starttime']  # init input
         endtime = config['GENERAL']['endtime']      # init input
-        err_coef = config['GENERAL']['err_coef']
+        rel_err = config['GENERAL']['rel_err']
+        err_ref_rng = config['GENERAL']['err_ref_rng']
         self.include_noise = config['GENERAL']['noise']
 
         # generate ionosphere object
@@ -49,7 +50,7 @@ class SyntheticData(object):
             self.te_err,
             self.vlos_err,
             self.ne_notr_err
-        ) = self.generate_errors(err_coef)
+        ) = self.generate_errors(rel_err, err_ref_rng)
 
     def generate_time_array(self, starttime, endtime):
         """
@@ -126,7 +127,7 @@ class SyntheticData(object):
                                     self.radar.acf_lon, self.radar.acf_alt)
         return ne, ti, te, vlos, ne_notr
 
-    def generate_errors(self, err_coef):
+    def generate_errors(self, rel_err, err_ref_rng):
         """
         Generate error values associated with each radar measurment. This is
         a simple approximation where errors are proportional to the distance
@@ -134,11 +135,17 @@ class SyntheticData(object):
 
             err = C*r^2
 
+        Here, C is `rel_err` and r is the radar slant range divided by 
+        `err_ref_rng`, such that the ouput will have the specified relative
+        error at the specified reference range.
+
         Parameters
         ----------
-        err_coef : list of floats
-            Coeffients (C) for each radar parameter, in the order
-            [Ne, Ti, Te, Vlos]
+        rel_err : float
+            Relative error
+        err_ref_rng: float
+            Error reference range, or the range at which the output
+            error equals the specified `rel_err`
 
         Returns
         -------
@@ -154,13 +161,22 @@ class SyntheticData(object):
             Electron density error at the ACF range gates
         """
         # Need to make this more rigerous
-        ne_err = err_coef[0] * self.radar.slant_range**2
-        ti_err = err_coef[1] * self.radar.slant_range**2
-        te_err = err_coef[2] * self.radar.slant_range**2
-        vlos_err = err_coef[3] * self.radar.slant_range**2
-        ne_notr_err = err_coef[0] * self.radar.acf_slant_range**2
+        r = self.radar.slant_range / err_ref_rng
+        ne_err = rel_err * r**2 * self.ne
+        ti_err = rel_err * r**2 * self.ti
+        te_err = rel_err * r**2 * self.te
+        vlos_err = rel_err * r**2 * np.abs(self.vlos)
+        r_sr = self.radar.acf_slant_range / err_ref_rng
+        ne_notr_err = rel_err * r_sr**2 * self.ne_notr
+
+        #ne_err = err_coef[0] * self.radar.slant_range**2
+        #ti_err = err_coef[1] * self.radar.slant_range**2
+        #te_err = err_coef[2] * self.radar.slant_range**2
+        #vlos_err = err_coef[3] * self.radar.slant_range**2
+        #ne_notr_err = err_coef[0] * self.radar.acf_slant_range**2
 
         return ne_err, ti_err, te_err, vlos_err, ne_notr_err
+        #return rel_err
 
     def noisy_measurements(self):
         """
