@@ -1,4 +1,11 @@
-on: [push]
+# This workflow compiles the draft JOSS manuscript
+# https://github.com/marketplace/actions/open-journals-pdf-generator
+
+name: Generate draft of JOSS paper
+
+on: 
+  push:
+    branches: ['joss']
 
 jobs:
   paper:
