@@ -15,7 +15,7 @@ affiliations:
   - name: SRI International, Menlo Park, CA, USA
   - index: 1
 date: 15 December 2023
-bibliography: 
+bibliography: paper.bib
 ---
 
 # Summary
