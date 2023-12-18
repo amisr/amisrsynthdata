@@ -6,10 +6,8 @@ tags:
   - ionosphere
 authors:
   - name: Leslie J. Lamarche
-    orcid: 0000-1234
-    affiliation: 1
-  - name: Asti Bhatt
-    orcid: 0000-1234
+    orcid: 0000-0001-7098-0524
+    corresponding: true
     affiliation: 1
 affiliations:
   - name: SRI International, Menlo Park, CA, USA
