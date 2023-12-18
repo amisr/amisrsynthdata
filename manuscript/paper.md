@@ -11,7 +11,7 @@ authors:
     affiliation: 1
 affiliations:
   - name: SRI International, Menlo Park, CA, USA
-  - index: 1
+    index: 1
 date: 15 December 2023
 bibliography: paper.bib
 ---
