@@ -510,6 +510,7 @@ class SyntheticData(object):
             import pymap3d as pm
             import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
+            import matplotlib.dates as mdates
             import cartopy.crs as ccrs
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
@@ -617,7 +618,7 @@ class SyntheticData(object):
         for p in plotting_params:
 
             fig = plt.figure(figsize=(15, 7))
-            fig.suptitle(p['title'])
+            fig.suptitle(p['title'], fontsize=20, fontweight=3)
 
             # Create slice plots
             for j in range(len(alt_layers)):
@@ -630,10 +631,13 @@ class SyntheticData(object):
                     # Only plot a subset of the vector grid to keep the plot
                     #  readable
                     s = [int(N/10)+1 for N in glon[:, :, j].shape]
-                    ax.quiver(glon[::s[0], ::s[1], j], glat[::s[0], ::s[1], j],
+                    q = ax.quiver(glon[::s[0], ::s[1], j], glat[::s[0], ::s[1], j],
                               p['param'][0][::s[0], ::s[1], j],
                               p['param'][1][::s[0], ::s[1], j],
                               color='blue', transform=ccrs.PlateCarree())
+                    if gs[0, j].is_first_col():
+                        u = p['cparam']['vmax']
+                        ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
 
                 else:
                     cs = ax.contourf(glon[:, :, j], glat[:, :, j],
@@ -642,6 +646,11 @@ class SyntheticData(object):
                     cs.cmap.set_over('white')
                     cs.cmap.set_under('grey')
                     cs.changed()
+
+                # Add site location
+                ax.scatter(self.radar.site_lon, self.radar.site_lat,
+                           marker='^', color='k',
+                           transform=ccrs.PlateCarree())
 
                 # Add beam positions
                 aidx = np.nanargmin(
@@ -666,7 +675,7 @@ class SyntheticData(object):
             # Create RTI
             ax = fig.add_subplot(gs[1, :-1])
             time = self.utime[:, 0].astype('datetime64[s]')
-            alt = self.radar.alt[bidx, :]
+            alt = self.radar.alt[bidx, :] / 1000.
             c = ax.pcolormesh(time,
                               alt[np.isfinite(alt)],
                               p['synthdata'][:,
@@ -674,8 +683,10 @@ class SyntheticData(object):
                                              np.isfinite(alt)].T,
                               **p['cparam'])
             ax.axvline(x=plot_time, color='magenta')
+            ax.text(0.0, -0.15, np.datetime_as_string(time[0], unit='D'), transform=ax.transAxes)
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
             ax.set_xlabel('Universal Time')
-            ax.set_ylabel('Altitude (m)')
+            ax.set_ylabel('Altitude (km)')
             ax.set_title(
                 'Beam Number: {:.0f} (az:{:.1f}, el:{:.1f})'.format(
                     self.radar.beam_codes[bidx],
@@ -689,8 +700,12 @@ class SyntheticData(object):
             fp = np.isfinite(self.radar.alt)
 
             ax = fig.add_subplot(gs[:, -1], projection='3d')
-            c = ax.scatter(x[fp], y[fp], z[fp], c=p['synthdata']
-                           [tidx, fp], **p['cparam'])
+            c = ax.scatter(x[fp] / 1000., y[fp] / 1000., z[fp] / 1000.,
+                           c=p['synthdata'][tidx, fp], **p['cparam'])
+            ax.scatter(0., 0., 0., marker='^', color='k')
+            ax.set_xlabel('East (km)')
+            ax.set_ylabel('North (km)')
+            ax.set_zlabel('Altitude (km)')
             # ax.xaxis.set_ticklabels([])
             # ax.yaxis.set_ticklabels([])
             # ax.zaxis.set_ticklabels([])
