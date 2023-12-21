@@ -9,7 +9,9 @@ build:
 python:
   install:
     - method: pip
-      path: . 
+      path: .
+    - method: pip
+      path: sphinx_rtd_theme
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
