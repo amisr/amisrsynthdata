@@ -631,10 +631,11 @@ class SyntheticData(object):
                     # Only plot a subset of the vector grid to keep the plot
                     #  readable
                     s = [int(N/10)+1 for N in glon[:, :, j].shape]
-                    q = ax.quiver(glon[::s[0], ::s[1], j], glat[::s[0], ::s[1], j],
-                              p['param'][0][::s[0], ::s[1], j],
-                              p['param'][1][::s[0], ::s[1], j],
-                              color='blue', transform=ccrs.PlateCarree())
+                    q = ax.quiver(glon[::s[0], ::s[1], j],
+                                  glat[::s[0], ::s[1], j],
+                                  p['param'][0][::s[0], ::s[1], j],
+                                  p['param'][1][::s[0], ::s[1], j],
+                                  color='blue', transform=ccrs.PlateCarree())
                     if gs[0, j].is_first_col():
                         u = p['cparam']['vmax']
                         ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
@@ -683,7 +684,8 @@ class SyntheticData(object):
                                              np.isfinite(alt)].T,
                               **p['cparam'])
             ax.axvline(x=plot_time, color='magenta')
-            ax.text(0.0, -0.15, np.datetime_as_string(time[0], unit='D'), transform=ax.transAxes)
+            ax.text(0.0, -0.15, np.datetime_as_string(time[0], unit='D'),
+                    transform=ax.transAxes)
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
             ax.set_xlabel('Universal Time')
             ax.set_ylabel('Altitude (km)')
