@@ -323,15 +323,15 @@ class Density(object):
         gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)
 
         if not utime.shape:
-            Ts0 = gh.query_model(
+            Ne0 = gh.query_model(
                 dt.datetime.utcfromtimestamp(utime),
-                self.species)
+                'ne')
 
         else:
             s = output_shape(utime, galt)
-            Ts0 = np.empty(s)
+            Ne0 = np.empty(s)
             for i, ut in enumerate(utime):
-                Ts0[i] = gh.query_model(
+                Ne0[i] = gh.query_model(
                     dt.datetime.utcfromtimestamp(ut), 'ne')
 
-        return Ts0
+        return Ne0
