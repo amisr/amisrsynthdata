@@ -112,3 +112,7 @@ maintains a consistent coding style:
 - Provide tests with informative failure statements and descriptive, one-line
   docstrings.
 
+Add Ionospheric State Function
+------------------------------
+
+The package was deliberately designed to make it straight forwards for users to expand the libary of ionospheric state functions by adding new ones.  Instructions for how to do this are available in the `Create New State Functions <https://amisrsynthdata.readthedocs.io/en/latest/ionostate.html#create-new-state-functions>`_ section.
