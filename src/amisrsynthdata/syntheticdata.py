@@ -508,6 +508,7 @@ class SyntheticData(object):
         # matplotlib and cartopy are not listed in the package requirments
         try:
             import pymap3d as pm
+            import matplotlib as mpl
             import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
             import matplotlib.dates as mdates
@@ -620,6 +621,12 @@ class SyntheticData(object):
             fig = plt.figure(figsize=(15, 7))
             fig.suptitle(p['title'], fontsize=20, fontweight=3)
 
+            cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
+            cmap.set_over('white')
+            cmap.set_under('grey')
+            
+            norm = mpl.colors.Normalize(vmin=p['cparam']['vmin'], vmax=p['cparam']['vmax'])
+
             # Create slice plots
             for j in range(len(alt_layers)):
 
@@ -642,11 +649,8 @@ class SyntheticData(object):
 
                 else:
                     cs = ax.contourf(glon[:, :, j], glat[:, :, j],
-                                     p['param'][:, :, j], **p['cparam'],
+                                     p['param'][:, :, j], cmap=cmap, norm=norm,
                                      transform=ccrs.PlateCarree())
-                    cs.cmap.set_over('white')
-                    cs.cmap.set_under('grey')
-                    cs.changed()
 
                 # Add site location
                 ax.scatter(self.radar.site_lon, self.radar.site_lat,
@@ -679,10 +683,9 @@ class SyntheticData(object):
             alt = self.radar.alt[bidx, :] / 1000.
             c = ax.pcolormesh(time,
                               alt[np.isfinite(alt)],
-                              p['synthdata'][:,
-                                             bidx,
+                              p['synthdata'][:, bidx,
                                              np.isfinite(alt)].T,
-                              **p['cparam'])
+                              cmap=cmap, norm=norm)
             ax.axvline(x=plot_time, color='magenta')
             ax.text(0.0, -0.15, np.datetime_as_string(time[0], unit='D'),
                     transform=ax.transAxes)
@@ -703,7 +706,7 @@ class SyntheticData(object):
 
             ax = fig.add_subplot(gs[:, -1], projection='3d')
             c = ax.scatter(x[fp] / 1000., y[fp] / 1000., z[fp] / 1000.,
-                           c=p['synthdata'][tidx, fp], **p['cparam'])
+                           c=p['synthdata'][tidx, fp], cmap=cmap, norm=norm)
             ax.scatter(0., 0., 0., marker='^', color='k')
             ax.set_xlabel('East (km)')
             ax.set_ylabel('North (km)')
