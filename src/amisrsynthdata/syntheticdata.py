@@ -624,7 +624,7 @@ class SyntheticData(object):
             cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
             cmap.set_over('white')
             cmap.set_under('grey')
-            
+
             norm = mpl.colors.Normalize(vmin=p['cparam']['vmin'],
                                         vmax=p['cparam']['vmax'])
 
@@ -649,9 +649,9 @@ class SyntheticData(object):
                         ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
 
                 else:
-                    cs = ax.contourf(glon[:, :, j], glat[:, :, j],
-                                     p['param'][:, :, j], cmap=cmap, norm=norm,
-                                     transform=ccrs.PlateCarree())
+                    ax.contourf(glon[:, :, j], glat[:, :, j],
+                                p['param'][:, :, j], cmap=cmap, norm=norm,
+                                transform=ccrs.PlateCarree())
 
                 # Add site location
                 ax.scatter(self.radar.site_lon, self.radar.site_lat,

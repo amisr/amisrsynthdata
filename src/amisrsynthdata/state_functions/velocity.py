@@ -104,11 +104,11 @@ class Velocity(object):
             warnings.simplefilter('ignore')
             if np.isscalar(galt):
                 (_, _, _, _, _, _,
-                _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
+                    _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
                     glat, glon, galt / 1000.)
             else:
                 (_, _, _, _, _, _,
-                _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
+                    _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
                     glat.ravel(), glon.ravel(), galt.ravel() / 1000.)
                 # reshape basevector arrays to match the original input
                 e1 = e1.T.reshape(glat.shape + (3,))
