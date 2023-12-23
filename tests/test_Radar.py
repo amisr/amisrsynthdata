@@ -7,6 +7,7 @@ import yaml
 import numpy as np
 import pymap3d as pm
 import os
+import warnings
 
 from amisrsynthdata.radar import Radar
 
@@ -85,7 +86,11 @@ def test_calculate_gates(radar):
         for i in range(len(altbins) - 1):
             abidx = np.argwhere((radar.acf_alt[b] >= altbins[i]) & (
                 radar.acf_alt[b] < altbins[i + 1])).flatten()
-            sr = np.mean(radar.acf_slant_range[abidx])
+            # supress 'Mean of empty slice' warning so it doesn't clutter
+            # output - we expect empty slices at high altitudes
+            with warnings.catch_warnings():
+                warnings.filterwarnings(action='ignore')
+                sr = np.mean(radar.acf_slant_range[abidx])
             lat, lon, alt = pm.aer2geodetic(
                 radar.beam_azimuth[b], radar.beam_elevation[b], sr,
                 radar.site_lat, radar.site_lon, radar.site_alt)

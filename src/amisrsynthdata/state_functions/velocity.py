@@ -1,6 +1,7 @@
 import numpy as np
 import pymap3d as pm
 import datetime as dt
+import warnings
 # from apexpy import Apex
 from .utils import output_shape, gemini_helper
 
@@ -41,8 +42,11 @@ class Velocity(object):
             Geodetic longitude of initial specified vector (deg)
         """
 
-        alat, alon = self.apex.geo2apex(glat, glon, galt / 1000.)
-        map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
+        # warning filters are needed to supress apexpy warnings with NaN input
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            alat, alon = self.apex.geo2apex(glat, glon, galt / 1000.)
+            map_glat, map_glon, _ = self.apex.apex2geo(alat, alon, 300.)
 
         # Find ECEF velocity components for given geodetic velocity at center
         # of points
@@ -59,16 +63,18 @@ class Velocity(object):
         V_scale = V_map * \
             np.linalg.norm(self.value) / np.linalg.norm(V_map, axis=0)
         # map velocities along field lines back to the original heights
-        if not np.isscalar(galt):
-            # map_V_to_height doesn't handle multidimensional arrays, so must
-            # flatten and reform
-            V0 = self.apex.map_V_to_height(alat.ravel(), alon.ravel(
-            ), 300., galt.ravel() / 1000., V_scale.reshape(3, -1))
-            # reform original array shape
-            V0 = V0.T.reshape(galt.shape + (3,))
-        else:
-            V0 = self.apex.map_V_to_height(
-                alat, alon, 300., galt / 1000., V_scale)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            if not np.isscalar(galt):
+                # map_V_to_height doesn't handle multidimensional arrays, so
+                # must flatten and reform
+                V0 = self.apex.map_V_to_height(alat.ravel(), alon.ravel(
+                ), 300., galt.ravel() / 1000., V_scale.reshape(3, -1))
+                # reform original array shape
+                V0 = V0.T.reshape(galt.shape + (3,))
+            else:
+                V0 = self.apex.map_V_to_height(
+                    alat, alon, 300., galt / 1000., V_scale)
 
         s = output_shape(utime, galt)
         if not s:
@@ -94,16 +100,20 @@ class Velocity(object):
         Ve1, Ve2, Ve3 = self.value
 
         # Find base vector at each location
-        if np.isscalar(galt):
-            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(
-                glat, glon, galt / 1000.)
-        else:
-            _, _, _, _, _, _, _, _, _, e1, e2, e3 = self.apex.basevectors_apex(
-                glat.ravel(), glon.ravel(), galt.ravel() / 1000.)
-            # reshape basevector arrays to match the original input
-            e1 = e1.T.reshape(glat.shape + (3,))
-            e2 = e2.T.reshape(glat.shape + (3,))
-            e3 = e3.T.reshape(glat.shape + (3,))
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            if np.isscalar(galt):
+                (_, _, _, _, _, _,
+                    _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
+                    glat, glon, galt / 1000.)
+            else:
+                (_, _, _, _, _, _,
+                    _, _, _, e1, e2, e3) = self.apex.basevectors_apex(
+                    glat.ravel(), glon.ravel(), galt.ravel() / 1000.)
+                # reshape basevector arrays to match the original input
+                e1 = e1.T.reshape(glat.shape + (3,))
+                e2 = e2.T.reshape(glat.shape + (3,))
+                e3 = e3.T.reshape(glat.shape + (3,))
 
         # calculate V in geodetic coordinates
         VE = Ve1 * e1 + Ve2 * e2 + Ve3 * e3
