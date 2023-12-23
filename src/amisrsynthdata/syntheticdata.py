@@ -24,7 +24,9 @@ class SyntheticData(object):
 
         starttime = config['GENERAL']['starttime']  # init input
         endtime = config['GENERAL']['endtime']      # init input
-        err_coef = config['GENERAL']['err_coef']
+        rel_err = config['GENERAL']['rel_err']
+        err_ref_rng = config['GENERAL']['err_ref_rng']
+        self.include_noise = config['GENERAL']['noise']
 
         # generate ionosphere object
         self.iono = Ionosphere(config)
@@ -48,7 +50,7 @@ class SyntheticData(object):
             self.te_err,
             self.vlos_err,
             self.ne_notr_err
-        ) = self.generate_errors(err_coef)
+        ) = self.generate_errors(rel_err, err_ref_rng)
 
     def generate_time_array(self, starttime, endtime):
         """
@@ -125,7 +127,7 @@ class SyntheticData(object):
                                     self.radar.acf_lon, self.radar.acf_alt)
         return ne, ti, te, vlos, ne_notr
 
-    def generate_errors(self, err_coef):
+    def generate_errors(self, rel_err, err_ref_rng):
         """
         Generate error values associated with each radar measurment. This is
         a simple approximation where errors are proportional to the distance
@@ -133,11 +135,17 @@ class SyntheticData(object):
 
             err = C*r^2
 
+        Here, C is `rel_err` and r is the radar slant range divided by
+        `err_ref_rng`, such that the ouput will have the specified relative
+        error at the specified reference range.
+
         Parameters
         ----------
-        err_coef : list of floats
-            Coeffients (C) for each radar parameter, in the order
-            [Ne, Ti, Te, Vlos]
+        rel_err : float
+            Relative error
+        err_ref_rng: float
+            Error reference range, or the range at which the output
+            error equals the specified `rel_err`
 
         Returns
         -------
@@ -152,12 +160,15 @@ class SyntheticData(object):
         ne_notr_err : np.ndarray
             Electron density error at the ACF range gates
         """
+
         # Need to make this more rigerous
-        ne_err = err_coef[0] * self.radar.slant_range**2
-        ti_err = err_coef[1] * self.radar.slant_range**2
-        te_err = err_coef[2] * self.radar.slant_range**2
-        vlos_err = err_coef[3] * self.radar.slant_range**2
-        ne_notr_err = err_coef[0] * self.radar.acf_slant_range**2
+        r = self.radar.slant_range / err_ref_rng
+        ne_err = rel_err * r**2 * self.ne
+        ti_err = rel_err * r**2 * self.ti
+        te_err = rel_err * r**2 * self.te
+        vlos_err = rel_err * r**2 * np.abs(self.vlos)
+        r_sr = self.radar.acf_slant_range / err_ref_rng
+        ne_notr_err = rel_err * r_sr**2 * self.ne_notr
 
         return ne_err, ti_err, te_err, vlos_err, ne_notr_err
 
@@ -226,6 +237,13 @@ class SyntheticData(object):
             'IonMass': self.iono.ion_mass,
             'Range': self.radar.slant_range}
 
+        # Add noise to measured parameters
+        if self.include_noise:
+            ne, ti, te, vlos, ne_notr = self.noisy_measurements()
+        else:
+            ne, ti, te, vlos, ne_notr = (
+                    self.ne, self.ti, self.te, self.vlos, self.ne_notr)
+
         # create fit and error arrays that match the shape of whats in the
         # processed fitted files
         # Fit Array: Nrecords x Nbeams x Nranges x Nions+1 x 4
@@ -235,16 +253,16 @@ class SyntheticData(object):
         s = (self.utime.shape[0],) + self.radar.slant_range.shape
         FittedParams['Fits'] = np.full(
             s + (len(self.iono.ion_mass) + 1, 4), np.nan)
-        FittedParams['Fits'][:, :, :, 0, 1] = self.ti
-        FittedParams['Fits'][:, :, :, -1, 1] = self.te
-        FittedParams['Fits'][:, :, :, 0, 3] = self.vlos
-        FittedParams['Fits'][:, :, :, -1, 3] = self.vlos
+        FittedParams['Fits'][:, :, :, 0, 1] = ti
+        FittedParams['Fits'][:, :, :, -1, 1] = te
+        FittedParams['Fits'][:, :, :, 0, 3] = vlos
+        FittedParams['Fits'][:, :, :, -1, 3] = vlos
         FittedParams['Fits'][:, :, :, :, 0] = np.zeros(
             s + (len(self.iono.ion_mass) + 1,))
         FittedParams['Fits'][:, :, :, 0, 0] = np.ones(s)
         FittedParams['Fits'][:, :, :, -1, 0] = np.ones(s)
 
-        FittedParams['Ne'] = self.ne
+        FittedParams['Ne'] = ne
 
         FittedParams['Noise'] = np.full(s + (3,), np.nan)
 
@@ -270,10 +288,10 @@ class SyntheticData(object):
             'Range': self.radar.acf_slant_range
             }
 
-        NeFromPower['Ne_Mod'] = self.ne_notr
-        NeFromPower['Ne_NoTr'] = self.ne_notr
+        NeFromPower['Ne_Mod'] = ne_notr
+        NeFromPower['Ne_NoTr'] = ne_notr
         NeFromPower['SNR'] = np.full(self.radar.acf_slant_range.shape, np.nan)
-        NeFromPower['dNeFrac'] = self.ne_notr_err / self.ne_notr
+        NeFromPower['dNeFrac'] = self.ne_notr_err / ne_notr
 
         return FittedParams, FitInfo, NeFromPower
 
@@ -490,8 +508,10 @@ class SyntheticData(object):
         # matplotlib and cartopy are not listed in the package requirments
         try:
             import pymap3d as pm
+            import matplotlib as mpl
             import matplotlib.pyplot as plt
             import matplotlib.gridspec as gridspec
+            import matplotlib.dates as mdates
             import cartopy.crs as ccrs
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
@@ -543,33 +563,36 @@ class SyntheticData(object):
         e = es * sf
         n = ns * sf
 
+        if self.include_noise:
+            ne, ti, te, vlos, _ = self.noisy_measurements()
+        else:
+            ne, ti, te, vlos = (self.ne, self.ti, self.te, self.vlos)
+
         plotting_params = [
             dict(
-                synthdata=self.ne,
+                synthdata=ne,
                 param=ne0,
                 cparam=dens_colors,
                 label=r'Ne (m$^{-3}$)',
                 title='Electron Density',
                 output=output_prefix + 'ne.png'),
             dict(
-                synthdata=self.ti,
+                synthdata=ti,
                 param=ti0,
                 cparam=itemp_colors,
                 label=r'Ti (K)',
                 title='Ion Temperature',
                 output=output_prefix + 'ti.png'),
             dict(
-                synthdata=self.te,
+                synthdata=te,
                 param=te0,
                 cparam=etemp_colors,
                 label=r'Te (K)',
                 title='Electron Temperature',
                 output=output_prefix + 'te.png'),
             dict(
-                synthdata=self.vlos,
-                param=[
-                    e,
-                    n],
+                synthdata=vlos,
+                param=[e, n],
                 cparam=vlos_colors,
                 label=r'Vlos (m/s)',
                 title='Plasma Velocity',
@@ -596,7 +619,14 @@ class SyntheticData(object):
         for p in plotting_params:
 
             fig = plt.figure(figsize=(15, 7))
-            fig.suptitle(p['title'])
+            fig.suptitle(p['title'], fontsize=20, fontweight=3)
+
+            cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
+            cmap.set_over('white')
+            cmap.set_under('grey')
+
+            norm = mpl.colors.Normalize(vmin=p['cparam']['vmin'],
+                                        vmax=p['cparam']['vmax'])
 
             # Create slice plots
             for j in range(len(alt_layers)):
@@ -606,17 +636,27 @@ class SyntheticData(object):
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
-                    ax.quiver(glon[:, :, j], glat[:, :, j],
-                              p['param'][0][:, :, j], p['param'][1][:, :, j],
-                              color='blue', transform=ccrs.PlateCarree())
+                    # Only plot a subset of the vector grid to keep the plot
+                    #  readable
+                    s = [int(N/10)+1 for N in glon[:, :, j].shape]
+                    q = ax.quiver(glon[::s[0], ::s[1], j],
+                                  glat[::s[0], ::s[1], j],
+                                  p['param'][0][::s[0], ::s[1], j],
+                                  p['param'][1][::s[0], ::s[1], j],
+                                  color='blue', transform=ccrs.PlateCarree())
+                    if gs[0, j].is_first_col():
+                        u = p['cparam']['vmax']
+                        ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
 
                 else:
-                    cs = ax.contourf(glon[:, :, j], glat[:, :, j],
-                                     p['param'][:, :, j], **p['cparam'],
-                                     transform=ccrs.PlateCarree())
-                    cs.cmap.set_over('white')
-                    cs.cmap.set_under('grey')
-                    cs.changed()
+                    ax.contourf(glon[:, :, j], glat[:, :, j],
+                                p['param'][:, :, j], cmap=cmap, norm=norm,
+                                transform=ccrs.PlateCarree())
+
+                # Add site location
+                ax.scatter(self.radar.site_lon, self.radar.site_lat,
+                           marker='^', color='k',
+                           transform=ccrs.PlateCarree())
 
                 # Add beam positions
                 aidx = np.nanargmin(
@@ -641,16 +681,18 @@ class SyntheticData(object):
             # Create RTI
             ax = fig.add_subplot(gs[1, :-1])
             time = self.utime[:, 0].astype('datetime64[s]')
-            alt = self.radar.alt[bidx, :]
+            alt = self.radar.alt[bidx, :] / 1000.
             c = ax.pcolormesh(time,
                               alt[np.isfinite(alt)],
-                              p['synthdata'][:,
-                                             bidx,
+                              p['synthdata'][:, bidx,
                                              np.isfinite(alt)].T,
-                              **p['cparam'])
+                              cmap=cmap, norm=norm)
             ax.axvline(x=plot_time, color='magenta')
+            ax.text(0.0, -0.15, np.datetime_as_string(time[0], unit='D'),
+                    transform=ax.transAxes)
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
             ax.set_xlabel('Universal Time')
-            ax.set_ylabel('Altitude (m)')
+            ax.set_ylabel('Altitude (km)')
             ax.set_title(
                 'Beam Number: {:.0f} (az:{:.1f}, el:{:.1f})'.format(
                     self.radar.beam_codes[bidx],
@@ -664,8 +706,12 @@ class SyntheticData(object):
             fp = np.isfinite(self.radar.alt)
 
             ax = fig.add_subplot(gs[:, -1], projection='3d')
-            c = ax.scatter(x[fp], y[fp], z[fp], c=p['synthdata']
-                           [tidx, fp], **p['cparam'])
+            c = ax.scatter(x[fp] / 1000., y[fp] / 1000., z[fp] / 1000.,
+                           c=p['synthdata'][tidx, fp], cmap=cmap, norm=norm)
+            ax.scatter(0., 0., 0., marker='^', color='k')
+            ax.set_xlabel('East (km)')
+            ax.set_ylabel('North (km)')
+            ax.set_zlabel('Altitude (km)')
             # ax.xaxis.set_ticklabels([])
             # ax.yaxis.set_ticklabels([])
             # ax.zaxis.set_ticklabels([])

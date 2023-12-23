@@ -10,7 +10,9 @@ GENERAL:
 
   ion_mass: [16.,32.,30.,28.,14.]
 
-  err_coef: [1.,1.e-9,5.e-9,1.e-9]
+  rel_err: 0.2
+
+  err_ref_rng: 300000.
 
   noise: False
 

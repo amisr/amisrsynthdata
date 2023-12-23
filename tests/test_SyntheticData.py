@@ -103,7 +103,7 @@ def test_generate_errors(synthdata, config, datafile):
         datafile['NeFromPower/dNeFrac'][:]
 
     ne_err, ti_err, te_err, vlos_err, ne_notr_err = synthdata.generate_errors(
-        config['GENERAL']['err_coef'])
+        config['GENERAL']['rel_err'], config['GENERAL']['err_ref_rng'])
 
     np.testing.assert_allclose(
         np.broadcast_to(
