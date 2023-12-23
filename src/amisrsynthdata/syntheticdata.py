@@ -621,11 +621,12 @@ class SyntheticData(object):
             fig = plt.figure(figsize=(15, 7))
             fig.suptitle(p['title'], fontsize=20, fontweight=3)
 
-            cmap = mpl.cm.get_cmap(p['cparam']['cmap'])
+            cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
             cmap.set_over('white')
             cmap.set_under('grey')
             
-            norm = mpl.colors.Normalize(vmin=p['cparam']['vmin'], vmax=p['cparam']['vmax'])
+            norm = mpl.colors.Normalize(vmin=p['cparam']['vmin'],
+                                        vmax=p['cparam']['vmax'])
 
             # Create slice plots
             for j in range(len(alt_layers)):

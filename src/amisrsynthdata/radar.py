@@ -192,8 +192,7 @@ class Radar(object):
         # supress 'Mean of empty slice' warning so it doesn't clutter output -
         # we expect empty slices at high altitudes
         with warnings.catch_warnings():
-            warnings.filterwarnings(
-                action='ignore', message='Mean of empty slice')
+            warnings.filterwarnings(action='ignore')
             slant_range = np.array([[np.nanmean(
                 np.where((beam >= altbins[i]) & (beam < altbins[i + 1]),
                          self.acf_slant_range, np.nan))
