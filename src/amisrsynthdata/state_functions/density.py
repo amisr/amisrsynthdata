@@ -174,32 +174,20 @@ class Density(object):
         else:
             t = utime - self.utime0
 
-        # define array of point vectors in ECEF
+        # define array of point vectors in ENU
         e, n, u = pm.geodetic2enu(
             glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
         point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
-        # define norm vector and array of point vectors in ECEF
-        center_vec = np.array(
-            pm.geodetic2ecef(
-                self.cent_lat,
-                self.cent_lon,
-                self.cent_alt))
-        norm_vec = np.array(
-            pm.aer2ecef(
-                self.az,
-                0.,
-                1.,
-                self.cent_lat,
-                self.cent_lon,
-                self.cent_alt)) - center_vec
+        # define norm vector in ENU
+        norm_vec = np.array(pm.aer2enu(self.az, 0., 1.))
 
         # create wave with sine function
         Vn = np.einsum('i,...i->...', np.array(self.velocity), norm_vec)
         pn = np.einsum('...i,i->...', point_vec, norm_vec)
 
-        Ne0 = self.N0 / 2. * (np.tanh((pn + Vn * t + w) / self.L) - np.tanh(
-            (pn + Vn * t - w) / self.L)) * np.exp(
+        Ne0 = self.N0 / 2. * (np.tanh((pn - Vn * t + w) / self.L) - np.tanh(
+            (pn - Vn * t - w) / self.L)) * np.exp(
                     -0.5 * (galt - self.cent_alt)**2 / h**2)
 
         return Ne0
