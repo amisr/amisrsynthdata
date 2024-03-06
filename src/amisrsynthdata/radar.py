@@ -88,7 +88,13 @@ class Radar(object):
         radar_key = self.radar_abbrev.lower().replace('-', '')
         filename = f'bcotable_{radar_key}.txt'
         bc_file = files('amisrsynthdata').joinpath('beamcodes', filename)
-        bc_data = np.loadtxt(bc_file)
+        try:
+            bc_data = np.loadtxt(bc_file)
+        except FileNotFoundError:
+            print('WARNING!  No beamcode table is available for the radar '
+                  f'{self.radar_abbrev}.  Any specified beamcodes will be '
+                  'ignored!')
+            return np.empty((0,)), np.empty((0,)), np.empty((0,))
 
         idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
         beam_azimuth = bc_data[idx, 1]
