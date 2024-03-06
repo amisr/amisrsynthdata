@@ -107,7 +107,7 @@ class Radar(object):
         """
         Generate beamcodes and ksys constants for beams defined by an arbitrary
         azimuth and elevation.  Beamcodes are assigned sequentially starting at
-        90000 to differentiate them easily from "standard" beamcodes.
+        90001 to differentiate them easily from "standard" beamcodes.
 
         Parameters
         ----------
@@ -131,7 +131,7 @@ class Radar(object):
         NaNs as placeholders.
         """
 
-        beamcodes = np.arange(len(beam_azimuth)) + 90000
+        beamcodes = np.arange(len(beam_azimuth)) + 90001
         beam_ksys = np.full(len(beam_azimuth), np.nan)
 
         return beamcodes, beam_ksys

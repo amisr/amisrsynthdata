@@ -47,7 +47,7 @@ def test_beams_from_beam_codes(radar):
 def test_beams_from_az_el(radar):
     azimuth = [14.04, -154.3, -34.69, 75.03]
     elevation = [90., 77.5, 66.09, 65.56]
-    truth_bc = [90000, 90001, 90002, 90003]
+    truth_bc = [90001, 90002, 90003, 90004]
     truth_ksys = [np.nan, np.nan, np.nan, np.nan]
     beamcodes, ksys = radar.beams_from_az_el(azimuth, elevation)
     np.testing.assert_allclose(beamcodes, truth_bc)
