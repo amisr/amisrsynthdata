@@ -76,6 +76,38 @@ class Density(object):
 
         return Ne0
 
+    def epstein(self, utime, glat, glon, galt):
+        """
+        Standard Epstein profile.
+
+        z' = (z-z0)/H
+
+        Ne = N0 / cosh^2(z')
+
+        From Themens et al., 2019; Equation 7
+
+        Parameters
+        ----------
+        N0: float
+            Peak electron density (m-3)
+        z0: float
+            Peak altitude (m)
+        H: float
+            Scale height (m)
+        """
+
+        # From Themens et al., 2009; eqn 7
+        zp = (galt - self.z0) / self.H
+        Ne = self.N0 / np.cosh(zp)
+
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = Ne
+        else:
+            Ne0 = np.broadcast_to(Ne, s)
+
+        return Ne0
+
     def gradient(self, utime, glat, glon, galt):
         """
         Single horizontal gradient crated with a hyperbolic tangent function.
