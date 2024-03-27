@@ -96,9 +96,9 @@ class Density(object):
             Scale height (m)
         """
 
-        # From Themens et al., 2009; eqn 7
+        # From Themens et al., 2019; eqn 7
         zp = (galt - self.z0) / self.H
-        Ne = self.N0 / np.cosh(zp)
+        Ne = self.N0 / np.cosh(zp)**2
 
         s = output_shape(utime, galt)
         if not s:
