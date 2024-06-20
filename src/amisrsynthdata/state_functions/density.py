@@ -278,9 +278,9 @@ class Density(object):
         A0: float
             Wave amplitude (m^-3)
         k: list
-            Wavevector [E, N, U] (m/s)
+            Wavevector [E, N, U] (m^-1)
         P: float
-            Wave period (m)
+            Wave period (s)
         orig_lat: float
             Geodetic latitude wavevector is defined from (deg)
         orig_lon: float
