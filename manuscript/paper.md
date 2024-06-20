@@ -25,6 +25,8 @@ AMISR utilizes phased-array technology to steer the radar beam electronically, w
 
 The `amisrsynthdata` package produces synthetic data for AMISR.  It is written purely in python, with use of common numeric, array manipulation, and plotting libraries [@numpy; @h5py; @pymap3d; @matplotlib; @cartopy].  Users create a configuration file containing information both about the radar observational mode and the ionospheric states, which the package then uses to create a synthetic data file showing what the data would be expected to look like if the radar were to measure the specified ionospheric phenomena in the given mode.  
 
+![Example of summary figure output of `amisrsynthdata`.  This shows electron density for a traveling ionospheric disturbance or large-scale wave propagating in the ionospheric F-region.  The top row of panels show the "truth" density at different altitude slices as well as the beam locations in each.  The bottom panel shows a "range-time-intensity" plot of synthetic measured electron density over time in a specific beam.  The right panel shows a 3D view of synthetic measurements in all beams at a particular time.  The beam used in the bottom panel is indicated in pink in the top panels and the time used in the top and right panels is indicated by the pink line in the bottom panel.](../docs/synthdata_summary_ne.png)
+
 # Statement of Need
 
 The `amisrsynthdata` package is useful for several items related to ensuring efficient and effective use of the AMISR radars and accurate subsequent data analysis.
@@ -36,8 +38,6 @@ The `amisrsynthdata` package is useful for several items related to ensuring eff
 3. **Determining if a particular phenomena is observable:** Sometime it is unclear if an ionospheric structure can be seen in the radar data, or what it is expected to look like.  This is relevant to determine if a radar mode under-resolves a structure, which can lead to aliasing and bias interpretation if not accounted for.  This is also useful if you are looking for a particular kind of event in the collected database, but need to understand the expected signatures of it in the radar data.
 
 Although there are only a small number of people who routinely design and optimize radar operation modes, this work is done in service to the broader ionospheric science research community.  Furthermore, the user community routinely experiments with new ways to utilize the radar data and extract more information from it.  AMISR is a widely utilized facility that continues to contribute significantly to space physics research [@decadalsurvey2013].
-
-![Example of summary figure output of `amisrsynthdata`.  This shows electron density for a traveling ionospheric disturbance or large-scale wave propagating in the ionospheric F-region.  The top row of panels show the "truth" density at different altitude slices as well as the beam locations in each.  The bottom panel shows a "range-time-intensity" plot of synthetic measured electron density over time in a specific beam.  The right panel shows a 3D view of synthetic measurements in all beams at a particular time.  The beam used in the bottom panel is indicated in pink in the top panels and the time used in the top and right panels is indicated by the pink line in the bottom panel.](../docs/synthdata_summary_ne.png)
 
 # Acknowledgements
 
