@@ -23,7 +23,11 @@ AMISR utilizes phased-array technology to steer the radar beam electronically, w
 
 ![Left: A 3D visualization of beam positions with synthetic density measurements from a commonly run 11 beam AMISR mode. Right: All possible beam positions within the AMISR field-of-view.](amisr_fov.png)
 
-The `amisrsynthdata` package produces synthetic data for AMISR.  It is written purely in python, with use of common numeric, array manipulation, and plotting libraries [@numpy; @h5py; @pymap3d; @matplotlib; @cartopy].  Users create a configuration file containing information both about the radar observational mode and the ionospheric states, which the package then uses to create a synthetic data file showing what the data would be expected to look like if the radar were to measure the specified ionospheric phenomena in the given mode.  This is useful for several things related to ensuring efficient and effective use of the radars and accurate subsequent data analysis.
+The `amisrsynthdata` package produces synthetic data for AMISR.  It is written purely in python, with use of common numeric, array manipulation, and plotting libraries [@numpy; @h5py; @pymap3d; @matplotlib; @cartopy].  Users create a configuration file containing information both about the radar observational mode and the ionospheric states, which the package then uses to create a synthetic data file showing what the data would be expected to look like if the radar were to measure the specified ionospheric phenomena in the given mode.  
+
+# Statement of Need
+
+The `amisrsynthdata` package is useful for several items related to ensuring efficient and effective use of the AMISR radars and accurate subsequent data analysis.
 
 1. **Validation of higher level data products:** AMISR data are often used in sophisticated inversion and interpolation procedures to generate high level data products.  These include things such as generating vector velocities from the line-of-sight measurements [@Heinselman2008; @Nicolls2014], 3D volumetric interpolations [@Lamarche2020], and inversion of the precipitating energetic particle spectra [@Semeter2005].  When developing these algorithms, it is important to have "truth" data to validate against.  Because there are rarely datasets available that directly measure these higher level parameters, using synthetic data where the ionospheric state is known unambiguously independent of sampling or instrument effects can be convenient.
 
