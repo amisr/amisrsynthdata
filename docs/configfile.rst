@@ -21,11 +21,11 @@ GENERAL
 +---------------------+--------------------------------------------------------+----------------------------------+
 | output_filename     | Name out output synthetic data file                    | amisr_synthetic_data_output.h5   |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| ion_mass [2]_       | List of masses of ions to be included in composition   | [16., 32., 30., 28., 14.]        |
+| ion_mass [1]_       | List of masses of ions to be included in composition   | [16., 32., 30., 28., 14.]        |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| rel_err             | Relative error which will be scaled as r^2             | 0.1                              |
+| rel_err             | Relative error which will be scaled as r :sup:`2`      | 0.1                              |
 +---------------------+--------------------------------------------------------+----------------------------------+
-| err_ref_rng         | Reference range to expand the r^2 error from           | 300000.                          |
+| err_ref_rng         | Reference range to extend the r :sup:`2` error from (m)| 300000.                          |
 +---------------------+--------------------------------------------------------+----------------------------------+
 | noise               | Whether or not to add random noise                     | False                            |
 +---------------------+--------------------------------------------------------+----------------------------------+
@@ -39,7 +39,7 @@ RADAR
 +=========================+===========================================================+============================+
 | full_name               | Site Name                                                 | Poker Flat                 |
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| abbreviation            | Site Name                                                 | PFISR                      |
+| abbreviation [2]_       | Site Abbreviation                                         | PFISR                      |
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | site_coordinates        | Site geodetic coordinates - lat (deg), lon (deg), alt (m) | [65.13, -147.47, 213.]     |
 +-------------------------+-----------------------------------------------------------+----------------------------+
@@ -53,17 +53,19 @@ RADAR
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | altitude_bins [4]_      | Altitude bins to use for fitted data (m)                  | [100000., 800000., 50000.] |
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| integration_period [1]_ | Integration period (s)                                    | 60.                        |
+| integration_period [5]_ | Integration period (s)                                    | 60.                        |
 +-------------------------+-----------------------------------------------------------+----------------------------+
 
-.. [1] Although no actual integration occurs, integration_period determines the time steps in the output file.
 
-.. [2] Most calculations are done assuming only O+, but listing all five major species considered by the fitter will result in arrays of a similar shape.
+.. [1] Most calculations are done assuming only O+, but listing all five major species considered by the fitter will result in arrays of a similar shape.
 
-.. [3] Beams can be specified either by a list of beamcode numbers, a list of azimuth and elevation angles, or some combination of both.
+.. [2] This is used to look up beamcode tables in addition to being saved to the output datafile metadata.  If a non-AMISR site is listed (not PFISR, RISR-N, or RISR-C), you will not be able to specify beams by their beamcodes and must use the azimuth and elevation options instead.
+
+.. [3] Beams can be specified either by a list of beamcode numbers, a list of azimuth and elevation angles, or some combination of both.  Beams specified by azimuth and elevation are assigned a beamcode starting with 90001 and incrimenting sequentually.
 
 .. [4] Bins should be specified as start, stop, step, but multiple sets can be specified to change step size for different altitude ranges. See example configuration file.
 
+.. [5] Although no actual integration occurs, integration_period determines the time steps in the output file.
 
 
 IONOSPHERE
@@ -104,7 +106,7 @@ This section is optional.  If it is not included, summary plots will not be crea
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | plot_time               | Target time for altitude slices and 3D plot               | 2016-09-13 00:10:00        |
 +-------------------------+-----------------------------------------------------------+----------------------------+
-| plot_beam               | Beam for RTI plot                                         | 64157                      |
+| plot_beam               | Beamcode for RTI plot                                     | 64157                      |
 +-------------------------+-----------------------------------------------------------+----------------------------+
 | alt_slices              | Altitudes to use for altitude slices (m)                  | [200000., 300000., 400000.]|
 +-------------------------+-----------------------------------------------------------+----------------------------+

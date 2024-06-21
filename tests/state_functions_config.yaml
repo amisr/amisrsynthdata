@@ -6,6 +6,10 @@ DENSITY:
       z0: 300000.
       H: 50000.
       sza: 0.
+  - epstein:
+      N0: 5.e+11
+      z0: 300000.
+      H: 50000.
   - gradient:
       N0: 5.e+11
       L: 10000.

@@ -76,6 +76,38 @@ class Density(object):
 
         return Ne0
 
+    def epstein(self, utime, glat, glon, galt):
+        """
+        Standard Epstein profile.
+
+        z' = (z-z0)/H
+
+        Ne = N0 / cosh^2(z')
+
+        From Themens et al., 2019; Equation 7
+
+        Parameters
+        ----------
+        N0: float
+            Peak electron density (m-3)
+        z0: float
+            Peak altitude (m)
+        H: float
+            Scale height (m)
+        """
+
+        # From Themens et al., 2019; eqn 7
+        zp = (galt - self.z0) / self.H
+        Ne = self.N0 / np.cosh(zp)**2
+
+        s = output_shape(utime, galt)
+        if not s:
+            Ne0 = Ne
+        else:
+            Ne0 = np.broadcast_to(Ne, s)
+
+        return Ne0
+
     def gradient(self, utime, glat, glon, galt):
         """
         Single horizontal gradient crated with a hyperbolic tangent function.
@@ -174,32 +206,20 @@ class Density(object):
         else:
             t = utime - self.utime0
 
-        # define array of point vectors in ECEF
+        # define array of point vectors in ENU
         e, n, u = pm.geodetic2enu(
             glat, glon, galt, self.cent_lat, self.cent_lon, self.cent_alt)
         point_vec = np.moveaxis(np.array([e, n, u]), 0, -1)
 
-        # define norm vector and array of point vectors in ECEF
-        center_vec = np.array(
-            pm.geodetic2ecef(
-                self.cent_lat,
-                self.cent_lon,
-                self.cent_alt))
-        norm_vec = np.array(
-            pm.aer2ecef(
-                self.az,
-                0.,
-                1.,
-                self.cent_lat,
-                self.cent_lon,
-                self.cent_alt)) - center_vec
+        # define norm vector in ENU
+        norm_vec = np.array(pm.aer2enu(self.az, 0., 1.))
 
         # create wave with sine function
         Vn = np.einsum('i,...i->...', np.array(self.velocity), norm_vec)
         pn = np.einsum('...i,i->...', point_vec, norm_vec)
 
-        Ne0 = self.N0 / 2. * (np.tanh((pn + Vn * t + w) / self.L) - np.tanh(
-            (pn + Vn * t - w) / self.L)) * np.exp(
+        Ne0 = self.N0 / 2. * (np.tanh((pn - Vn * t + w) / self.L) - np.tanh(
+            (pn - Vn * t - w) / self.L)) * np.exp(
                     -0.5 * (galt - self.cent_alt)**2 / h**2)
 
         return Ne0
@@ -258,9 +278,9 @@ class Density(object):
         A0: float
             Wave amplitude (m^-3)
         k: list
-            Wavevector [E, N, U] (m/s)
+            Wavevector [E, N, U] (m^-1)
         P: float
-            Wave period (m)
+            Wave period (s)
         orig_lat: float
             Geodetic latitude wavevector is defined from (deg)
         orig_lon: float
