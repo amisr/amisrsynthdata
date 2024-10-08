@@ -741,4 +741,5 @@ def main():
 
     sd = SyntheticData(config)
     sd.create_hdf5_output(config['GENERAL']['output_filename'])
-    sd.create_summary_plots(**config['SUMMARY_PLOT'])
+    if 'SUMMARY_PLOT' in config:
+        sd.create_summary_plots(**config['SUMMARY_PLOT'])
