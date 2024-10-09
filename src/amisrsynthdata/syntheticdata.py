@@ -505,7 +505,7 @@ class SyntheticData(object):
         """
 
         # optional imports used ONLY for creating summary plots
-        # matplotlib and cartopy are not listed in the package requirments
+        # matplotlib and cartopy are optional package requirements [plots]
         try:
             import pymap3d as pm
             import matplotlib as mpl

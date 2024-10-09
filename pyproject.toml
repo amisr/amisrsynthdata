@@ -16,6 +16,7 @@ requires-python = ">=3.7"
 dependencies = [
     "numpy",
     "h5py",
+    "apexpy",
     "pymap3d",
     "pyyaml",
     "importlib_resources; python_version < '3.9'",
@@ -38,7 +39,7 @@ amisrsynthdata = ["beamcodes/*.txt"]
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
-apex = ["apexpy"]
+gemini = ["pygemini@git+https://github.com/gemini3d/pygemini.git"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"

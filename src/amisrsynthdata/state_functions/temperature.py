@@ -1,6 +1,7 @@
 import numpy as np
 import datetime as dt
-from .utils import output_shape, gemini_helper
+#from .utils import output_shape, gemini_helper
+from .utils import output_shape
 
 # Because ion and electron temperature functions tend to be similar, they are
 #   both caputred within this function.  Ions and Electrons DO NOT have to use
@@ -79,6 +80,11 @@ class Temperature(object):
             Which species (ion or electron) should be read from GEMINI output
             ('Te' or 'Ti')
         """
+
+        # importing gemini_helper will trigger loading gemini3d, which
+        #   is only available if pygemini is installed as an optional
+        #   package requirement [gemini]
+        from .gemini_utils import gemini_helper
 
         gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)
 

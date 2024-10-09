@@ -9,20 +9,21 @@ The amisrsynthdata package is pure python and can be installed easily with pip.
 
   pip install amisrsynthdata
 
-This assumes you already have
-`apexpy <https://apexpy.readthedocs.io/en/latest/>`_ installed.  If you do not,
-either install it manually or use the ``apex`` option.
-
-.. code-block::
-
-   pin install amisrsynthdata[apex]
-
 If you would like create the optional summary plots, you will need to install
 with the ``plots`` option.
 
 .. code-block::
 
-   pin install amisrsynthdata[plots]
+   pip install amisrsynthdata[plots]
+
+If you would like to use the GEMINI mode to specify the ionosphere, you will
+need to install with the ``gemini`` option.
+
+.. code-block::
+
+   pip install amisrsynthdata[gemini]
+
+The amisrsynthdata package depends on `apexpy <https://apexpy.readthedocs.io/en/latest/>`_, which should be installed automatically.  Historically, this package has sometimes been challenging to install on some computer systems.  If the installation of amisrsynthdata fails because apexpy fails to install, or amisrsynthdata crashed due to an apexpy error, consider manually installing apexpy first following the `apexpy installation instructions <https://apexpy.readthedocs.io/en/latest/installation.html>`_, then reinstalling amisrsynthdata as shown above.
 
 .. _developer installation:
 

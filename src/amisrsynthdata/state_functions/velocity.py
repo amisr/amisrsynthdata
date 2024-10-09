@@ -3,7 +3,8 @@ import pymap3d as pm
 import datetime as dt
 import warnings
 # from apexpy import Apex
-from .utils import output_shape, gemini_helper
+#from .utils import output_shape, gemini_helper
+from .utils import output_shape
 
 
 class Velocity(object):
@@ -161,6 +162,11 @@ class Velocity(object):
         gemini_output_dir: string
             Path to directory of GEMINI output files
         """
+
+        # importing gemini_helper will trigger loading gemini3d, which
+        #   is only available if pygemini is installed as an optional
+        #   package requirement [gemini]
+        from .gemini_utils import gemini_helper
 
         gh = gemini_helper(self.gemini_output_dir, glat, glon, galt)
 
