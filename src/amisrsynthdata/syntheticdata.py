@@ -632,7 +632,7 @@ class SyntheticData(object):
             for j in range(len(alt_layers)):
 
                 ax = fig.add_subplot(gs[0, j], projection=proj)
-                ax.coastlines()
+                ax.coastlines(color='grey', linewidth=0.5, zorder=3)
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
@@ -643,7 +643,8 @@ class SyntheticData(object):
                                   glat[::s[0], ::s[1], j],
                                   p['param'][0][::s[0], ::s[1], j],
                                   p['param'][1][::s[0], ::s[1], j],
-                                  color='blue', transform=ccrs.PlateCarree())
+                                  color='blue', zorder=2, 
+                                  transform=ccrs.PlateCarree())
                     if gs[0, j].is_first_col():
                         u = p['cparam']['vmax']
                         ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
@@ -651,11 +652,11 @@ class SyntheticData(object):
                 else:
                     ax.contourf(glon[:, :, j], glat[:, :, j],
                                 p['param'][:, :, j], cmap=cmap, norm=norm,
-                                transform=ccrs.PlateCarree())
+                                zorder=2, transform=ccrs.PlateCarree())
 
                 # Add site location
                 ax.scatter(self.radar.site_lon, self.radar.site_lat,
-                           marker='^', color='k',
+                           marker='^', color='k', zorder=5,
                            transform=ccrs.PlateCarree())
 
                 # Add beam positions
@@ -670,12 +671,14 @@ class SyntheticData(object):
                     slice_lat,
                     facecolors='none',
                     edgecolors='k',
+                    zorder=4,
                     transform=ccrs.Geodetic())
                 ax.scatter(
                     slice_lon[bidx],
                     slice_lat[bidx],
                     facecolors='none',
                     edgecolors='magenta',
+                    zorder=4,
                     transform=ccrs.Geodetic())
 
             # Create RTI
@@ -719,7 +722,7 @@ class SyntheticData(object):
             ax.set_box_aspect(
                 [ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')()
                  for a in 'xyz')])
-            fig.colorbar(c, label=p['label'])
+            fig.colorbar(c, label=p['label'], pad=0.15)
 
             fig.savefig(p['output'])
 
