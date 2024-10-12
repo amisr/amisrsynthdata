@@ -2,6 +2,7 @@
 import numpy as np
 import pymap3d as pm
 import warnings
+import h5py
 
 import sys
 if sys.version_info < (3, 9):
@@ -85,18 +86,16 @@ class Radar(object):
         """
 
         # beams defined by standard beam code (beamcode files in package data)
-        radar_key = self.radar_abbrev.lower().replace('-', '')
-        filename = f'bcotable_{radar_key}.txt'
-        bc_file = files('amisrsynthdata').joinpath('beamcodes', filename)
+        bc_file = files('amisrsynthdata').joinpath('beamcodes.h5')
         try:
-            bc_data = np.loadtxt(bc_file)
-        except FileNotFoundError:
+            with h5py.File(bc_file, 'r') as h5:
+                bc_data = h5[self.radar_abbrev][:]
+        except KeyError:
             print('WARNING!  No beamcode table is available for the radar '
                   f'{self.radar_abbrev}.  Any specified beamcodes will be '
                   'ignored!')
-            return np.empty((0,)), np.empty((0,)), np.empty((0,))
+            return np.empty((0,)), np.empty((0,)), np.empty((0,)), np.empty((0,))
 
-        #idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
         beamcodes_sorted = np.unique(beamcodes)[::-1]
         idx = np.argwhere(np.isin(bc_data[:, 0], beamcodes_sorted)).flatten()
         beam_azimuth = bc_data[idx, 1]

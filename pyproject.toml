@@ -35,7 +35,7 @@ classifiers = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-amisrsynthdata = ["beamcodes/*.txt"]
+amisrsynthdata = ["beamcodes.h5"]
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
