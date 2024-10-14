@@ -27,6 +27,10 @@ The `amisrsynthdata` package produces synthetic data for AMISR.  It is written p
 
 ![Example of summary figure output of `amisrsynthdata`.  This shows electron density for a traveling ionospheric disturbance or large-scale wave propagating in the ionospheric F-region.  The top row of panels show the "truth" density at different altitude slices as well as the beam locations in each.  The bottom panel shows a "range-time-intensity" plot of synthetic measured electron density over time in a specific beam.  The right panel shows a 3D view of synthetic measurements in all beams at a particular time.  The beam used in the bottom panel is indicated in pink in the top panels and the time used in the top and right panels is indicated by the pink line in the bottom panel.](../docs/synthdata_summary_ne.png)
 
+The package provides a variety of options for specifying the background ionosphere, from extremely simple uniform parameter fields to more complex combinations, including sampling the of output numerical models. The source code was also designed so it is relatively simple to add new ionospheric state functions as needed.
+
+![Horizontal slices of synthetic AMISR data in all four standard incoherent scatter radar parameters.   The ionosphere used in this case comes from output of the GEMINI numerical model of local ionospheric dynamics [@Zettergren2015]](../docs/synthdata_gemini_plot.png)
+
 # Statement of Need
 
 The `amisrsynthdata` package is useful for several items related to ensuring efficient and effective use of the AMISR radars and accurate subsequent data analysis.
