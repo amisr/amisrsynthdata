@@ -1,6 +1,5 @@
 import numpy as np
 import datetime as dt
-#from .utils import output_shape, gemini_helper
 from .utils import output_shape
 
 # Because ion and electron temperature functions tend to be similar, they are

@@ -2,8 +2,6 @@ import numpy as np
 import pymap3d as pm
 import datetime as dt
 import warnings
-# from apexpy import Apex
-#from .utils import output_shape, gemini_helper
 from .utils import output_shape
 
 

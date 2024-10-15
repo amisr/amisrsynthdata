@@ -643,7 +643,7 @@ class SyntheticData(object):
                                   glat[::s[0], ::s[1], j],
                                   p['param'][0][::s[0], ::s[1], j],
                                   p['param'][1][::s[0], ::s[1], j],
-                                  color='blue', zorder=2, 
+                                  color='blue', zorder=2,
                                   transform=ccrs.PlateCarree())
                     if gs[0, j].is_first_col():
                         u = p['cparam']['vmax']

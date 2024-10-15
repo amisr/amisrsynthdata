@@ -1,8 +1,6 @@
-
 import numpy as np
 
-# import gemimi3d utilites
-# NOTE: This requires pygemini installed, which is specialized and not 
+# NOTE: This requires pygemini installed, which is specialized and not
 #  used in any other part of amisrsythdata.
 try:
     from gemini3d.grid.gridmodeldata import model2pointsgeogcoords
@@ -66,5 +64,3 @@ class gemini_helper(object):
         P = self.replace_nans(P)
         P0 = P.reshape(self.out_shape)
         return P0
-
-

@@ -31,11 +31,21 @@ class Radar(object):
          self.site_alt) = config['RADAR']['site_coords']
 
         beam_bc = config['RADAR'].get('beamcodes', [])
-        beam_bc1, beam_az1, beam_el1, beam_ksys1 = self.beams_from_beam_codes(beam_bc)
+        (
+            beam_bc1,
+            beam_az1,
+            beam_el1,
+            beam_ksys1
+        ) = self.beams_from_beam_codes(beam_bc)
 
         beam_az = config['RADAR'].get('beam_azimuth', [])
         beam_el = config['RADAR'].get('beam_elevation', [])
-        beam_bc2, beam_az2, beam_el2, beam_ksys2 = self.beams_from_az_el(beam_az, beam_el)
+        (
+            beam_bc2,
+            beam_az2,
+            beam_el2,
+            beam_ksys2
+        ) = self.beams_from_az_el(beam_az, beam_el)
 
         # combine both beam arrays
         self.beam_codes = np.concatenate((beam_bc1, beam_bc2))
@@ -94,7 +104,8 @@ class Radar(object):
             print('WARNING!  No beamcode table is available for the radar '
                   f'{self.radar_abbrev}.  Any specified beamcodes will be '
                   'ignored!')
-            return np.empty((0,)), np.empty((0,)), np.empty((0,)), np.empty((0,))
+            empty_arr = np.empty((0,))
+            return empty_arr, empty_arr, empty_arr, empty_arr
 
         beamcodes_sorted = np.unique(beamcodes)[::-1]
         idx = np.argwhere(np.isin(bc_data[:, 0], beamcodes_sorted)).flatten()

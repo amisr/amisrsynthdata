@@ -13,5 +13,3 @@ def output_shape(ut, x):
     else:
         s = ut.shape + x.shape
     return s
-
-
