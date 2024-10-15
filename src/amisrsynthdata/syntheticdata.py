@@ -621,7 +621,7 @@ class SyntheticData(object):
             fig = plt.figure(figsize=(15, 7))
             fig.suptitle(p['title'], fontsize=20, fontweight=3)
 
-            cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
+            cmap = mpl.colormaps[p['cparam']['cmap']].copy()
             cmap.set_over('white')
             cmap.set_under('grey')
 

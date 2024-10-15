@@ -38,7 +38,7 @@ def test_beams_from_beam_codes(radar):
     truth_az = [14.04, -154.3, -34.69, 75.03]
     truth_el = [90., 77.5, 66.09, 65.56]
     truth_ksys = [np.nan, np.nan, np.nan, np.nan]
-    azimuth, elevation, ksys = radar.beams_from_beam_codes(beamcodes)
+    _, azimuth, elevation, ksys = radar.beams_from_beam_codes(beamcodes)
     np.testing.assert_allclose(azimuth, truth_az)
     np.testing.assert_allclose(elevation, truth_el)
     np.testing.assert_allclose(ksys, truth_ksys)
@@ -49,7 +49,7 @@ def test_beams_from_az_el(radar):
     elevation = [90., 77.5, 66.09, 65.56]
     truth_bc = [90001, 90002, 90003, 90004]
     truth_ksys = [np.nan, np.nan, np.nan, np.nan]
-    beamcodes, ksys = radar.beams_from_az_el(azimuth, elevation)
+    beamcodes, _, _, ksys = radar.beams_from_az_el(azimuth, elevation)
     np.testing.assert_allclose(beamcodes, truth_bc)
     np.testing.assert_allclose(ksys, truth_ksys)
 
