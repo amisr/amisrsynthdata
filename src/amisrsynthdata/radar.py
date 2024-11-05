@@ -2,6 +2,7 @@
 import numpy as np
 import pymap3d as pm
 import warnings
+import h5py
 
 import sys
 if sys.version_info < (3, 9):
@@ -29,12 +30,22 @@ class Radar(object):
          self.site_lon,
          self.site_alt) = config['RADAR']['site_coords']
 
-        beam_bc1 = config['RADAR'].get('beamcodes', [])
-        beam_az1, beam_el1, beam_ksys1 = self.beams_from_beam_codes(beam_bc1)
+        beam_bc = config['RADAR'].get('beamcodes', [])
+        (
+            beam_bc1,
+            beam_az1,
+            beam_el1,
+            beam_ksys1
+        ) = self.beams_from_beam_codes(beam_bc)
 
-        beam_az2 = config['RADAR'].get('beam_azimuth', [])
-        beam_el2 = config['RADAR'].get('beam_elevation', [])
-        beam_bc2, beam_ksys2 = self.beams_from_az_el(beam_az2, beam_el2)
+        beam_az = config['RADAR'].get('beam_azimuth', [])
+        beam_el = config['RADAR'].get('beam_elevation', [])
+        (
+            beam_bc2,
+            beam_az2,
+            beam_el2,
+            beam_ksys2
+        ) = self.beams_from_az_el(beam_az, beam_el)
 
         # combine both beam arrays
         self.beam_codes = np.concatenate((beam_bc1, beam_bc2))
@@ -85,23 +96,24 @@ class Radar(object):
         """
 
         # beams defined by standard beam code (beamcode files in package data)
-        radar_key = self.radar_abbrev.lower().replace('-', '')
-        filename = f'bcotable_{radar_key}.txt'
-        bc_file = files('amisrsynthdata').joinpath('beamcodes', filename)
+        bc_file = files('amisrsynthdata').joinpath('beamcodes.h5')
         try:
-            bc_data = np.loadtxt(bc_file)
-        except FileNotFoundError:
+            with h5py.File(bc_file, 'r') as h5:
+                bc_data = h5[self.radar_abbrev][:]
+        except KeyError:
             print('WARNING!  No beamcode table is available for the radar '
                   f'{self.radar_abbrev}.  Any specified beamcodes will be '
                   'ignored!')
-            return np.empty((0,)), np.empty((0,)), np.empty((0,))
+            empty_arr = np.empty((0,))
+            return empty_arr, empty_arr, empty_arr, empty_arr
 
-        idx = np.where(np.in1d(bc_data[:, 0], beamcodes))[0]
+        beamcodes_sorted = np.unique(beamcodes)[::-1]
+        idx = np.argwhere(np.isin(bc_data[:, 0], beamcodes_sorted)).flatten()
         beam_azimuth = bc_data[idx, 1]
         beam_elevation = bc_data[idx, 2]
         beam_ksys = np.full(len(idx), np.nan)
 
-        return beam_azimuth, beam_elevation, beam_ksys
+        return beamcodes_sorted, beam_azimuth, beam_elevation, beam_ksys
 
     def beams_from_az_el(self, beam_azimuth, beam_elevation):
         """
@@ -134,7 +146,7 @@ class Radar(object):
         beamcodes = np.arange(len(beam_azimuth)) + 90001
         beam_ksys = np.full(len(beam_azimuth), np.nan)
 
-        return beamcodes, beam_ksys
+        return beamcodes, beam_azimuth, beam_elevation, beam_ksys
 
     def calculate_acf_gates(self, slant_range_config):
         """

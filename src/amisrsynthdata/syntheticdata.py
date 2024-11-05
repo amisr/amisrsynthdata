@@ -505,7 +505,7 @@ class SyntheticData(object):
         """
 
         # optional imports used ONLY for creating summary plots
-        # matplotlib and cartopy are not listed in the package requirments
+        # matplotlib and cartopy are optional package requirements [plots]
         try:
             import pymap3d as pm
             import matplotlib as mpl
@@ -621,7 +621,7 @@ class SyntheticData(object):
             fig = plt.figure(figsize=(15, 7))
             fig.suptitle(p['title'], fontsize=20, fontweight=3)
 
-            cmap = mpl.cm.get_cmap(p['cparam']['cmap']).copy()
+            cmap = mpl.colormaps[p['cparam']['cmap']].copy()
             cmap.set_over('white')
             cmap.set_under('grey')
 
@@ -632,7 +632,7 @@ class SyntheticData(object):
             for j in range(len(alt_layers)):
 
                 ax = fig.add_subplot(gs[0, j], projection=proj)
-                ax.coastlines()
+                ax.coastlines(color='grey', linewidth=0.5, zorder=3)
                 ax.set_title('{} km'.format(alt_layers[j] / 1000.))
 
                 if p['title'] == 'Plasma Velocity':
@@ -643,7 +643,8 @@ class SyntheticData(object):
                                   glat[::s[0], ::s[1], j],
                                   p['param'][0][::s[0], ::s[1], j],
                                   p['param'][1][::s[0], ::s[1], j],
-                                  color='blue', transform=ccrs.PlateCarree())
+                                  color='blue', zorder=2,
+                                  transform=ccrs.PlateCarree())
                     if gs[0, j].is_first_col():
                         u = p['cparam']['vmax']
                         ax.quiverkey(q, 0.1, -0.1, u, f'{u} m/s', labelpos='E')
@@ -651,11 +652,11 @@ class SyntheticData(object):
                 else:
                     ax.contourf(glon[:, :, j], glat[:, :, j],
                                 p['param'][:, :, j], cmap=cmap, norm=norm,
-                                transform=ccrs.PlateCarree())
+                                zorder=2, transform=ccrs.PlateCarree())
 
                 # Add site location
                 ax.scatter(self.radar.site_lon, self.radar.site_lat,
-                           marker='^', color='k',
+                           marker='^', color='k', zorder=5,
                            transform=ccrs.PlateCarree())
 
                 # Add beam positions
@@ -670,12 +671,14 @@ class SyntheticData(object):
                     slice_lat,
                     facecolors='none',
                     edgecolors='k',
+                    zorder=4,
                     transform=ccrs.Geodetic())
                 ax.scatter(
                     slice_lon[bidx],
                     slice_lat[bidx],
                     facecolors='none',
                     edgecolors='magenta',
+                    zorder=4,
                     transform=ccrs.Geodetic())
 
             # Create RTI
@@ -719,7 +722,7 @@ class SyntheticData(object):
             ax.set_box_aspect(
                 [ub - lb for lb, ub in (getattr(ax, f'get_{a}lim')()
                  for a in 'xyz')])
-            fig.colorbar(c, label=p['label'])
+            fig.colorbar(c, label=p['label'], pad=0.15)
 
             fig.savefig(p['output'])
 
@@ -741,4 +744,5 @@ def main():
 
     sd = SyntheticData(config)
     sd.create_hdf5_output(config['GENERAL']['output_filename'])
-    sd.create_summary_plots(**config['SUMMARY_PLOT'])
+    if 'SUMMARY_PLOT' in config:
+        sd.create_summary_plots(**config['SUMMARY_PLOT'])

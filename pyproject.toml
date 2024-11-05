@@ -16,6 +16,7 @@ requires-python = ">=3.7"
 dependencies = [
     "numpy",
     "h5py",
+    "apexpy",
     "pymap3d",
     "pyyaml",
     "importlib_resources; python_version < '3.9'",
@@ -34,11 +35,10 @@ classifiers = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-amisrsynthdata = ["beamcodes/*.txt"]
+amisrsynthdata = ["beamcodes.h5"]
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
-apex = ["apexpy"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"

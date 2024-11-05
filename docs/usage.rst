@@ -91,3 +91,17 @@ The amisrsynthdata package contains three classes: ``Radar``, ``Ionosphere``, an
   Ne = sd.iono.density(utime, glat, glon, galt)
 
 Note that all functionality of the ``Radar`` and ``Ionosphere`` classes are available through the ``SyntheticData`` class.  ``SyntheticData`` contains an instance of the ``Radar`` class named ``radar`` and an instance of the ``Ionosphere`` class named ``iono``.
+
+Benchmarking
+------------
+
+The amount of time it takes to run ``amisrsynthdata`` depends on the ionosphere model that is chosen as well as the radar mode. Modes with more beams or finner range or time resolution will generally take longer to compute synthetic data files.  Producing summary plots also increases the time it takes to run ``amisrsynthdata``.  The table below shows rough benchmarking of how long it takes to produce a synthetic data file from the command line for a simple case and a complex case.  The simple case uses the `example configuration file <https://github.com/amisr/amisrsynthdata/blob/develop/example_synth_config.yaml>`_ provided with the package which uses altitude-varying or uniform ionospheric state functions and 6 beams with relatively corse range resolution.  The complex case uses an ionosphere specified from the output of the GEMINI numerical model (the slowest ionosphere option currently available) and mimics the 52 beam imaging mode.  This benchmarking was performed on a laptop workstation and should only be considered approximate.
+
++--------------+--------+----------+
+|              | Simple | Complex  |
++==============+========+==========+
+| **No Plots** | 0.77 s |  87.48 s |
++--------------+--------+----------+
+| **Plots**    | 9.72 s | 103.24 s |
++--------------+--------+----------+
+
