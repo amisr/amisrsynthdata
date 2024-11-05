@@ -39,7 +39,6 @@ amisrsynthdata = ["beamcodes.h5"]
 
 [project.optional-dependencies]
 plots = ["matplotlib", "cartopy"]
-gemini = ["pygemini@git+https://github.com/gemini3d/pygemini.git"]
 
 [project.urls]
 "Homepage" = "https://github.com/amisr/amisrsynthdata"

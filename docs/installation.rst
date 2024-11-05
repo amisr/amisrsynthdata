@@ -16,13 +16,6 @@ with the ``plots`` option.
 
    pip install amisrsynthdata[plots]
 
-If you would like to use the GEMINI mode to specify the ionosphere, you will
-need to install with the ``gemini`` option.
-
-.. code-block::
-
-   pip install amisrsynthdata[gemini]
-
 The amisrsynthdata package depends on `apexpy <https://apexpy.readthedocs.io/en/latest/>`_, which should be installed automatically.  Historically, this package has sometimes been challenging to install on some computer systems.  If the installation of amisrsynthdata fails because apexpy fails to install, or amisrsynthdata crashed due to an apexpy error, consider manually installing apexpy first following the `apexpy installation instructions <https://apexpy.readthedocs.io/en/latest/installation.html>`_, then reinstalling amisrsynthdata as shown above.
 
 .. _developer installation:
@@ -60,4 +53,13 @@ The following additional packages are required and will be installed:
   * `pyyaml <https://pyyaml.org/wiki/PyYAMLDocumentation>`_
   * `importlib-resources <https://pypi.org/project/importlib-resources/>`_ (for python < 3.9)
 
-If automatic installation of any of these packages fail, try installing it in your environment manually referring to instructions and tips from that package's documentation.  Additionally, `matplotlib <https://matplotlib.org/>`_ and `cartopy <https://scitools.org.uk/cartopy/docs/latest/>`_ are required to create the optional summary plots.  Utilizing output from the GEMINI non-linear ionospheric dynamics model requires `pygemini <https://github.com/gemini3d/pygemini>`_ be installed.
+If installing with the ``plots'' option, the following additional packages are also required and will be installed:
+
+
+  * `matplotlib <https://matplotlib.org/>`_
+  * `cartopy <https://scitools.org.uk/cartopy/docs/latest/>`_
+
+If automatic installation of any of these packages fail, try installing them in your environment manually referring to instructions and tips from that package's documentation.
+
+Utilizing output from the GEMINI non-linear ionospheric dynamics model to specify the ionospheric state requires `pygemini <https://github.com/gemini3d/pygemini>`_ to be installed. This is a specialized option and interested users should install this package manually using instructions in its README file before attempting to run `amisrsynthdata' with GEMINI configuration option.
+
