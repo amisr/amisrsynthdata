@@ -13,26 +13,42 @@ Quick Start
 Installation
 ************
 
-The amisrsynthdata package is pure python and can be installed easily with pip:
+The amisrsynthdata package is pure python and can be installed with pip:
 
 .. code-block::
 
-  $ pip install amisrsynthdata
+  pip install amisrsynthdata
 
 Additional `installation instructions <https://amisrsynthdata.readthedocs.io/en/latest/installation.html#>`_
 are also available.
 
 
-Basic Usage
-***********
+Example Usage
+*************
 
-This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used:
+This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used.  The following steps show how to use a provided example configuration file to run amisrsythdata.
+
+1. Install amisrsynthdata with the plots option.
 
 .. code-block::
 
-  $ amisrsynthdata config.yaml
+   pip install amisrsynthdata[plots]
 
-Refer to the `configuration file docs <https://amisrsynthdata.readthedocs.io/en/latest/configfile.html#>`_ for information about the contents of these configuration files and how to construct one.
+2. Download the `example configuration file <https://github.com/amisr/amisrsynthdata/blob/develop/example_synth_config.yaml>`_.
+
+.. code-block::
+
+   wget https://raw.githubusercontent.com/amisr/amisrsynthdata/refs/heads/main/example_synth_config.yaml
+
+3. Run amisrsynthdata.
+
+.. code-block::
+
+  amisrsynthdata example_synth_config.yaml
+
+This should product the output synthetic data file ``synthetic_data.h5`` and four summary plot files in your working directory.  By editing the options in the configuration file, you can specify the radar mode and ionosphere that are used to create the synthetic data.  Refer to the `configuration file documentation <https://amisrsynthdata.readthedocs.io/en/latest/configfile.html#>`_ for information about the contents of the configuration file.
+
+Additional information about using this pacakge is available in the `usage documentation <https://amisrsynthdata.readthedocs.io/en/latest/usage.html#>`_.
 
 Limitations
 -----------

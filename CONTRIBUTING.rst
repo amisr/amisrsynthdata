@@ -1,5 +1,5 @@
-Contributing
-============
+Contributing Guidelines
+=======================
 
 Bug reports, feature suggestions and other contributions are greatly
 appreciated! While I can't promise to implement everything, I will always try
