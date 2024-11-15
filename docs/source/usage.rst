@@ -12,8 +12,9 @@ To run the AMISR synthetic data generator, simply call ``amisrsynthdata`` from t
 
   amisrsynthdata config.yaml
 
+Use the ``-v`` or ``--verbose`` options to print status messages to the screen as the code runs.  Depending on the options used, the code may take several mintues to run.
 
-See :ref:`Configuration File` section of the documentation for details on the fields that should be in this file.
+See :ref:`Configuration File` section of the documentation for details on the fields that should be in the configuration file.  An example configuration file can be downloaded from the `root of the GitHub repository <https://github.com/amisr/amisrsynthdata>`_.
 
 Python
 ------

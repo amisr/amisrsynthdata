@@ -12,7 +12,7 @@ description = "Tool for generating synthetic AMISR data files."
 readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["AMISR", "synthetic", "data"]
-requires-python = ">=3.7"
+requires-python = ">=3.7,<3.12"
 dependencies = [
     "numpy",
     "h5py",
