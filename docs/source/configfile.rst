@@ -5,7 +5,7 @@
 Configuration File
 ==================
 
-The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an `example configuration file <https://github.com/amisr/amisrsynthdata/blob/develop/example_synth_config.yaml>`_ is available in the main project repository.  The contents of this file can be copy/pasted into a local text file or the example file can be downloaded from GitHub or with wget on the command line.
+The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an `example configuration file <https://github.com/amisr/amisrsynthdata/blob/main/example_synth_config.yaml>`_ is available in the main project repository.  The contents of this file can be copy/pasted into a local text file or the example file can be downloaded from GitHub or with wget on the command line.
 
 .. code-block::
 
