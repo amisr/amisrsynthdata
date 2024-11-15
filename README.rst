@@ -40,11 +40,11 @@ This package installs the command line tool `amisrsynthdata`, which is used alon
 
    wget https://raw.githubusercontent.com/amisr/amisrsynthdata/refs/heads/main/example_synth_config.yaml
 
-3. Run amisrsynthdata.
+3. Run amisrsynthdata with the verbose option.
 
 .. code-block::
 
-  amisrsynthdata example_synth_config.yaml
+  amisrsynthdata example_synth_config.yaml -v
 
 This should product the output synthetic data file ``synthetic_data.h5`` and four summary plot files in your working directory.  By editing the options in the configuration file, you can specify the radar mode and ionosphere that are used to create the synthetic data.  Refer to the `configuration file documentation <https://amisrsynthdata.readthedocs.io/en/latest/configfile.html#>`_ for information about the contents of the configuration file.
 
