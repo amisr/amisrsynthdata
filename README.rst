@@ -8,7 +8,7 @@ This module provides tools to create synthetic data files for the AMISR (Advance
 .. image:: docs/synthdata_gemini_plot.png
 
 
-TEST UPDATE TO DEVELOP
+TEST UPDATE TO DEVELOP AND MERGED WITH MAIN
 
 Quick Start
 -----------
