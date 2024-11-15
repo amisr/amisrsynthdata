@@ -743,11 +743,15 @@ def main():
     with open(args['synth_config_file'], 'r') as cf:
         config = yaml.safe_load(cf)
 
-    if args['verbose']: print('Initializing synthetic data module...')
+    if args['verbose']:
+        print('Initializing synthetic data module...')
     sd = SyntheticData(config)
-    if args['verbose']: print('Generating output file...')
+    if args['verbose']:
+        print('Generating output file...')
     sd.create_hdf5_output(config['GENERAL']['output_filename'])
     if 'SUMMARY_PLOT' in config:
-        if args['verbose']: print('Generating summary plots...')
+        if args['verbose']:
+            print('Generating summary plots...')
         sd.create_summary_plots(**config['SUMMARY_PLOT'])
-    if args['verbose']: print('amisrsynthdata has finished!')
+    if args['verbose']:
+        print('amisrsynthdata has finished!')
