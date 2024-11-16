@@ -33,9 +33,9 @@ This package installs the command line tool `amisrsynthdata`, which is used alon
 
 .. code-block::
 
-   pip install amisrsynthdata[plots]
+   pip install 'amisrsynthdata[plots]'
 
-2. Download the `example configuration file <https://github.com/amisr/amisrsynthdata/blob/main/example_synth_config.yaml>`_.
+2. Download the `example configuration file <https://github.com/amisr/amisrsynthdata/blob/main/example_synth_config.yaml>`_.  This can be done directly from the repository webpage or with a command line utility such as `wget <https://www.gnu.org/software/wget/>`_.
 
 .. code-block::
 
@@ -47,7 +47,7 @@ This package installs the command line tool `amisrsynthdata`, which is used alon
 
   amisrsynthdata example_synth_config.yaml -v
 
-This should product the output synthetic data file ``synthetic_data.h5`` and four summary plot files in your working directory.  By editing the options in the configuration file, you can specify the radar mode and ionosphere that are used to create the synthetic data.  Refer to the `configuration file documentation <https://amisrsynthdata.readthedocs.io/en/stable/configfile.html>`_ for information about the contents of the configuration file.
+This should product the output synthetic data file ``synthetic_data.h5`` and four summary plot files in your working directory.  Note that this example uses extremely simple ionospheric state functions for illustrative purposes.  By editing the options in the configuration file, you can specify the radar mode and ionosphere that are used to create the synthetic data.  Refer to the `configuration file documentation <https://amisrsynthdata.readthedocs.io/en/stable/configfile.html>`_ for information about the contents of the configuration file.
 
 Additional information about using this pacakge is available in the `usage documentation <https://amisrsynthdata.readthedocs.io/en/stable/usage.html>`_.
 
