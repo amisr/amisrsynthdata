@@ -65,6 +65,11 @@ Documentation
 
 Full documentation for amisrsynthdata is available on `ReadTheDocs <https://amisrsynthdata.readthedocs.io>`_.
 
+Source Code Repository
+----------------------
+
+The source code for amisrsynthdata is available on `GitHub <https://github.com/amisr/amisrsynthdata>`_.
+
 Contributing
 ------------
 

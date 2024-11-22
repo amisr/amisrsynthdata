@@ -74,24 +74,25 @@ The amisrsynthdata package contains three classes: ``Radar``, ``Ionosphere``, an
 .. code-block:: python
 
   from amisrsynthdata.syntheticdata import SyntheticData
-
+  
   sd = SyntheticData(config)
-
+  
   # Get get output range gate positions and electron density
-  fov_glat = sd.Geomag['Latitude']
-  fov_glon = sd.Geomag['Longitude']
-  fov_galt = sd.Geomag['Altitude']
-  fov_ne = sd.FittedParams['Ne']
-
-  # Can also get range gate positions from Radar
-  glat = sd.radar.lat
-  glon = sd.radar.lon
-  galt = sd.radar.alt
-
-  # And access Ionosphere functions directly
-  Ne = sd.iono.density(utime, glat, glon, galt)
+  fov_glat = sd.radar.lat
+  fov_glon = sd.radar.lon
+  fov_galt = sd.radar.alt
+  fov_ne = sd.ne
+  
+  # Also queary the ionosphre functions
+  Ne = sd.iono.density(utime, fov_glat, fov_glon, fov_galt)
 
 Note that all functionality of the ``Radar`` and ``Ionosphere`` classes are available through the ``SyntheticData`` class.  ``SyntheticData`` contains an instance of the ``Radar`` class named ``radar`` and an instance of the ``Ionosphere`` class named ``iono``.
+
+Jupyter Notebook Tutorial
+*************************
+
+A jupyter ntoebook tutorial demonstrating the basic python functionality of ``amisrsynthdata`` is `available in the GitHub repository <https://github.com/amisr/amisrsynthdata/blob/main/tutorial.ipynb>'_.
+
 
 Benchmarking
 ------------
