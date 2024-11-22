@@ -91,7 +91,7 @@ Note that all functionality of the ``Radar`` and ``Ionosphere`` classes are avai
 Jupyter Notebook Tutorial
 *************************
 
-A jupyter ntoebook tutorial demonstrating the basic python functionality of ``amisrsynthdata`` is `available in the GitHub repository <https://github.com/amisr/amisrsynthdata/blob/main/tutorial.ipynb>'_.
+A jupyter ntoebook tutorial demonstrating the basic python functionality of ``amisrsynthdata`` is `available in the GitHub repository <https://github.com/amisr/amisrsynthdata/blob/main/tutorial.ipynb>`_.
 
 
 Benchmarking
