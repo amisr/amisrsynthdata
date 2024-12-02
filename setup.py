@@ -1,4 +1,4 @@
-from setuptools import setup
+import setuptools
 import os
 
 install_requires = [
@@ -13,4 +13,4 @@ install_requires = [
 if os.getenv('READTHEDOCS'):
     install_requires.pop("apexpy")
 
-setup(install_requires=install_requires)
+setuptools.setup(install_requires=install_requires)
