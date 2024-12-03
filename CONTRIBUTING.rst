@@ -1,11 +1,11 @@
-Contributing
-============
+Contributing Guidelines
+=======================
 
 Bug reports, feature suggestions and other contributions are greatly
 appreciated! While I can't promise to implement everything, I will always try
 to respond in a timely manner.  Please ensure all bug reports, feature
 requests, and contribution discussions abide by the
-`Code of Conduct <https://amisrsynthdata.readthedocs.io/en/latest/conduct.html#>`_.
+`Code of Conduct <https://amisrsynthdata.readthedocs.io/en/stable/conduct.html#>`_.
 
 Short version
 -------------
@@ -45,7 +45,7 @@ To add new features or fix existing bugs in amisrsynthdata, and contribute
 them back to the main repository:
 
 1. Set up amisrsynthdata locally for development by following the `development 
-   installation <https://amisrsynthdata.readthedocs.io/en/latest/installation.html##development>`_
+   installation <https://amisrsynthdata.readthedocs.io/en/stable/installation.html#development>`_
    instructions. 
 
 3. Create a branch for local development based off of the ``develop`` branch
@@ -115,4 +115,4 @@ maintains a consistent coding style:
 Add Ionospheric State Function
 ------------------------------
 
-The package was deliberately designed to make it straight forwards for users to expand the libary of ionospheric state functions by adding new ones.  Instructions for how to do this are available in the `Create New State Functions <https://amisrsynthdata.readthedocs.io/en/latest/ionostate.html#create-new-state-functions>`_ section.
+The package was deliberately designed to make it straight forwards for users to expand the libary of ionospheric state functions by adding new ones.  Instructions for how to do this are available in the `Create New State Functions <https://amisrsynthdata.readthedocs.io/en/stable/ionostate.html#create-new-state-functions>`_ section.

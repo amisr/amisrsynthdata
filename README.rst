@@ -7,32 +7,49 @@ This module provides tools to create synthetic data files for the AMISR (Advance
 
 .. image:: docs/synthdata_gemini_plot.png
 
+
 Quick Start
 -----------
 
 Installation
 ************
 
-The amisrsynthdata package is pure python and can be installed easily with pip:
+The amisrsynthdata package is pure python and can be installed with pip:
 
 .. code-block::
 
-  $ pip install amisrsynthdata
+  pip install amisrsynthdata
 
-Additional `installation instructions <https://amisrsynthdata.readthedocs.io/en/latest/installation.html#>`_
+Additional `installation instructions <https://amisrsynthdata.readthedocs.io/en/stable/installation.html#>`_
 are also available.
 
 
-Basic Usage
-***********
+Example Usage
+*************
 
-This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used:
+This package installs the command line tool `amisrsynthdata`, which is used along with a YAML configuration file to generate an output hdf5 AMISR data file.  The configuration file specifies the ionosphere state and radar configuration that should be used.  The following steps show how to use a provided example configuration file to run amisrsythdata.
+
+1. Install amisrsynthdata with the plots option.
 
 .. code-block::
 
-  $ amisrsynthdata config.yaml
+   pip install 'amisrsynthdata[plots]'
 
-Refer to the `configuration file docs <https://amisrsynthdata.readthedocs.io/en/latest/configfile.html#>`_ for information about the contents of these configuration files and how to construct one.
+2. Download the `example configuration file <https://github.com/amisr/amisrsynthdata/blob/main/example_synth_config.yaml>`_.  This can be done directly from the repository webpage or with a command line utility such as `wget <https://www.gnu.org/software/wget/>`_.
+
+.. code-block::
+
+   wget https://raw.githubusercontent.com/amisr/amisrsynthdata/refs/heads/main/example_synth_config.yaml
+
+3. Run amisrsynthdata with the verbose option.
+
+.. code-block::
+
+  amisrsynthdata example_synth_config.yaml -v
+
+This should product the output synthetic data file ``synthetic_data.h5`` and four summary plot files in your working directory.  Note that this example uses extremely simple ionospheric state functions for illustrative purposes.  By editing the options in the configuration file, you can specify the radar mode and ionosphere that are used to create the synthetic data.  Refer to the `configuration file documentation <https://amisrsynthdata.readthedocs.io/en/stable/configfile.html>`_ for information about the contents of the configuration file.
+
+Additional information about using this pacakge is available in the `usage documentation <https://amisrsynthdata.readthedocs.io/en/stable/usage.html>`_.
 
 Limitations
 -----------
@@ -46,10 +63,15 @@ The following are NOT currently included in the amisrsynthdata module:
 Documentation
 -------------
 
-Full documentation for amisrsynthdata is available on `ReadTheDocs <https://amisrsynthdata.readthedocs.io/en/latest/index.html>`_.
+Full documentation for amisrsynthdata is available on `ReadTheDocs <https://amisrsynthdata.readthedocs.io>`_.
+
+Source Code Repository
+----------------------
+
+The source code for amisrsynthdata is available on `GitHub <https://github.com/amisr/amisrsynthdata>`_.
 
 Contributing
 ------------
 
-Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Contributions can take the form of `issues <https://github.com/amisr/amisrsynthdata/issues>`_ to report bugs and request new features and `pull requests <https://github.com/amisr/amisrsynthdata/pulls>`_ to submit new code.  Please refer to the `contributing guidelines <https://amisrsynthdata.readthedocs.io/en/latest/contributing.html#>`_ for more details.  Specific instructions on how to add a new state function to describe the ionosphere are available in `New State Functions <https://amisrsynthdata.readthedocs.io/en/latest/ionostate.html#>`_.
+Contributions to this package are welcome and encouraged, particularly to expand the currently set of specified ionospheres.  Contributions can take the form of `issues <https://github.com/amisr/amisrsynthdata/issues>`_ to report bugs and request new features and `pull requests <https://github.com/amisr/amisrsynthdata/pulls>`_ to submit new code.  Please refer to the `contributing guidelines <https://amisrsynthdata.readthedocs.io/en/stable/contributing.html>`_ for more details.  Specific instructions on how to add a new state function to describe the ionosphere are available in `Create New State Functions <https://amisrsynthdata.readthedocs.io/en/stable/ionostate.html#create-new-state-functions>`_.
 

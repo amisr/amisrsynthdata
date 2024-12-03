@@ -5,7 +5,15 @@
 Configuration File
 ==================
 
-The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an `example configuration file <https://github.com/amisr/amisrsynthdata/blob/develop/example_synth_config.yaml>`_ is available in the main project repository.  The configuration file requires six main sections: GENERAL (which specifies various options for how the synthetic data generator should be run), RADAR (which specifies the radar mode and configuration options), and DENSITY, VELOCITY, ITEMP, and ETEMP (which specify the values for electron density, plasma drift velocity, ion temperature, and electron temperature, respectively).  There is an additional optional SUMMARY_PLOT section where plotting parameters for the automatically-generated summary plots can be specified.  The GENERAL and RADAR sections are composed of several standard parameters that need to be specified (described in the tables below).
+The configuration file specifies both the state of the ionosphere, the radar mode and configuration, and various other options for creating the synthetic data file.  The file should be in `YAML <https://yaml.org/>`_ and an `example configuration file <https://github.com/amisr/amisrsynthdata/blob/main/example_synth_config.yaml>`_ is available in the main project repository.  The contents of this file can be copy/pasted into a local text file or the example file can be downloaded from GitHub or with wget on the command line.
+
+.. code-block::
+
+   wget https://raw.githubusercontent.com/amisr/amisrsynthdata/refs/heads/main/example_synth_config.yaml
+
+This file should work as an example for running amisrsynthdata, but it will have to be modified to synthesize data for different situations.  Note that you can rename this configuration file and keep several on your system.
+
+The configuration file requires six main sections: GENERAL (which specifies various options for how the synthetic data generator should be run), RADAR (which specifies the radar mode and configuration options), and DENSITY, VELOCITY, ITEMP, and ETEMP (which specify the values for electron density, plasma drift velocity, ion temperature, and electron temperature, respectively).  There is an additional optional SUMMARY_PLOT section where plotting parameters for the automatically-generated summary plots can be specified.  The GENERAL and RADAR sections are composed of several standard parameters that need to be specified (described in the tables below).
 
 **IMPORTANT NOTE**: YAML can natively handle scientific notation, but has stringent formatting requirements.  The mantissa must have a decimal point and the sign of the exponent must be included.  This means `4.0e+11` can be used in the configuration files, but `4e11` would generate errors.
 

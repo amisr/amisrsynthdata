@@ -53,7 +53,7 @@ The following additional packages are required and will be installed:
   * `pyyaml <https://pyyaml.org/wiki/PyYAMLDocumentation>`_
   * `importlib-resources <https://pypi.org/project/importlib-resources/>`_ (for python < 3.9)
 
-If installing with the ``plots'' option, the following additional packages are also required and will be installed:
+If installing with the ``plots`` option, the following additional packages are also required and will be installed:
 
 
   * `matplotlib <https://matplotlib.org/>`_
@@ -61,5 +61,5 @@ If installing with the ``plots'' option, the following additional packages are a
 
 If automatic installation of any of these packages fail, try installing them in your environment manually referring to instructions and tips from that package's documentation.
 
-Utilizing output from the GEMINI non-linear ionospheric dynamics model to specify the ionospheric state requires `pygemini <https://github.com/gemini3d/pygemini>`_ to be installed. This is a specialized option and interested users should install this package manually using instructions in its README file before attempting to run `amisrsynthdata' with GEMINI configuration option.
+Utilizing output from the GEMINI non-linear ionospheric dynamics model to specify the ionospheric state requires `pygemini <https://github.com/gemini3d/pygemini>`_ to be installed. This is a specialized option and interested users should install this package manually using instructions in its README file before attempting to run `amisrsynthdata` with GEMINI configuration option.
 
