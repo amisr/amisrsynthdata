@@ -13,14 +13,6 @@ readme = "README.rst"
 license = { file = "LICENSE" }
 keywords = ["AMISR", "synthetic", "data"]
 requires-python = ">=3.7,<3.12"
-dependencies = [
-    "numpy",
-    "h5py",
-    "apexpy",
-    "pymap3d",
-    "pyyaml",
-    "importlib_resources; python_version < '3.9'",
-]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering",
@@ -30,6 +22,7 @@ classifiers = [
     "Programming Language :: Python",
     "Operating System :: OS Independent",
 ]
+dynamic = ["dependencies"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
