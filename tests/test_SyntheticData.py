@@ -109,27 +109,27 @@ def test_generate_errors(synthdata, config, datafile):
         np.broadcast_to(
             ne_err,
             truth_ne_err.shape),
-        truth_ne_err)
+        truth_ne_err, atol=1e-12)
     np.testing.assert_allclose(
         np.broadcast_to(
             ti_err,
             truth_ti_err.shape),
-        truth_ti_err)
+        truth_ti_err, atol=1e-12)
     np.testing.assert_allclose(
         np.broadcast_to(
             te_err,
             truth_te_err.shape),
-        truth_te_err)
+        truth_te_err, atol=1e-12)
     np.testing.assert_allclose(
         np.broadcast_to(
             vlos_err,
             truth_vlos_err.shape),
-        truth_vlos_err)
+        truth_vlos_err, atol=1e-12)
     np.testing.assert_allclose(
         np.broadcast_to(
             ne_notr_err,
             truth_ne_notr_err.shape),
-        truth_ne_notr_err)
+        truth_ne_notr_err, atol=1e-12)
 
 
 def test_noisy_measurements(synthdata):

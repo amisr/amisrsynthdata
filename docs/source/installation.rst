@@ -44,6 +44,9 @@ Note that the installation options discussed above can be used here as well.
 
 Requirements
 ------------
+
+This package has been tested with python versions 3.9-3.14.  It will likely work with other versions of python 3, but there may be errors.  You can test the functionality by running the unit tests with `pytest <https://docs.pytest.org/en/stable/>`_.
+
 The following additional packages are required and will be installed:
 
   * `numpy <https://numpy.org/>`_
